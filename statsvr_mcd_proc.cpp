@@ -703,12 +703,14 @@ int32_t CMCDProc::HandleRequest(char* data, unsigned data_len,
 
     if (ti != NULL)
     {
+		LogTrace("==================================================================================>");
         if (ti->do_next_step(outdata) == 0)
         {
             m_timer_queue.set(ti->GetMsgSeq(), ti, ti->GetTimeGap());
         }
         else
         {
+			LogTrace("<====================================================================================\r\n\r\n");
             delete ti;
         }
     }

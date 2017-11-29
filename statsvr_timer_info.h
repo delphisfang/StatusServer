@@ -517,7 +517,7 @@ namespace statsvr
 			
 			int KV_parse_queue(string app_tag, bool highpri)
 			{
-				LogTrace("parse queue, app_tag: %s", app_tag.c_str());
+				LogTrace("parse queue of app_tag: %s", app_tag.c_str());
 				
 				TagUserQueue *pTagQueues = NULL;
 				string key_queueList, val_queueList;

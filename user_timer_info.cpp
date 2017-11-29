@@ -9,21 +9,20 @@ using namespace statsvr;
 /* just for test */
 int EchoTimer::do_next_step(string& req_data)
 {
-    switch (m_cur_step)
-    {
-        case STATE_INIT:
-        {
-            if (init(req_data, req_data.size()))
-    		{
-				ON_ERROR_PARSE_PACKET();
-				return -1;
-    		}
-
-			return on_echo();
-        }
-    }
+	if (init(req_data, req_data.size()))
+	{
+		ON_ERROR_PARSE_PACKET();
+		return -1;
+	}
 	
-    return 0;
+	if (on_echo())
+	{
+		return -1;
+	}
+	else
+	{
+		return 1;
+	}
 }
 
 /*
@@ -112,6 +111,7 @@ int GetUserInfoTimer::on_get_userinfo()
 
 		if (CAppConfig::Instance()->GetUser(app_userID, user))
 		{
+			m_raw_userID = delappID(app_userID);
 			on_not_online();
 			return SS_ERROR;
 		}

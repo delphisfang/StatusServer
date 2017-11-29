@@ -41,7 +41,7 @@ int GetServiceInfoTimer::on_get_serviceinfo()
 	ServiceInfo serv;
 	UserQueue *uq = NULL, *highpri_uq = NULL;
 	unsigned queueNum = 0;
-	string serviceID;
+	string app_serviceID;
 	
     int maxConvNum = CAppConfig::Instance()->getMaxConvNum(m_appID);
 
@@ -49,9 +49,10 @@ int GetServiceInfoTimer::on_get_serviceinfo()
 
 	for (set<string>::iterator it = m_serviceID_list.begin(); it != m_serviceID_list.end(); it++)
 	{
-		serviceID = (*it);
-		if (CAppConfig::Instance()->GetService(serviceID, serv))
+		app_serviceID = (*it);
+		if (CAppConfig::Instance()->GetService(app_serviceID, serv))
 		{
+			m_raw_serviceID = delappID(app_serviceID);
 			on_not_online();
 			return SS_ERROR;
 		}

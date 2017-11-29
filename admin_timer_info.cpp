@@ -147,7 +147,7 @@ int  AdminConfigTimer::on_admin_ping()
         string appID = ping_req["appIDList"][i].asString();
 		
 		/* 获取app version */
-		LogDebug("GetVersion for appID: %s", appID.c_str());
+		//LogDebug("GetVersion for appID: %s", appID.c_str());
         unsigned version = CAppConfig::Instance()->GetVersion(appID);
 
 		Json::Value items;
