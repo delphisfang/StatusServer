@@ -134,7 +134,6 @@ int  AdminConfigTimer::on_admin_ping()
 	
 	//参数检查
 	unsigned size = ping_req["appIDList"].size();
-	LogDebug("size: %u", size);
 	if (size > MAXSIZE)
 	{
 		LogError("size:%d > MAXSIZE:%d\n", size, MAXSIZE);
@@ -170,11 +169,11 @@ int  AdminConfigTimer::on_admin_ping()
 		map_now[appID] = true;
     }
     ping_rsp["data"] = appIDlistVer;
-	LogDebug("Parse data finish");
+	//LogDebug("Parse data finish");
 	
 	int delnum = CAppConfig::Instance()->CheckDel(map_now);
 	CAppConfig::Instance()->SetNowappIDList(appIDString);
-	LogDebug("SetNowappIDList(%s) finish", appIDString.c_str());
+	//LogDebug("SetNowappIDList(%s) finish", appIDString.c_str());
 
 	int loglevel = LOG_TRACE;
 	if (delnum > 0)

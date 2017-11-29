@@ -63,7 +63,7 @@ int CAppConfig::UpdateappIDConf (const Json::Value &push_config_req)
 		}
 		SetVersion(appID, version);
 
-	    LogDebug("[UpdateappIDConf] appID:[%s] conf:%s\n", appID.c_str(), appIDConf.c_str());	    
+	    //LogDebug("[UpdateappIDConf] appID:[%s] conf:%s\n", appID.c_str(), appIDConf.c_str());	    
 		SetConf(appID, appIDConf);
 
 		if (!appID_conf["configs"].isNull() && appID_conf["configs"].isObject())
@@ -197,8 +197,7 @@ int CAppConfig::UpdateappIDConf (const Json::Value &push_config_req)
 int CAppConfig::SetNowappIDList (string& value)
 {
 	SetValue("0", "appIDlist", value);
-	LogDebug("SetNowappIDList(%s) finish", value.c_str());
-
+	//LogDebug("SetNowappIDList(%s) finish", value.c_str());
 	return 0;
 }
 
@@ -263,21 +262,21 @@ int CAppConfig::GetVersion(string appID)
 {
 	int version;
 	GetValue(appID, "version", version);
-	LogDebug("[GetVersion] appID:[%s], version:[%d]\n", appID.c_str() ,version);
+	//LogDebug("[GetVersion] appID:[%s], version:[%d]\n", appID.c_str() ,version);
 	return version;
 }
 
 int CAppConfig::SetVersion(string appID, uint32_t version)
 {
 	SetValue(appID, "version", (int)version);
-	LogDebug("[SetVersion] appID:[%s], version:[%d]\n", appID.c_str() ,version);
+	//LogDebug("[SetVersion] appID:[%s], version:[%d]\n", appID.c_str() ,version);
 	return 0;
 }
 
 int CAppConfig::DelVersion(string appID)
 {
 	DelValue(appID, "version");
-	LogDebug("[DelVersion] appID:[%s]\n", appID.c_str());
+	//LogDebug("[DelVersion] appID:[%s]\n", appID.c_str());
 	return 0;
 }
 
