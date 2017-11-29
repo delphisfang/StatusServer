@@ -308,7 +308,7 @@ int UserServiceTimer::on_create_session()
 	//确定session的serviceID
 	m_session.serviceID = delappID(m_serviceID);
 	m_session.atime 	= m_session.btime = GetCurTimeStamp();
-	DO_FAIL(UpdateUserSession(m_appID, m_userID, &m_session, DEF_SESS_TIMEWARN, DEF_SESS_TIMEWARN));
+	DO_FAIL(UpdateUserSession(m_appID, m_userID, &m_session, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT));
 	
 	//更新user状态
 	UserInfo user;

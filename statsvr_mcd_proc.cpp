@@ -988,8 +988,8 @@ int32_t CMCDProc::EnququeHttp2DCC(char* data, unsigned data_len, const string& i
     }
     else
     {
-        LogDebug("[EnququeHttp2DCC] enqueue to DCC success, total_len:%d, ccd_header:%d\n"
-			   , totallen, CCD_HEADER_LEN);
+        /*LogDebug("[EnququeHttp2DCC] enqueue to DCC success, total_len:%d, ccd_header:%d\n"
+			   , totallen, CCD_HEADER_LEN);*/
         timeval nowTime;
 	    gettimeofday(&nowTime, NULL);
         CWaterLog::Instance()->WriteLog(nowTime, 1, (char *)ip.c_str(), port, 0, data);

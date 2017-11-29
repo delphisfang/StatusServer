@@ -73,7 +73,7 @@ int KVSetKeyValue(KvCacheCtrl &ckv_cache, const string &key, const string &value
 
 	if (0 == ret)
 	{
-		LogTrace("Success to set key: %s, value: %s", key.c_str(), value.c_str());
+		//LogTrace("Success to set key: %s, value: %s", key.c_str(), value.c_str());
 	}
 	else
 	{
