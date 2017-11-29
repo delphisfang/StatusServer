@@ -46,7 +46,7 @@ int KVGetKeyValue(KvCacheCtrl &ckv_cache, const string &key, string &value)
     }
     else
     {
-		LogError("[KV_GET] key:%s not exist!", key.c_str());
+		//LogError("[KV_GET] key:%s not exist!", key.c_str());
         return ERRNO_KV_KEY_NOT_EXIST;
     }
 }

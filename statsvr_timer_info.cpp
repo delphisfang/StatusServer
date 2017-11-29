@@ -74,7 +74,15 @@ int CTimerInfo::init(string req_data, int datalen)
 	
 	m_seq = get_value_uint(js_req_root, "innerSeq");
 
-	m_appID = get_value_str(js_req_root, "appID");
+	if (!js_req_root["appID"].isNull() && js_req_root["appID"].isString())
+	{
+		m_appID = js_req_root["appID"].asString();
+	}
+	else if (!js_req_root["appID"].isNull() && js_req_root["appID"].isUInt())
+	{
+		m_appID = ui2str(js_req_root["appID"].asUInt());
+	}
+	
 	if (m_cmd != "pingConf" && m_cmd != "updateConf" && m_cmd != "getConf"
 		&& CAppConfig::Instance()->checkAppIDExist(m_appID))
 	{
