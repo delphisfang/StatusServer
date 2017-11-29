@@ -56,15 +56,19 @@ int SessionOutTimer::on_session_timeout()
 
 	if ("" == sess.serviceID)
 	{
-		//LogTrace("no need to send timeout");
+		LogTrace("no need to send timeout");
 		return SS_OK;
 	}
+
+	LogDebug("==>IN1");
 
     m_raw_userID    = sess.userID;
     m_raw_serviceID = sess.serviceID;
 	m_userID        = m_appID + "_" + m_raw_userID;
 	m_serviceID     = m_appID + "_" + m_raw_serviceID;
     m_sessionID     = sess.sessionID;
+
+	LogDebug("==>IN2, m_serviceID: %s, m_raw_userID: %s", m_serviceID.c_str(), m_raw_serviceID.c_str());
 
     if (CAppConfig::Instance()->GetService(m_serviceID, m_serviceInfo) 
     	|| m_serviceInfo.find_user(m_raw_userID))

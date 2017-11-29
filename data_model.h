@@ -1038,14 +1038,19 @@ namespace statsvr
 
 		int get_first(Session& sess)
 		{
-			list<SessionTimer>::iterator it = _sess_list.begin();
+			list<SessionTimer>::iterator it;
+			long long nowTime = (long long)time(NULL);
 			
-			if (_sess_list.size() > 0)
+			for (it = _sess_list.begin(); it != _sess_list.end(); it++)
 			{
-				sess = it->session;
-				return 0;
+				if (nowTime >= it->expire_time)
+				{
+					sess = it->session;
+					return 0;
+				}
 			}
-			LogError("Failed to get first session from SessionQueue, its size <= 0!");
+			
+			LogError("Failed to get an expired session from SessionQueue, its size <= 0!");
 			return -1;
 		}
 
