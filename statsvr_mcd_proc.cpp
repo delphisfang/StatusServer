@@ -407,7 +407,7 @@ void CMCDProc::DispatchCCD()
             continue;
         }
 
-		LogDebug("CCD receive a packet");
+		//LogDebug("CCD receive a packet");
 
         uint32_t client_ip 	= ccdheader->_ip;
 		ccd_time.tv_sec 	= ccdheader->_timestamp;
@@ -896,8 +896,8 @@ int32_t CMCDProc::EnququeHttp2CCD(unsigned long long flow, char *data, unsigned 
     }
     else
     {
-        LogDebug("[Enqueue2CCD] enqueue to CCD success, total_len:%d, ccd_header:%d\n"
-			   , totallen, CCD_HEADER_LEN);
+        /*LogDebug("[Enqueue2CCD] enqueue to CCD success, total_len:%d, ccd_header:%d\n"
+			   , totallen, CCD_HEADER_LEN);*/
         timeval nowTime;
 	    gettimeofday(&nowTime, NULL);
         CWaterLog::Instance()->WriteLog(nowTime, 1, (char *)"", 0, 0, data);
@@ -1040,8 +1040,8 @@ int32_t CMCDProc::EnququeErrHttp2DCC(char* data, unsigned data_len)
     }
     else
     {
-        LogDebug("[EnququeErrHttp2DCC] enqueue to DCC success, total_len:%d, ccd_header:%d\n"
-			   , totallen, CCD_HEADER_LEN);
+        /*LogDebug("[EnququeErrHttp2DCC] enqueue to DCC success, total_len:%d, ccd_header:%d\n"
+			   , totallen, CCD_HEADER_LEN);*/
         timeval nowTime;
 	    gettimeofday(&nowTime, NULL);
         CWaterLog::Instance()->WriteLog(nowTime, 1, (char *)m_cfg._err_push_ip.c_str(), m_cfg._err_push_port, 0, data);
@@ -1172,7 +1172,7 @@ void CMCDProc::DispatchUser2Service()
             offServer = CAppConfig::Instance()->CanOfferService(serviceHeap, serverNum);
             if (getTag || offServer)
             {
-				LogDebug("No service available");
+				//LogDebug("No service available");
                 continue;
             }
             else

@@ -3,6 +3,7 @@
 #include "debug.h"
 #include "jsoncpp/json.h"
 #include "data_model.h"
+#include <string>
 
 using namespace std;
 using namespace statsvr;
@@ -24,19 +25,28 @@ void set_global(int glob)
 
 int CAppConfig::UpdateappIDConf (const Json::Value &push_config_req)
 {
-	Json::Value configList = push_config_req["configList"];
+	Json::Value configList = push_config_req["appList"];
 	int size = configList.size();
 	Json::Value appID_conf;
 	
 	for (int i = 0; i < size; ++i)
 	{
 		appID_conf = configList[i];
-		if (appID_conf["appID"].isNull() || !appID_conf["appID"].isString())
+		if (appID_conf["appID"].isNull() || (!appID_conf["appID"].isString() && !appID_conf["appID"].isUInt()))
 		{
 			LogError("[UpdateappIDConf] Unknown appID\n");
 			return -1;
 		}
-	    string appID = appID_conf["appID"].asString();
+
+		string appID;
+		if (appID_conf["appID"].isString())
+		{
+	    	appID = appID_conf["appID"].asString();
+		}
+		else
+		{
+			appID = ui2str(appID_conf["appID"].asUInt());
+		}
 		
 		string appIDConf = appID_conf.toStyledString();
 		appIDConf = Trim(appIDConf);
@@ -51,7 +61,7 @@ int CAppConfig::UpdateappIDConf (const Json::Value &push_config_req)
 		{
 			continue;
 		}
-		SetVersion (appID, version);
+		SetVersion(appID, version);
 
 	    LogDebug("[UpdateappIDConf] appID:[%s] conf:%s\n", appID.c_str(), appIDConf.c_str());	    
 		SetConf(appID, appIDConf);

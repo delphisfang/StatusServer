@@ -32,8 +32,10 @@ namespace statsvr
         {}
         int  do_next_step(string& req_data);
         int  on_admin_ping();
+		int  on_admin_getConf();
 		int  on_admin_config();
-
+		int  on_admin_get_today_status();
+		
 		int  get_id_list(string value, string idListName, vector<string> &idList);
 		int  restore_userList();
 		int  restore_serviceList();

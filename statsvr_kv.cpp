@@ -25,7 +25,7 @@ static char kv_server_buffer[BUFF_SIZE];
 
 int KVGetKeyValue(KvCacheCtrl &ckv_cache, const string &key, string &value)
 {
-	LogTrace("[KV_GET] key: %s", key.c_str());
+	//LogTrace("[KV_GET] key: %s", key.c_str());
 
     value.clear();
     if (0 == key.length() || key.length() > MAX_KEY_LEN)
@@ -53,7 +53,7 @@ int KVGetKeyValue(KvCacheCtrl &ckv_cache, const string &key, string &value)
 
 int KVSetKeyValue(KvCacheCtrl &ckv_cache, const string &key, const string &value)
 {
-	LogTrace("[KV_SET] key: %s, value:%s", key.c_str(), value.c_str());
+	//LogTrace("[KV_SET] key: %s, value:%s", key.c_str(), value.c_str());
 	
     if (0 == key.length() || key.length() > MAX_KEY_LEN)
     {
@@ -84,7 +84,7 @@ int KVSetKeyValue(KvCacheCtrl &ckv_cache, const string &key, const string &value
 
 int KVDelKeyValue(KvCacheCtrl &ckv_cache, const string &key)
 {
-	LogTrace("[KV_DEL] key: %s", key.c_str());
+	//LogTrace("[KV_DEL] key: %s", key.c_str());
 
     if (0 == key.length() || key.length() > MAX_KEY_LEN)
     {

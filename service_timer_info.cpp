@@ -49,7 +49,6 @@ int GetServiceInfoTimer::on_get_serviceinfo()
 
 	for (set<string>::iterator it = m_serviceID_list.begin(); it != m_serviceID_list.end(); it++)
 	{
-		LogDebug("==>IN");
 		serviceID = (*it);
 		if (CAppConfig::Instance()->GetService(serviceID, serv))
 		{
@@ -59,7 +58,6 @@ int GetServiceInfoTimer::on_get_serviceinfo()
 		//serv.toJson(servInfo);
 		get_service_json(m_appID, serv, servInfo);
 
-		LogDebug("==>IN");
 		//calculate service's queueNumber
 		for (set<string>::iterator it = serv.tags.begin(); it != serv.tags.end(); it++)
 		{
@@ -67,13 +65,10 @@ int GetServiceInfoTimer::on_get_serviceinfo()
 			
 			DO_FAIL(get_normal_queue(m_appID, *it, &uq));
 			queueNum += uq->size();
-			LogDebug("==>IN");
 			DO_FAIL(get_highpri_queue(m_appID, *it, &highpri_uq));
 			queueNum += highpri_uq->size();
 		}
 		servInfo["queueNumber"] = queueNum;
-
-		LogDebug("==>IN");
 
 		//当前服务人数>=最大会话人数时，返回busy
         if (serv.status == "online" && serv.user_count() >= maxConvNum)

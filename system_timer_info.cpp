@@ -52,7 +52,7 @@ int SessionOutTimer::on_session_timeout()
         return SS_OK;
     }
 
-	//LogDebug("==>Choose timeout session: %s", sess.toString().c_str());
+	LogDebug("==>Choose timeout session: %s", sess.toString().c_str());
 
 	if ("" == sess.serviceID)
 	{

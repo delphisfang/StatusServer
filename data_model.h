@@ -191,7 +191,7 @@ namespace statsvr
 
 			UserInfo();
 			
-			LogDebug("value: %s", value.toStyledString().c_str());
+			//LogDebug("value: %s", value.toStyledString().c_str());
 			if (!value["userID"].isNull() && value["userID"].isString())
 	        {
 				userID = value["userID"].asString();
@@ -244,7 +244,7 @@ namespace statsvr
 				channel = value["channel"].asString();
 			}
 
-			LogDebug("construct userInfo: %s", toString().c_str());
+			//LogDebug("construct userInfo: %s", toString().c_str());
 	    }
 
 		void toJson(Json::Value &value) const

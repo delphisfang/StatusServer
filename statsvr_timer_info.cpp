@@ -48,7 +48,6 @@ int CTimerInfo::init(string req_data, int datalen)
 	Json::Value js_req_root;
 	Json::Value js_req_data;
 
-	LogTrace("req_data: %s", req_data.c_str());
 	if (!reader.parse(req_data, js_req_root))
 	{
 		LogError("Error init SerializeToString Fail: %s\n", req_data.c_str());
@@ -66,11 +65,18 @@ int CTimerInfo::init(string req_data, int datalen)
 		m_cmd = get_value_str(js_req_root, "cmd");
 	}
 	//LogDebug("m_cmd: %s", m_cmd.c_str());
+
+	if ((m_cmd != "getUserInfo" && m_cmd != "getServiceInfo")
+		|| 0 == access("/home/fht/sskv_10302/debug_switch", F_OK))
+	{
+		LogTrace("req_data: %s", req_data.c_str());
+	}
 	
 	m_seq = get_value_uint(js_req_root, "innerSeq");
 
 	m_appID = get_value_str(js_req_root, "appID");
-	if (m_cmd != "pingConf" && m_cmd != "updateConf" && CAppConfig::Instance()->checkAppIDExist(m_appID))
+	if (m_cmd != "pingConf" && m_cmd != "updateConf" && m_cmd != "getConf"
+		&& CAppConfig::Instance()->checkAppIDExist(m_appID))
 	{
 		LogError("Unknown appID[%s]!", m_appID.c_str());
 		return -1;
@@ -101,7 +107,8 @@ int CTimerInfo::init(string req_data, int datalen)
 		m_raw_tag = js_req_data["tag"].asString();
 		m_tag = m_appID + "_" + m_raw_tag;
 
-		if (m_cmd != "pingConf" && m_cmd != "updateConf" && CAppConfig::Instance()->checkTagExist(m_appID, m_tag))
+		if (m_cmd != "pingConf" && m_cmd != "updateConf" && m_cmd != "getConf"
+			&& CAppConfig::Instance()->checkTagExist(m_appID, m_tag))
 		{
 			LogError("Unknown tag[%s]!", m_tag.c_str());
 			return -1;
@@ -193,8 +200,14 @@ int CTimerInfo::init(string req_data, int datalen)
 	char id_buf[64];
     snprintf (id_buf, sizeof(id_buf), "%s:%s--%s:%d", m_appID.c_str(), m_serviceID.c_str(), m_userID.c_str(), m_msg_seq);
 	m_search_no = string(id_buf);
-	LogTrace("Init request data OK! [id:%s,cmd:%s,userID:%s,servID:%s,msg_seq:%u]\n", 
-				m_identity.c_str(), m_cmd.c_str(), m_userID.c_str(), m_serviceID.c_str(), m_msg_seq);
+
+	if ((m_cmd != "getUserInfo" && m_cmd != "getServiceInfo")
+		|| 0 == access("/home/fht/sskv_10302/debug_switch", F_OK))
+	{
+		LogTrace("Init request data OK! [id:%s,cmd:%s,userID:%s,servID:%s,msg_seq:%u]\n", 
+					m_identity.c_str(), m_cmd.c_str(), m_userID.c_str(), m_serviceID.c_str(), m_msg_seq);
+	}
+
 	return 0;
 }
 

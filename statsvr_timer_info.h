@@ -201,7 +201,12 @@ namespace statsvr
 				rsp["code"] 	= 0;
 				rsp["data"] 	= data;
 				string strRsp   = rsp.toStyledString();
-				LogTrace("send response: %s", strRsp.c_str());
+
+				if ((m_cmd != "getUserInfo" && m_cmd != "getServiceInfo")
+					|| 0 == access("/home/fht/sskv_10302/debug_switch", F_OK))
+				{
+					LogTrace("send response: %s", strRsp.c_str());
+				}
 				if (m_proc->EnququeHttp2CCD(m_ret_flow, (char *)strRsp.c_str(), strRsp.size()))
 				{
 					LogError("searchid[%s]: Failed to SendReply <%s>", m_search_no.c_str(), m_cmd.c_str());
