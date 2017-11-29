@@ -100,6 +100,8 @@ namespace statsvr
 	        value["serviceID"]  = serviceID;
 	        value["activeTime"] = atime;
 	        value["buildTime"]  = btime;
+			value["chatProxyIp"]    = cpIP;
+			value["chatProxyPort"]  = cpPort;
 	        //value["toIM"] = toIM;
 			//value["whereFrom"] = whereFrom;
 			//value["channel"] = channel;

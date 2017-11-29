@@ -261,14 +261,16 @@ namespace statsvr
 			int get_user_session(string appID, string app_userID, Session *sess)
 			{
 				SessionQueue*  pSessQueue = NULL;
+				Session temp;
 				
 				if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue)
-					|| pSessQueue->get(app_userID, *sess))
+					|| pSessQueue->get(app_userID, temp))
 				{
 					LogError("Failed to get session of user[%s]", app_userID.c_str());
 					return SS_ERROR;
 				}
 
+				*sess = temp;
 				return SS_OK;
 			}
 

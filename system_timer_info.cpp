@@ -410,11 +410,12 @@ int UserServiceTimer::on_user_lastService()
     }
 
     m_serviceID   = m_userInfo.lastServiceID;
-    m_serviceInfo = lastServ;
-	
-	SET_SERV(lastServ.add_user(delappID(m_userID)));
-	DO_FAIL(UpdateService(m_serviceID, lastServ));
     LogTrace("Connect userID:%s <-----> lastServiceID:%s", m_userID.c_str(), m_serviceID.c_str());
+
+    m_serviceInfo = lastServ;
+	LogTrace("m_serviceInfo: %s", m_serviceInfo.toString().c_str());
+	SET_SERV(m_serviceInfo.add_user(delappID(m_userID)));
+	DO_FAIL(UpdateService(m_serviceID, m_serviceInfo));
 
 	DO_FAIL(on_create_session());
 	DO_FAIL(on_send_connect_success_msg());
