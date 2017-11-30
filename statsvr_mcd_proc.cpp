@@ -1106,12 +1106,33 @@ int32_t CMCDProc::Enqueue2DCC(char* data, unsigned data_len, const string& ip, u
     return 0;
 }
 
+void CMCDProc::DispatchServiceTimeout()
+{
+	#if 0
+    timeval ntv;
+	gettimeofday(&ntv, NULL);
+
+	CTimerInfo *ti  = new OnlineServiceCheck(this, GetMsgSeq(), ntv, "", 0, m_cfg._time_out);
+    string req_data = i2str(m_cfg._service_time_gap);
+
+    if (ti->do_next_step(req_data) == 0)
+    {
+        m_timer_queue.set(ti->GetMsgSeq(), ti, ti->GetTimeGap());
+    }
+    else
+    {
+        delete ti;
+    }
+	#endif
+}
+
 void CMCDProc::DispatchUser2Service()
 {
-    /*if (m_workMode == statsvr::WORKMODE_READY)
+    if (m_workMode == statsvr::WORKMODE_READY)
     {
         return;
-    }*/
+    }
+	
     Json::Reader reader;
 	Json::Value appList;
 	string appListString;
@@ -1201,11 +1222,11 @@ void CMCDProc::DispatchUser2Service()
 
 void CMCDProc::DispatchSessionTimer()
 {
-    /*if (m_workMode == statsvr::WORKMODE_READY)
+    if (m_workMode == statsvr::WORKMODE_READY)
     {
         return;
     }
-    */
+
     Json::Reader reader;
 	Json::Value appList;
 	string appListString;

@@ -66,7 +66,7 @@ int CTimerInfo::init(string req_data, int datalen)
 	}
 	//LogDebug("m_cmd: %s", m_cmd.c_str());
 
-	if ((m_cmd != "getUserInfo" && m_cmd != "getServiceInfo")
+	if ((m_cmd != "getUserInfo" && m_cmd != "getServiceInfo" && m_cmd != "updateConf")
 	/*	|| 0 == access("/home/fht/sskv_10302/debug_switch", F_OK)*/)
 	{
 		LogTrace("req_data: %s", req_data.c_str());
