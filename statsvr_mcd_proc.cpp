@@ -213,7 +213,7 @@ int32_t CMCDProc::InitLog()
         log_para->path_, log_para->name_prefix_,
         log_para->max_file_size_, log_para->max_file_no_);
 
-	if (ret<0)
+	if (ret < 0)
 		return ret;
 
 	log_para = &(m_cfg._water_log);

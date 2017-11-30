@@ -288,14 +288,12 @@ int ConnectServiceTimer::on_already_onqueue()
 int ConnectServiceTimer::on_no_service()
 {
 	Json::Value data;
-	string no_service_online_hint = "";
-
+	
 	data["status"] = "NoService";
 	set_data(data);
 	//if(m_whereFrom == "wx" || m_whereFrom == "wxpro")
 	//{
-		CAppConfig::Instance()->GetValue(m_appID, "no_service_online_hint", no_service_online_hint);
-		data["des"] = no_service_online_hint;
+		data["des"] = CAppConfig::Instance()->getNoServiceOnlineHint(m_appID);
 	//}
 	return on_send_error_reply(ERROR_NO_SERVICE, "Reject Enqueue", data);
 }
@@ -303,14 +301,12 @@ int ConnectServiceTimer::on_no_service()
 int ConnectServiceTimer::on_reject_enqueue()
 {
 	Json::Value data;
-	string queue_upper_limit_hint = "";
 
 	data["status"] = "FullQueue";
 	set_data(data);	
 	//if(m_whereFrom == "wx" || m_whereFrom == "wxpro")
 	//{
-		CAppConfig::Instance()->GetValue(m_appID, "queue_upper_limit_hint", queue_upper_limit_hint);
-		data["des"] = queue_upper_limit_hint;
+		data["des"] = CAppConfig::Instance()->getQueueUpperLimitHint(m_appID);
 	//}
 	return on_send_error_reply(ERROR_REJECT_ENQUEUE, "Reject Enqueue", data);
 }
@@ -364,7 +360,6 @@ int ConnectServiceTimer::on_queue()
     LogTrace("[%s] serviceNum:%u, max_conv_num:%d, queue rate:%d, max_queue_num: %d\n", 
     		m_appID.c_str(), serviceNum, max_conv_num, m_proc->m_cfg._queue_rate, max_queue_num);
 
-	
     if (CAppConfig::Instance()->GetTagHighPriQueue(m_appID, pTagQueues) ||
     	CAppConfig::Instance()->GetTagQueue(m_appID, pHighPriTagQueues))
     {

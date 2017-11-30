@@ -132,6 +132,11 @@ int SessionWarnTimer::on_send_timewarn_msg()
 	UserInfo user;
 
 	LogDebug("==>IN");
+
+	//if(m_session.whereFrom == "wx" || m_session.whereFrom == "wxpro")
+    //{
+        data["des"] = CAppConfig::Instance()->getTimeWarnHint(m_appID);
+    //}
 	
 	//发送超时提醒给坐席
 	data["userID"]    = m_raw_userID;
@@ -154,7 +159,6 @@ int SessionWarnTimer::on_session_timewarn()
 {
     SessionQueue* pSessQueue = NULL;
 	Session sess;
-	Json::Value data;
 	
 	//LogDebug("==>IN");
 
@@ -185,11 +189,6 @@ int SessionWarnTimer::on_session_timewarn()
 		LogTrace("no need to send timewarn");
         return SS_OK;   //continue check warn
     }
-
-	//if(m_session.whereFrom == "wx" || m_session.whereFrom == "wxpro")
-    //{
-        data["des"] = CAppConfig::Instance()->getTimeWarnHint(m_appID);
-    //}
 
 	#if 0
     if (m_whereFrom == "websocket")
@@ -261,9 +260,7 @@ int QueueOutTimer::on_queue_timeout(string &req_data)
 	set_user_data(data);
     //if(m_whereFrom == "wx" || m_whereFrom == "wxpro")
     //{
-        string queue_timeout_hint = "";
-        CAppConfig::Instance()->GetValue(m_appID, "queue_timeout_hint", queue_timeout_hint);
-        data["des"] = queue_timeout_hint;
+        data["des"] = CAppConfig::Instance()->getQueueTimeoutHint(m_appID);
     //}
 
 	LogDebug("==>OUT");

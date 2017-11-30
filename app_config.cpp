@@ -976,13 +976,34 @@ int CAppConfig::getMaxConvNum(string appID)
 	return max_conv_num;
 }
 
-
 string CAppConfig::getTimeWarnHint(string appID)
 {
-	string timeout_warn_hint;
-	CAppConfig::Instance()->GetValue(appID, "timeout_warn_hint", timeout_warn_hint);
-	return timeout_warn_hint;
+	string hint;
+	CAppConfig::Instance()->GetValue(appID, "timeout_warn_hint", hint);
+	return hint;
 }
+
+string CAppConfig::getNoServiceOnlineHint(string appID)
+{
+	string hint;
+	CAppConfig::Instance()->GetValue(appID, "no_service_online_hint", hint);
+	return hint;
+}
+
+string CAppConfig::getQueueTimeoutHint(string appID)
+{
+	string hint;
+	CAppConfig::Instance()->GetValue(appID, "queue_timeout_hint", hint);
+	return hint;
+}
+
+string CAppConfig::getQueueUpperLimitHint(string appID)
+{
+	string hint;
+	CAppConfig::Instance()->GetValue(appID, "queue_upper_limit_hint", hint);
+	return hint;
+}
+
 
 void CAppConfig::getUserListJson(string appID, Json::Value &userList)
 {

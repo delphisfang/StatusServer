@@ -137,6 +137,9 @@ public:
 	long long getDefaultQueueTimeout(string appID);
 	int getMaxConvNum(string appID);
 	string getTimeWarnHint(string appID);
+	string getNoServiceOnlineHint(string appID);
+	string getQueueTimeoutHint(string appID);
+	string getQueueUpperLimitHint(string appID);
 
 	void getUserListJson(string appID, Json::Value &userList);
 	void getServiceListJson(string appID, Json::Value &userList);

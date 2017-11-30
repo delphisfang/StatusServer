@@ -42,11 +42,11 @@ CWaterLog::~CWaterLog ()
 void CWaterLog::WriteLog(timeval& op_time, int op, char* ip, unsigned port, int ret, char* data)
 {
 	string opString;
-	if(op == 0)
+	if (op == 0)
 	{
 		opString = string("Recv");
 	}
-	else if(op == 1)
+	else if (op == 1)
 	{
 		opString = string("Send");
 	}
