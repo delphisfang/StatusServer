@@ -203,7 +203,7 @@ namespace statsvr
 				string strRsp   = rsp.toStyledString();
 
 				if ((m_cmd != "getUserInfo" && m_cmd != "getServiceInfo")
-					|| 0 == access("/home/fht/sskv_10302/debug_switch", F_OK))
+				/*	|| 0 == access("/home/fht/sskv_10302/debug_switch", F_OK)*/)
 				{
 					LogTrace("send response: %s", strRsp.c_str());
 				}
@@ -318,19 +318,23 @@ namespace statsvr
 			void get_service_json(string appID, const ServiceInfo &serv, Json::Value &servJson)
 			{
 				Json::Value arrayUserList;
-
+				string userID;
+				string app_userID;
+				
 				serv.toJson(servJson);
 				arrayUserList.resize(0);
 				for (set<string>::iterator it = serv.userList.begin(); it != serv.userList.end(); it++)
 				{
-					string userID = appID + "_" + *it;
 					UserInfo user;
 					Json::Value userJson = Json::objectValue;
-					
-					userJson["userID"]    = userID;
-					if (CAppConfig::Instance()->GetUser(userID, user))
+
+					userID     = *it;
+					app_userID = appID + "_" + userID;
+				
+					userJson["userID"] = userID;
+					if (CAppConfig::Instance()->GetUser(app_userID, user))
 					{
-						LogError("Failed to get user: %s!", userID.c_str());
+						LogError("Failed to get user: %s!", app_userID.c_str());
 						userJson["sessionID"] = "";
 						userJson["channel"]   = "";
 					}
