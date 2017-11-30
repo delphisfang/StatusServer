@@ -84,6 +84,7 @@ int CTimerInfo::init(string req_data, int datalen)
 	}
 	
 	if (m_cmd != "pingConf" && m_cmd != "updateConf" && m_cmd != "getConf"
+		&& m_cmd != "getTodayStatus"
 		&& CAppConfig::Instance()->checkAppIDExist(m_appID))
 	{
 		LogError("Unknown appID[%s]!", m_appID.c_str());
@@ -116,6 +117,7 @@ int CTimerInfo::init(string req_data, int datalen)
 		m_tag = m_appID + "_" + m_raw_tag;
 
 		if (m_cmd != "pingConf" && m_cmd != "updateConf" && m_cmd != "getConf"
+			&& m_cmd != "getTodayStatus"
 			&& CAppConfig::Instance()->checkTagExist(m_appID, m_tag))
 		{
 			LogError("Unknown tag[%s]!", m_tag.c_str());

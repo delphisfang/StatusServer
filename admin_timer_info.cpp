@@ -144,7 +144,17 @@ int  AdminConfigTimer::on_admin_ping()
     Json::Value appIDlistVer;
     for (unsigned i = 0; i < size; ++i)
     {
+		if (ping_req["appIDList"][i].isUInt())
+		{
+			LogTrace("==============>isUInt");
+		}
+		else
+		{
+			LogTrace("==============>isString");
+		}
+		
         string appID = ping_req["appIDList"][i].asString();
+		LogTrace("============>appID: %s", appID.c_str());
 		
 		/* 获取app version */
 		//LogDebug("GetVersion for appID: %s", appID.c_str());
@@ -356,6 +366,29 @@ int AdminConfigTimer::on_admin_get_today_status()
         on_error();
        	return -1;
     }
+
+	#if 0
+	Json::Reader reader;
+	Json::Value req;
+    if (!reader.parse(m_data, req))
+    {
+    	LogError("Failed to parse request data. data: [%s]", m_data.c_str());
+        return -1;
+    }
+	
+	if (req["appIDList"].isNull() || !req["appIDList"].isArray())
+	{
+		LogError("Failed to parse appIDlist. data: [%s]", m_data.c_str());
+		on_error_parse_packet("Error parse appIDList");
+        return -1;
+	}
+
+	for (unsigned i = 0; i < size; ++i)
+    {
+        string appID = req["appIDList"][i].asString();
+	}	
+
+	#endif
 	
     return 0;
 }

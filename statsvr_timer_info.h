@@ -359,6 +359,20 @@ namespace statsvr
 				return SS_OK;
 			}
 
+			int delete_user_session(string appID, string app_userID)
+			{
+				SessionQueue*  pSessQueue = NULL;
+				
+				if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue)
+					|| pSessQueue->delete_session(app_userID))
+				{
+					LogError("Failed to delete session of user[%s]", app_userID.c_str());
+					return SS_ERROR;
+				}
+
+				return SS_OK;
+			}
+			
 			int create_user_session(string appID, string app_userID, Session *sess, long long gap_warn, long long gap_expire)
 			{
 				SessionQueue*  pSessQueue = NULL;
@@ -439,6 +453,11 @@ namespace statsvr
 				return KVSetKeyValue(KV_CACHE, SESS_PREFIX+app_userID, sessJson.toStyledString());
 			}
 
+			int KV_del_session(string app_userID)
+			{
+				return KVDelKeyValue(KV_CACHE, SESS_PREFIX+app_userID);
+			}
+			
 			int KV_set_queue(string appID, string raw_tag, int highpri)
 			{
 				TagUserQueue *pTagQueues = NULL;
@@ -603,6 +622,13 @@ namespace statsvr
 				return SS_OK;
 			}
 
+			int DeleteUserSession(string appID, string app_userID)
+			{
+				SET_SESS(delete_user_session(appID, app_userID));
+				DO_FAIL(KV_del_session(app_userID));
+				return SS_OK;
+			}
+			
 			int CreateUserSession(string appID, string app_userID, Session *sess, long long gap_warn, long long gap_expire)
 			{
 				SET_SESS(create_user_session(appID, app_userID, sess, gap_warn, gap_expire));

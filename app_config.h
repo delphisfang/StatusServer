@@ -127,6 +127,7 @@ public:
 	int DelSessionQueue(string appID);
 
 	unsigned GetServiceNumber(string appID);
+	unsigned GetTagServiceNumber(string appID, string raw_tag);
 	
 	int checkAppIDExist(string appID);
 	int checkTagExist(string appID, string tag);

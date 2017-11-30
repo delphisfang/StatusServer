@@ -825,6 +825,26 @@ int CAppConfig::DelSessionQueue(string appID)
 	return 0;
 }
 
+unsigned CAppConfig::GetTagServiceNumber(string appID, string raw_tag)
+{
+	map<string, ServiceHeap>::iterator it;
+	ServiceHeap sh;
+	string key = appID + "_" + raw_tag;
+	
+	it = tagServiceHeap.begin();
+	while (it != tagServiceHeap.end())
+	{
+		if (key == it->first)
+		{
+			sh = it->second;
+			return sh.size();
+		}
+		it++;
+	}
+	
+	return 0;
+}
+
 unsigned CAppConfig::GetServiceNumber(string appID)
 {
 	map<string, ServiceHeap>::iterator it;
@@ -834,8 +854,11 @@ unsigned CAppConfig::GetServiceNumber(string appID)
 	it = tagServiceHeap.begin();
 	while (it != tagServiceHeap.end())
 	{
-		sh = it->second;
-		servNum += sh.size();
+		if (appID == getappID(it->first))
+		{
+			sh = it->second;
+			servNum += sh.size();
+		}
 		it++;
 	}
 	return servNum;

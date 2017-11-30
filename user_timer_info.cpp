@@ -359,7 +359,7 @@ int ConnectServiceTimer::on_queue()
 	LogDebug("==>IN");
 
 	max_conv_num  = CAppConfig::Instance()->getMaxConvNum(m_appID);
-	serviceNum    = CAppConfig::Instance()->GetServiceNumber(m_appID);
+	serviceNum    = CAppConfig::Instance()->GetTagServiceNumber(m_appID, m_raw_tag);
 	max_queue_num = serviceNum * max_conv_num * m_proc->m_cfg._queue_rate;
     LogTrace("[%s] serviceNum:%u, max_conv_num:%d, queue rate:%d, max_queue_num: %d\n", 
     		m_appID.c_str(), serviceNum, max_conv_num, m_proc->m_cfg._queue_rate, max_queue_num);
@@ -628,9 +628,14 @@ int CloseSessionTimer::on_close_session()
 	m_raw_serviceID = m_session.serviceID;
 	m_serviceID     = m_appID + "_" + m_raw_serviceID;
 	
-	//update session
+	//delete old session, create new session
+	LogTrace("======>Delete old session: %s", m_session.toString().c_str());
 	m_session.serviceID = "";
-	DO_FAIL(UpdateUserSession(m_appID, m_userID, &m_session, MAX_INT, MAX_INT));
+	user.sessionID  = m_session.sessionID = gen_sessionID(m_userID);
+	m_session.atime = m_session.btime = GetCurTimeStamp();
+	LogTrace("======>Create new session: %s", m_session.toString().c_str());
+	DO_FAIL(DeleteUserSession(m_appID, m_userID));
+	DO_FAIL(CreateUserSession(m_appID, m_userID, &m_session, MAX_INT, MAX_INT));
 
 	//update service.userList
 	GET_SERV(CI->GetService(m_serviceID, m_service));
