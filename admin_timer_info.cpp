@@ -178,17 +178,7 @@ int AdminConfigTimer::on_admin_ping()
     Json::Value appIDlistVer;
     for (unsigned i = 0; i < size; ++i)
     {
-		if (ping_req["appIDList"][i].isUInt())
-		{
-			LogTrace("==============>isUInt");
-		}
-		else
-		{
-			LogTrace("==============>isString");
-		}
-		
         string appID = ping_req["appIDList"][i].asString();
-		LogTrace("============>appID: %s", appID.c_str());
 		
 		/* 获取app version */
 		//LogDebug("GetVersion for appID: %s", appID.c_str());
