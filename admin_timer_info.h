@@ -31,6 +31,7 @@ namespace statsvr
                       : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
         {}
         int  do_next_step(string& req_data);
+		int  on_admin_send_reply(const Json::Value &rsp);
         int  on_admin_ping();
 		int  on_admin_getConf();
 		int  on_admin_config();

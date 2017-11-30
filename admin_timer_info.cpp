@@ -121,8 +121,21 @@ int AdminConfigTimer::do_next_step(string& req_data)
 	return 0;
 }
 
+int AdminConfigTimer::on_admin_send_reply(const Json::Value &rsp)
+{
+    string rsp_str = rsp.toStyledString();
+    if (m_proc->EnququeHttp2CCD (m_ret_flow, (char *)rsp_str.c_str(), rsp_str.size()))
+    {
+    	LogError("enqueue_2_ccd failed.");
+		m_errno = ERROR_SYSTEM_WRONG;
+        m_errmsg = "Error send to client";
+        on_error();
+        return -1;
+    }
+	return 0;
+}
 
-int  AdminConfigTimer::on_admin_ping()
+int AdminConfigTimer::on_admin_ping()
 {
     Json::Reader reader;
     Json::Value ping_req;
@@ -213,16 +226,7 @@ int  AdminConfigTimer::on_admin_ping()
 	DEBUG_P(loglevel, "PingList:%s, delnum:[%d]\n", appIDString.c_str(), delnum);
 
 	LogDebug("Send ping resp");
-    string ping_rsp_str = ping_rsp.toStyledString();
-    if (m_proc->EnququeHttp2CCD (m_ret_flow, (char *)ping_rsp_str.c_str(), ping_rsp_str.size()))
-    {
-    	LogError("enqueue_2_ccd failed.");
-		m_errno = ERROR_SYSTEM_WRONG;
-        m_errmsg = "Error send to client";
-        on_error();
-        return -1;
-    }
-    return 0;
+	return on_admin_send_reply(ping_rsp);
 }
 
 int AdminConfigTimer::on_admin_getConf()
@@ -283,18 +287,8 @@ int AdminConfigTimer::on_admin_getConf()
     get_cfg_rsp["msg"]  = "OK";
 	get_cfg_rsp["seq"]  = m_seq;
 	get_cfg_rsp["data"] = data;
-	
-	string get_cfg_rsp_str = get_cfg_rsp.toStyledString();
-    if (m_proc->EnququeHttp2CCD (m_ret_flow, (char *)get_cfg_rsp_str.c_str(), get_cfg_rsp_str.size()) != 0)
-    {
-    	LogError("enqueue_2_dcc failed.");
-		m_errno = ERROR_SYSTEM_WRONG;
-        m_errmsg = "Error send to client";
-        on_error();
-       	return -1;
-    }
-	
-    return 0;
+
+	return on_admin_send_reply(get_cfg_rsp);
 }
 
 int AdminConfigTimer::on_admin_config()
@@ -319,16 +313,7 @@ int AdminConfigTimer::on_admin_config()
     push_cfg_rsp["seq"]  = m_seq;
 
 	LogDebug("Send config resp");
-    string push_cfg_rsp_str = push_cfg_rsp.toStyledString();
-    if (m_proc->EnququeHttp2CCD (m_ret_flow, (char *)push_cfg_rsp_str.c_str(), push_cfg_rsp_str.size()) != 0)
-    {
-    	DEBUG_P (LOG_ERROR, "enqueue_2_ccd failed. \n");
-		m_errno  = ERROR_SYSTEM_WRONG;
-        m_errmsg = "Error send to client";
-        on_error();
-       	return -1;
-    }
-    return 0;
+	return on_admin_send_reply(push_cfg_rsp);
 }
 
 int AdminConfigTimer::on_admin_getServiceStatus()
@@ -375,18 +360,8 @@ int AdminConfigTimer::on_admin_getServiceStatus()
 	admin_rsp["msg"]  = "OK";
 	admin_rsp["seq"]  = m_seq;
 	admin_rsp["data"] = data;
-	
-	string admin_rsp_str = admin_rsp.toStyledString();
-	if (m_proc->EnququeHttp2CCD (m_ret_flow, (char *)admin_rsp_str.c_str(), admin_rsp_str.size()) != 0)
-	{
-		LogError("enqueue_2_dcc failed.");
-		m_errno = ERROR_SYSTEM_WRONG;
-		m_errmsg = "Error send to client";
-		on_error();
-		return -1;
-	}
-	
-	return 0;
+
+	return on_admin_send_reply(admin_rsp);
 }
 
 int AdminConfigTimer::get_app_today_status(string appID, Json::Value &appList)
@@ -476,18 +451,8 @@ int AdminConfigTimer::on_admin_get_today_status()
 	admin_rsp["msg"]  = "OK";
 	admin_rsp["seq"]  = m_seq;
 	admin_rsp["data"] = data;
-	
-	string admin_rsp_str = admin_rsp.toStyledString();
-	if (m_proc->EnququeHttp2CCD (m_ret_flow, (char *)admin_rsp_str.c_str(), admin_rsp_str.size()) != 0)
-	{
-		LogError("enqueue_2_dcc failed.");
-		m_errno = ERROR_SYSTEM_WRONG;
-		m_errmsg = "Error send to client";
-		on_error();
-		return -1;
-	}
-	
-    return 0;
+
+	return on_admin_send_reply(admin_rsp);
 }
 
 
