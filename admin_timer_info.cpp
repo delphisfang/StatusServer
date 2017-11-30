@@ -121,8 +121,15 @@ int AdminConfigTimer::do_next_step(string& req_data)
 	return 0;
 }
 
-int AdminConfigTimer::on_admin_send_reply(const Json::Value &rsp)
+int AdminConfigTimer::on_admin_send_reply(const Json::Value &data)
 {
+	Json::Value rsp;
+	rsp["cmd"]  = m_cmd + "-reply";
+	rsp["code"] = 0;
+	rsp["msg"]  = "OK";
+	rsp["seq"]  = m_seq;
+	rsp["data"] = data;
+
     string rsp_str = rsp.toStyledString();
     if (m_proc->EnququeHttp2CCD (m_ret_flow, (char *)rsp_str.c_str(), rsp_str.size()))
     {
@@ -139,14 +146,8 @@ int AdminConfigTimer::on_admin_ping()
 {
     Json::Reader reader;
     Json::Value ping_req;
-    Json::Value ping_rsp;
 	map<string, bool> map_now;
 	
-    ping_rsp["cmd"]  = m_cmd + "-reply";
-    ping_rsp["code"] = 0;
-    ping_rsp["msg"]  = "OK";
-    ping_rsp["seq"]  = m_seq;
-
     if (!reader.parse(m_data, ping_req))
     {
     	LogError("Parse ping request error. buf: [%s]\n", m_data.c_str());
@@ -211,7 +212,7 @@ int AdminConfigTimer::on_admin_ping()
 		
 		map_now[appID] = true;
     }
-    ping_rsp["data"] = appIDlistVer;
+	
 	//LogDebug("Parse data finish");
 	
 	int delnum = CAppConfig::Instance()->CheckDel(map_now);
@@ -226,7 +227,7 @@ int AdminConfigTimer::on_admin_ping()
 	DEBUG_P(loglevel, "PingList:%s, delnum:[%d]\n", appIDString.c_str(), delnum);
 
 	LogDebug("Send ping resp");
-	return on_admin_send_reply(ping_rsp);
+	return on_admin_send_reply(appIDlistVer);
 }
 
 int AdminConfigTimer::on_admin_getConf()
@@ -281,14 +282,7 @@ int AdminConfigTimer::on_admin_getConf()
 	}
 	data["appList"] = configList;
 
-	Json::Value get_cfg_rsp;
-	get_cfg_rsp["cmd"]  = m_cmd + "-reply";
-    get_cfg_rsp["code"] = 0;
-    get_cfg_rsp["msg"]  = "OK";
-	get_cfg_rsp["seq"]  = m_seq;
-	get_cfg_rsp["data"] = data;
-
-	return on_admin_send_reply(get_cfg_rsp);
+	return on_admin_send_reply(data);
 }
 
 int AdminConfigTimer::on_admin_config()
@@ -354,14 +348,7 @@ int AdminConfigTimer::on_admin_getServiceStatus()
 	data["services"] = servInfoList;
 	data["identity"] = m_identity;
 
-	Json::Value admin_rsp;
-	admin_rsp["cmd"]  = m_cmd + "-reply";
-	admin_rsp["code"] = 0;
-	admin_rsp["msg"]  = "OK";
-	admin_rsp["seq"]  = m_seq;
-	admin_rsp["data"] = data;
-
-	return on_admin_send_reply(admin_rsp);
+	return on_admin_send_reply(data);
 }
 
 int AdminConfigTimer::get_app_today_status(string appID, Json::Value &appList)
@@ -445,14 +432,7 @@ int AdminConfigTimer::on_admin_get_today_status()
 	data["identity"] = m_identity;
 	data["appList"]  = appList;
 	
-	Json::Value admin_rsp;
-	admin_rsp["cmd"]  = m_cmd + "-reply";
-	admin_rsp["code"] = 0;
-	admin_rsp["msg"]  = "OK";
-	admin_rsp["seq"]  = m_seq;
-	admin_rsp["data"] = data;
-
-	return on_admin_send_reply(admin_rsp);
+	return on_admin_send_reply(data);
 }
 
 
