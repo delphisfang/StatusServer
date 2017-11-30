@@ -68,6 +68,7 @@ namespace statsvr
         int on_resp_cp();
 		int on_already_online();
 		int on_already_offline();
+		int on_not_online();
 		int on_service_changestatus();
     };
 

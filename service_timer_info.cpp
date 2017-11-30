@@ -195,6 +195,13 @@ int ServiceChangeStatusTimer::on_resp_cp()
 	return on_send_reply(data);
 }
 
+int ServiceChangeStatusTimer::on_not_online()
+{
+	Json::Value data;
+	set_service_data(data);
+	return on_send_error_reply(ERROR_SERVICE_NOT_ONLINE, "Service Not Online", data);
+}
+
 /*
 m_serviceID, m_status
 */
@@ -204,7 +211,11 @@ int ServiceChangeStatusTimer::on_service_changestatus()
 
 	LogDebug("==>IN");
 
-	GET_SERV(CAppConfig::Instance()->GetService(m_serviceID, serv));
+	if (CAppConfig::Instance()->GetService(m_serviceID, serv))
+	{
+		on_not_online();
+		return SS_ERROR;
+	}
 
 	if (m_status != serv.status)
 	{
