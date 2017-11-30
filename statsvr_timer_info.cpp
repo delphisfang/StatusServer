@@ -83,14 +83,6 @@ int CTimerInfo::init(string req_data, int datalen)
 		m_appID = ui2str(js_req_root["appID"].asUInt());
 	}
 	
-	if (m_cmd != "pingConf" && m_cmd != "updateConf" && m_cmd != "getConf"
-		&& m_cmd != "getTodayStatus"
-		&& CAppConfig::Instance()->checkAppIDExist(m_appID))
-	{
-		LogError("Unknown appID[%s]!", m_appID.c_str());
-		return -1;
-	}	
-	
 	if (js_req_root["data"].isNull() || !js_req_root["data"].isObject())
 	{
 		m_search_no = m_appID + "_" + i2str(m_msg_seq);
@@ -105,6 +97,23 @@ int CTimerInfo::init(string req_data, int datalen)
 	}
 	*/
 
+	if (!js_req_data["appID"].isNull() && js_req_data["appID"].isString())
+	{
+		m_appID = js_req_data["appID"].asString();
+	}
+	else if (!js_req_data["appID"].isNull() && js_req_data["appID"].isUInt())
+	{
+		m_appID = ui2str(js_req_data["appID"].asUInt());
+	}
+
+	if (m_cmd != "pingConf" && m_cmd != "updateConf" && m_cmd != "getConf"
+		&& m_cmd != "getTodayStatus"
+		&& CAppConfig::Instance()->checkAppIDExist(m_appID))
+	{
+		LogError("Unknown appID[%s]!", m_appID.c_str());
+		return -1;
+	}	
+	
 	m_identity = get_value_str(js_req_data, "identity");
 
 	m_cpIP = get_value_str(js_req_data, "chatProxyIp");
@@ -147,6 +156,14 @@ int CTimerInfo::init(string req_data, int datalen)
 	else if (!js_req_data["serviceID"].isNull() && js_req_data["serviceID"].isArray())
 	{
 		Json::Value serviceID_list = js_req_data["serviceID"];
+		for(int i = 0; i < serviceID_list.size(); i++)
+		{
+			m_serviceID_list.insert(m_appID + "_" + serviceID_list[i].asString());
+		}
+	}
+	else if (!js_req_data["services"].isNull() && js_req_data["services"].isArray())
+	{
+		Json::Value serviceID_list = js_req_data["services"];
 		for(int i = 0; i < serviceID_list.size(); i++)
 		{
 			m_serviceID_list.insert(m_appID + "_" + serviceID_list[i].asString());

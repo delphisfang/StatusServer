@@ -65,6 +65,26 @@ int AdminConfigTimer::do_next_step(string& req_data)
 				m_cur_step = STATE_END;
 				return 1;
             }
+            else if (m_cmd == "getServiceStatus")
+			{
+				if (m_proc->m_workMode == statsvr::WORKMODE_READY)
+				{
+					m_errno  = ERROR_NOT_READY;
+                	m_errmsg = "System not ready";
+                	on_error();
+					m_cur_step = STATE_END;
+					return -1;
+				}
+				
+				if (on_admin_getServiceStatus())
+				{
+					m_cur_step = STATE_END;
+					return -1;
+				}
+				on_stat();
+				m_cur_step = STATE_END;
+				return 1;
+			}
             else if (m_cmd == "getTodayStatus")
 			{
 				if (m_proc->m_workMode == statsvr::WORKMODE_READY)
@@ -311,8 +331,65 @@ int AdminConfigTimer::on_admin_config()
     return 0;
 }
 
-/* 获取某个appID下的 (会话用户数，排队用户数，在线客服数) */
-int AdminConfigTimer::on_admin_get_today_status()
+int AdminConfigTimer::on_admin_getServiceStatus()
+{
+	Json::Value servInfoList;
+	servInfoList.resize(0);
+	Json::Value servInfo;
+	int i = 0;
+	
+	ServiceInfo serv;
+	string app_serviceID;
+	
+    int maxConvNum = CAppConfig::Instance()->getMaxConvNum(m_appID);
+	for (set<string>::iterator it = m_serviceID_list.begin(); it != m_serviceID_list.end(); it++)
+	{
+		app_serviceID = (*it);
+		servInfo["serviceID"] = delappID(app_serviceID);
+
+		if (CAppConfig::Instance()->GetService(app_serviceID, serv))
+		{
+			servInfo["status"] = "offline";
+		}
+		else
+		{
+			servInfo["status"]    = serv.status;
+			//当前服务人数>=最大会话人数时，返回busy
+	        if (serv.status == "online" && serv.user_count() >= maxConvNum)
+	        {
+	            servInfo["status"] = "busy";
+	        }
+		}
+		
+		servInfoList[i] = servInfo;
+		++i;
+	}
+
+	Json::Value data;
+	data["services"] = servInfoList;
+	data["identity"] = m_identity;
+
+	Json::Value admin_rsp;
+	admin_rsp["cmd"]  = m_cmd + "-reply";
+	admin_rsp["code"] = 0;
+	admin_rsp["msg"]  = "OK";
+	admin_rsp["seq"]  = m_seq;
+	admin_rsp["data"] = data;
+	
+	string admin_rsp_str = admin_rsp.toStyledString();
+	if (m_proc->EnququeHttp2CCD (m_ret_flow, (char *)admin_rsp_str.c_str(), admin_rsp_str.size()) != 0)
+	{
+		LogError("enqueue_2_dcc failed.");
+		m_errno = ERROR_SYSTEM_WRONG;
+		m_errmsg = "Error send to client";
+		on_error();
+		return -1;
+	}
+	
+	return 0;
+}
+
+int AdminConfigTimer::get_app_today_status(string appID, Json::Value &appList)
 {
 	unsigned userNumber = 0;
 	unsigned queueNumber = 0;
@@ -321,7 +398,7 @@ int AdminConfigTimer::on_admin_get_today_status()
 	TagUserQueue* pTagQueues = NULL;
 
 	//获取某个appID下当前正在会话的用户人数
-	if (CAppConfig::Instance()->GetSessionQueue(m_appID, pSessQueue))
+	if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue))
 	{
 		userNumber = 0;
 	}
@@ -331,7 +408,7 @@ int AdminConfigTimer::on_admin_get_today_status()
 	}
 
 	/* 获取当前正在排队的用户人数 */
-	if (CAppConfig::Instance()->GetTagQueue(m_appID, pTagQueues))
+	if (CAppConfig::Instance()->GetTagQueue(appID, pTagQueues))
 	{
 		queueNumber = 0;
 	}
@@ -341,33 +418,22 @@ int AdminConfigTimer::on_admin_get_today_status()
 	}
 
 	/* 在线客服人数 */
-	onlineServiceNumber = CAppConfig::Instance()->GetServiceNumber(m_appID);
+	onlineServiceNumber = CAppConfig::Instance()->GetServiceNumber(appID);
 
-	Json::Value admin_data;
-	Json::Value admin_rsp;
+	Json::Value app_data;
+	app_data["appID"]         = atoi(appID.c_str());
+	app_data["userNumber"]    = userNumber;
+	app_data["queueNumber"]   = queueNumber;
+	app_data["serviceNumber"] = onlineServiceNumber;
 
-	admin_data["appID"]         = atoi(m_appID.c_str());
-	admin_data["userNumber"]    = userNumber;
-	admin_data["queueNumber"]   = queueNumber;
-	admin_data["serviceNumber"] = onlineServiceNumber;
+	appList.append(app_data);
 
-    admin_rsp["cmd"]  = m_cmd + "-reply";
-    admin_rsp["code"] = 0;
-    admin_rsp["msg"]  = "OK";
-    admin_rsp["seq"]  = m_seq;
-	admin_rsp["data"] = admin_data;
+	return 0;
+}
 
-	string admin_rsp_str = admin_rsp.toStyledString();
-	if (m_proc->EnququeHttp2CCD (m_ret_flow, (char *)admin_rsp_str.c_str(), admin_rsp_str.size()) != 0)
-    {
-    	LogError("enqueue_2_dcc failed.");
-		m_errno = ERROR_SYSTEM_WRONG;
-        m_errmsg = "Error send to client";
-        on_error();
-       	return -1;
-    }
-
-	#if 0
+/* 获取某个appID下的 (会话用户数，排队用户数，在线客服数) */
+int AdminConfigTimer::on_admin_get_today_status()
+{
 	Json::Reader reader;
 	Json::Value req;
     if (!reader.parse(m_data, req))
@@ -383,17 +449,46 @@ int AdminConfigTimer::on_admin_get_today_status()
         return -1;
 	}
 
+	//参数检查
+	unsigned size = req["appIDList"].size();
+	if (size > MAXSIZE)
+	{
+		LogError("size:%d > MAXSIZE:%d\n", size, MAXSIZE);
+		on_error_parse_packet("Error appIDList too long");
+		return -1;
+	}
+
+	Json::Value appList;
+	appList.resize(0);
 	for (unsigned i = 0; i < size; ++i)
     {
         string appID = req["appIDList"][i].asString();
-	}	
+		get_app_today_status(appID, appList);
+	}
 
-	#endif
+	Json::Value data;
+	data["identity"] = m_identity;
+	data["appList"]  = appList;
+	
+	Json::Value admin_rsp;
+	admin_rsp["cmd"]  = m_cmd + "-reply";
+	admin_rsp["code"] = 0;
+	admin_rsp["msg"]  = "OK";
+	admin_rsp["seq"]  = m_seq;
+	admin_rsp["data"] = data;
+	
+	string admin_rsp_str = admin_rsp.toStyledString();
+	if (m_proc->EnququeHttp2CCD (m_ret_flow, (char *)admin_rsp_str.c_str(), admin_rsp_str.size()) != 0)
+	{
+		LogError("enqueue_2_dcc failed.");
+		m_errno = ERROR_SYSTEM_WRONG;
+		m_errmsg = "Error send to client";
+		on_error();
+		return -1;
+	}
 	
     return 0;
 }
-
-
 
 
 int AdminConfigTimer::get_id_list(string value, string idListName, vector<string> &idList)
