@@ -202,7 +202,7 @@ namespace statsvr
 				rsp["data"] 	= data;
 				string strRsp   = rsp.toStyledString();
 
-				if ((m_cmd != "getUserInfo" && m_cmd != "getServiceInfo")
+				if ((m_cmd != "getUserInfo" && m_cmd != "getServiceInfo" && m_cmd != "refreshSession")
 				/*	|| 0 == access("/home/fht/sskv_10302/debug_switch", F_OK)*/)
 				{
 					LogTrace("send response: %s", strRsp.c_str());
@@ -537,6 +537,12 @@ namespace statsvr
 				/* 添加到ServiceHeap */
 				string appID = getappID(app_serviceID);
 				SET_FAIL(CAppConfig::Instance()->AddService2Tags(appID, serv), "service heap");
+
+				/* 更新OnlineServiceNum */
+				if ("online" == serv.status)
+				{
+					DO_FAIL(AddTagOnlineServNum(appID, serv));
+				}
 				return SS_OK;
 			}
 			
@@ -639,7 +645,25 @@ namespace statsvr
 				DO_FAIL(KV_set_session(app_userID, *sess, gap_warn, gap_expire));
 				return SS_OK;
 			}
-			
+
+			int AddTagOnlineServNum(string appID, const ServiceInfo &serv)
+			{
+				for (set<string>::iterator it = serv.tags.begin(); it != serv.tags.end(); it++)
+				{
+					DO_FAIL(CAppConfig::Instance()->AddTagOnlineServiceNumber(appID, *it));
+				}
+				return 0;
+			}
+
+			int DelTagOnlineServNum(string appID, const ServiceInfo &serv)
+			{
+				for (set<string>::iterator it = serv.tags.begin(); it != serv.tags.end(); it++)
+				{
+					DO_FAIL(CAppConfig::Instance()->DelTagOnlineServiceNumber(appID, *it));
+				}
+				return 0;
+			}
+
 		public:
 			int32_t         m_errno;
             string          m_errmsg;

@@ -62,7 +62,7 @@ int GetServiceInfoTimer::on_get_serviceinfo()
 		//calculate service's queueNumber
 		for (set<string>::iterator it = serv.tags.begin(); it != serv.tags.end(); it++)
 		{
-			LogDebug("==>it: %s", (*it).c_str());
+			LogDebug("==>service tag: %s", (*it).c_str());
 			
 			DO_FAIL(get_normal_queue(m_appID, *it, &uq));
 			queueNum += uq->size();
@@ -154,8 +154,9 @@ int ServiceLoginTimer::on_service_login()
 	else //service first online, create and add new service
 	{
 		serv = ServiceInfo(m_data);
-		LogDebug("Add new service: %s", serv.toString().c_str());
+		LogDebug("Add new service: %s", m_serviceID.c_str());
 		DO_FAIL(AddService(m_appID, m_serviceID, serv));
+		DO_FAIL(AddTagOnlineServNum(m_appID, serv));
 		/*unsigned servNum = CAppConfig::Instance()->GetServiceNumber(m_appID);
 		LogDebug("total service num: %u", servNum);*/
 	}
@@ -222,6 +223,14 @@ int ServiceChangeStatusTimer::on_service_changestatus()
 		LogTrace("Update service[%s] status to %s", m_serviceID.c_str(), m_status.c_str());
     	serv.status = m_status;
 		DO_FAIL(UpdateService(m_serviceID, serv));
+		if ("online" == serv.status)
+		{
+			DO_FAIL(AddTagOnlineServNum(m_appID, serv));
+		}
+		else
+		{
+			DO_FAIL(DelTagOnlineServNum(m_appID, serv));
+		}
 		return on_resp_cp();
 	}
 	else

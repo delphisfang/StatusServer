@@ -69,7 +69,7 @@ int CTimerInfo::init(string req_data, int datalen)
 	if ((m_cmd != "getUserInfo" && m_cmd != "getServiceInfo" && m_cmd != "updateConf")
 	/*	|| 0 == access("/home/fht/sskv_10302/debug_switch", F_OK)*/)
 	{
-		LogTrace("req_data: %s", req_data.c_str());
+		LogDebug("req_data: %s", req_data.c_str());
 	}
 	
 	m_seq = get_value_uint(js_req_root, "innerSeq");
@@ -231,7 +231,7 @@ int CTimerInfo::init(string req_data, int datalen)
 	if ((m_cmd != "getUserInfo" && m_cmd != "getServiceInfo")
 	/*	|| 0 == access("/home/fht/sskv_10302/debug_switch", F_OK)*/)
 	{
-		LogTrace("Init request data OK! [id:%s,cmd:%s,userID:%s,servID:%s,msg_seq:%u]", 
+		LogDebug("Init request data OK! [id:%s,cmd:%s,userID:%s,servID:%s,msg_seq:%u]", 
 					m_identity.c_str(), m_cmd.c_str(), m_userID.c_str(), m_serviceID.c_str(), m_msg_seq);
 	}
 

@@ -42,19 +42,21 @@ int SessionOutTimer::on_send_timeout_msg()
 int SessionOutTimer::on_session_timeout()
 {
     SessionQueue* pSessQueue = NULL;
+	SessionTimer sessTimer;
 	Session sess;
 	
 	//choose first session	
     if (SS_OK != CAppConfig::Instance()->GetSessionQueue(m_appID, pSessQueue) 
-		|| SS_OK != pSessQueue->get_first(sess))
+		|| SS_OK != pSessQueue->get_first_timer(sessTimer))
     {
 		//no session timeout yet
         return SS_OK;
     }
-
+	sess = sessTimer.session;
+	
 	LogDebug("==>Choose timeout session: %s", sess.toString().c_str());
 
-	if ("" == sess.serviceID)
+	if ("" == sess.serviceID || sessTimer.expire_time >= MAX_INT)
 	{
 		LogTrace("no need to send timeout");
 		return SS_OK;
@@ -81,29 +83,31 @@ int SessionOutTimer::on_session_timeout()
 
 	LogDebug("==>IN3");
 
-	//更新user，设置熟客ID
+	//1.更新session
+#if 0
+	pSessQueue->pop();
+#else
+	sess.sessionID = gen_sessionID(m_userID);
+	sess.serviceID = "";
+	sess.atime = sess.btime = GetCurTimeStamp();
+	SET_SESS(pSessQueue->set(m_userID, &sess, MAX_INT, MAX_INT));
+	DO_FAIL(KV_set_session(m_userID, sess, MAX_INT, MAX_INT));
+#endif
+
+	//2.更新user，设置熟客ID
 	UserInfo user;
 	GET_USER(CAppConfig::Instance()->GetUser(m_userID, user));
 	user.status = "inYiBot";
 	user.lastServiceID = sess.serviceID;
+	user.sessionID = sess.sessionID;//更新user.sessionID
 	DO_FAIL(UpdateUser(m_userID, user));
 	
-	//更新service
+	//3.更新service
 	//delete user from service.userList
 	SET_SERV(m_serviceInfo.delete_user(m_raw_userID));
 	DO_FAIL(UpdateService(m_serviceID, m_serviceInfo));
 	
 	LogDebug("==>IN4");
-		
-	//删除session or 更新session.serviceID
-	#if 0
-	pSessQueue->pop();
-	#else
-	sess.serviceID = "";
-	sess.sessionID = m_userID + "_" + l2str(GetCurTimeStamp());
-	SET_SESS(pSessQueue->set(m_userID, &sess, MAX_INT, MAX_INT));
-	DO_FAIL(KV_set_session(m_userID, sess, MAX_INT, MAX_INT));
-	#endif
 	
 	return on_send_timeout_msg();
 }
@@ -354,9 +358,12 @@ int UserServiceTimer::on_user_tag()
     for (int i = j; ; )
     {
         ServiceInfo serv;
+		
 		//如果坐席的服务人数已满，就分配下一个坐席
         if (CAppConfig::Instance()->GetService(*it, serv) || serv.user_count() >= m_serverNum)
         {
+			LogWarn("service[%s] user_count[%d], maxNum[%d]", serv.serviceID.c_str(), serv.user_count(), m_serverNum);
+
             i++;
             if (i == servHeap.size())
             {
@@ -406,6 +413,7 @@ int UserServiceTimer::on_user_lastService()
 
     if (lastServ.user_count() > m_serverNum)
     {
+		LogWarn("service[%s] user_count[%d], maxNum[%d]", lastServ.serviceID.c_str(), lastServ.user_count(), m_serverNum);
         LogError("[%s]: Last service:%s is busy", m_appID.c_str(), m_userInfo.lastServiceID.c_str());
         return SS_ERROR;
     }
@@ -457,6 +465,7 @@ int UserServiceTimer::on_user_common()
 
 			if (CAppConfig::Instance()->GetService(*it, serv) || serv.status == "offline" || serv.user_count() >= m_serverNum)
             {
+				LogWarn("service[%s] user_count[%d], maxNum[%d]", serv.serviceID.c_str(), serv.user_count(), m_serverNum);
 				LogWarn("Service[%s] is offline or busy, find next service!", serv.serviceID.c_str());
                 continue;
             }
@@ -531,11 +540,7 @@ int UserServiceTimer::on_dequeue_first_user()
 	//获取user的session
 	GET_SESS(get_user_session(m_appID, m_userID, &m_session));
 
-    if (CAppConfig::Instance()->GetValue(m_appID, "max_conv_num", m_serverNum) 
-		|| 0 == m_serverNum)
-    {
-        m_serverNum = 5;
-    }
+	m_serverNum = CAppConfig::Instance()->getMaxConvNum(m_appID);
 
 	//弹出排队队列的队头，即第一个用户
     //uq->pop();
@@ -695,7 +700,15 @@ int RefreshSessionTimer::on_refresh_session()
 
 	//update session.activeTime
 	sess.atime = GetCurTimeStamp();
-	DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT));
+	if ("" == sess.serviceID)
+	{
+		LogWarn("===============>session.serviceID is empty! do not refresh!");
+		DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess, MAX_INT, MAX_INT));
+	}
+	else
+	{
+		DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT));
+	}
 
 	Json::Value data = Json::objectValue;
 	DO_FAIL(on_send_reply(data));

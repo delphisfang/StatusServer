@@ -1011,7 +1011,8 @@ namespace statsvr
 			st.warn_time   = (sess->atime/1000) + gap_warn;
 			st.expire_time = (sess->atime/1000) + gap_expire;
 
-			LogDebug("atime: %ld, warn_time: %ld, expire_time: %ld", sess->atime, st.warn_time, st.expire_time);
+			LogDebug("Success to insert session: %s", sess->toString().c_str());
+			LogDebug("Session atime: %ld, warn_time: %ld, expire_time: %ld", sess->atime, st.warn_time, st.expire_time);
 			for (it = _sess_list.begin(); it != _sess_list.end(); it++)
 			{
 				if (st.expire_time < (*it).expire_time)
@@ -1033,6 +1034,24 @@ namespace statsvr
 			}
 			
 			LogError("Failed to pop from SessionQueue, its size <= 0!");
+			return -1;
+		}
+
+		int get_first_timer(SessionTimer& sessTimer)
+		{
+			list<SessionTimer>::iterator it;
+			long long nowTime = (long long)time(NULL);
+			
+			for (it = _sess_list.begin(); it != _sess_list.end(); it++)
+			{
+				if (nowTime >= it->expire_time)
+				{
+					sessTimer = (*it);
+					return 0;
+				}
+			}
+			
+			LogError("Failed to get an expired session from SessionQueue, its size <= 0!");
 			return -1;
 		}
 
@@ -1079,6 +1098,7 @@ namespace statsvr
 				if (it->userID == userID)
 				{
 					it = _sess_list.erase(it);
+					LogDebug("Success to delete session of user[%s]", userID.c_str());
 					return 0;
 				}
 			}
@@ -1119,7 +1139,7 @@ namespace statsvr
 			{
 				if (nowTime >= it->expire_time)
 				{
-					LogDebug("[nowTime: %ld] Find session timeout, session:%s", nowTime, it->toString().c_str());
+					//LogDebug("[nowTime: %ld] Find session timeout, session:%s", nowTime, it->toString().c_str());
 					expireNum++;
 				}
 			}

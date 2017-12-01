@@ -31,7 +31,7 @@ input: m_appID
 int EchoTimer::on_echo()
 {
 	//遍历用户列表、坐席列表
-	Json::Value userListJson, servListJson, sessQueueJson, normalQueueJson, highpriQueueJson;
+	Json::Value userListJson, servListJson, sessQueueJson, normalQueueJson, highpriQueueJson, onlineServNumJson;
 	Json::Value data;
 
 	LogTrace("Get appID[%s] data structures...", m_appID.c_str());
@@ -41,13 +41,14 @@ int EchoTimer::on_echo()
 	CAppConfig::Instance()->getSessionQueueJson(m_appID, sessQueueJson);
 	CAppConfig::Instance()->getTagNormalQueueJson(m_appID, normalQueueJson);
 	CAppConfig::Instance()->getTagHighPriQueueJson(m_appID, highpriQueueJson);
+	CAppConfig::Instance()->getOnlineServiceNumJson(m_appID, onlineServNumJson);
 
 	data["userList"] = userListJson;
 	data["servList"] = servListJson;
 	data["sessionList"] = sessQueueJson;
 	data["normalQueue"] = normalQueueJson;
 	data["highpriQueue"] = highpriQueueJson;
-	
+	data["onlineServNum"] = onlineServNumJson;
 	//遍历排队队列、高优先级队列
 	//遍历会话队列
 	
@@ -106,12 +107,12 @@ int GetUserInfoTimer::on_get_userinfo()
 	LogDebug("userID count: %u", m_userID_list.size());
 	for (set<string>::iterator it = m_userID_list.begin(); it != m_userID_list.end(); it++)
 	{
-		app_userID = (*it);
+		app_userID   = (*it);
+		m_raw_userID = delappID(app_userID);
 		LogDebug("try to get userInfo: %s", app_userID.c_str());
 
 		if (CAppConfig::Instance()->GetUser(app_userID, user))
 		{
-			m_raw_userID = delappID(app_userID);
 			on_not_online();
 			return SS_ERROR;
 		}
@@ -121,7 +122,7 @@ int GetUserInfoTimer::on_get_userinfo()
 			  && -1 != (queueRank = pTagQueues->find_user(app_userID))
 		   )
 		{
-			LogTrace("user[%s] is onHighPriQueue", app_userID.c_str());
+			LogTrace("user[%s] is on HighPriQueue", app_userID.c_str());
 			get_user_json(m_appID, app_userID, user, userJson);
 			userJson["status"] = "onQueue";
 			userJson["queueRank"] = queueRank;
@@ -130,7 +131,7 @@ int GetUserInfoTimer::on_get_userinfo()
 			  		&& -1 != (queueRank = pTagQueues->find_user(app_userID))
 			    )
 		{
-			LogTrace("user[%s] is onQueue", app_userID.c_str());
+			LogTrace("user[%s] is on NormalQueue", app_userID.c_str());
 			get_user_json(m_appID, app_userID, user, userJson);
 			userJson["status"] = "onQueue";
 			userJson["queueRank"] = queueRank;
@@ -226,7 +227,7 @@ int UserOnlineTimer::on_user_online()
 	else //user first online, create and add a new user
 	{
 		user = UserInfo(m_data);
-		LogDebug("Add new user: %s", user.toString().c_str());
+		LogDebug("Add new user: %s", m_userID.c_str());
 		user.status = "inYiBot";
 		user.sessionID = sess.sessionID = gen_sessionID(m_userID);
 		DO_FAIL(AddUser(m_userID, user));
@@ -355,7 +356,7 @@ int ConnectServiceTimer::on_queue()
 	LogDebug("==>IN");
 
 	max_conv_num  = CAppConfig::Instance()->getMaxConvNum(m_appID);
-	serviceNum    = CAppConfig::Instance()->GetTagServiceNumber(m_appID, m_raw_tag);
+	serviceNum    = CAppConfig::Instance()->GetTagOnlineServiceNumber(m_appID, m_raw_tag);
 	max_queue_num = serviceNum * max_conv_num * m_proc->m_cfg._queue_rate;
     LogTrace("[%s] serviceNum:%u, max_conv_num:%d, queue rate:%d, max_queue_num: %d\n", 
     		m_appID.c_str(), serviceNum, max_conv_num, m_proc->m_cfg._queue_rate, max_queue_num);

@@ -234,13 +234,13 @@ int CAppConfig::CheckDel(const map<string, bool>& map_now)
 	string appListString;
 	
 	GetNowappIDList(appListString);
-	LogDebug("appListString: %s", appListString.c_str());
+	//LogDebug("appListString: %s", appListString.c_str());
 	
 	reader.parse(appListString, appList);
 	for (int i = 0; i < appList["appIDList"].size(); i++)
 	{
 		string appID = appList["appIDList"][i].asString();
-		LogDebug("appID: %s", appID.c_str());
+		//LogDebug("appID: %s", appID.c_str());
 		if (map_now.find(appID) == map_now.end())
 		{
 			dellist.push_back(appID);
@@ -387,7 +387,7 @@ int CAppConfig::AddUser(const string& key, const UserInfo& ui)
 {
 	pair<map<string, UserInfo>::iterator, bool> ret;
 
-	LogTrace("Add User[%s]:%s\n", key.c_str(), ui.toString().c_str());
+	LogTrace("Add User[%s]:%s", key.c_str(), ui.toString().c_str());
 
 	ret = _userlist.insert(pair<string, UserInfo>(key, ui));
 	if (ret.second)
@@ -402,7 +402,7 @@ int CAppConfig::AddUser(const string& key, const UserInfo& ui)
 
 int CAppConfig::UpdateUser(const string& key, const UserInfo& ui)
 {
-	LogTrace("Update User[%s]:%s\n", key.c_str(), ui.toString().c_str());
+	LogTrace("Update User[%s]:%s", key.c_str(), ui.toString().c_str());
 
 	_userlist[key] = ui;
 	return 0;
@@ -411,7 +411,7 @@ int CAppConfig::UpdateUser(const string& key, const UserInfo& ui)
 int CAppConfig::UpdateUser(const string& key, const string& value)
 {
 	UserInfo ui(value);
-	LogTrace("Update User[%s]:%s\n", key.c_str(), ui.toString().c_str());
+	LogTrace("Update User[%s]:%s", key.c_str(), ui.toString().c_str());
 
 	_userlist[key] = ui;
 	return 0;
@@ -421,7 +421,7 @@ int CAppConfig::DelUser(const string& key)
 {
 	map<string, UserInfo>::iterator it;
 
-	LogTrace("Del User[%s]\n", key.c_str());
+	LogTrace("Delete User[%s]", key.c_str());
 	
 	it = _userlist.find(key);
 	if (it != _userlist.end())
@@ -457,7 +457,7 @@ int CAppConfig::AddService(const string &key, ServiceInfo &serv)
 {
 	pair<map<string, ServiceInfo>::iterator, bool> ret;
 
-	LogTrace("Add Service[%s]:%s\n", key.c_str(), serv.toString().c_str());
+	LogTrace("Add Service[%s]:%s", key.c_str(), serv.toString().c_str());
 
 	ret = _servicelist.insert(pair<string, ServiceInfo>(key,serv));
 	if (ret.second)
@@ -485,7 +485,7 @@ int CAppConfig::GetService(const string& key, ServiceInfo &serv)
 
 int CAppConfig::UpdateService(const string& key, const ServiceInfo& serv)
 {
-	LogTrace("Update Service[%s]:%s\n", key.c_str(), serv.toString().c_str());
+	LogTrace("Update Service[%s]:%s", key.c_str(), serv.toString().c_str());
 
 	_servicelist[key] = serv;
 	return 0;
@@ -494,7 +494,7 @@ int CAppConfig::UpdateService(const string& key, const ServiceInfo& serv)
 int CAppConfig::UpdateService(const string& key, const string& value)
 {
 	ServiceInfo serv(value);
-	LogTrace("Update Service[%s]:%s\n", key.c_str(), serv.toString().c_str());
+	LogTrace("Update Service[%s]:%s", key.c_str(), serv.toString().c_str());
 
 	_servicelist[key] = serv;
 	return 0;
@@ -507,7 +507,7 @@ int CAppConfig::DelService(const string& key)
 	it = _servicelist.find(key);
 	if (it != _servicelist.end())
 	{
-		LogTrace("Del Service[%s]:%s\n", key.c_str(), it->second.toString().c_str());
+		LogTrace("Delete Service[%s]:%s", key.c_str(), it->second.toString().c_str());
 		_servicelist.erase(it);
 	}
 	return 0;
@@ -550,18 +550,17 @@ int CAppConfig::AddTagServiceHeap(const string& key)
 int CAppConfig::UpdateTagServiceHeap(const string& key, const string& value)
 {
 	ServiceHeap serviceHeap(value);
-	DEBUG_P(LOG_NORMAL, "Update TagHeap[%s]:%s\n",key.c_str(), serviceHeap.toString().c_str());
+	LogTrace("Update TagServiceHeap[%s]:%s", key.c_str(), serviceHeap.toString().c_str());
 	tagServiceHeap[key] = serviceHeap;
 	return 0;
 }
 
 int CAppConfig::UpdateTagServiceHeap(const string& key, const ServiceHeap& serviceHeap)
 {
-	DEBUG_P(LOG_NORMAL, "Update TagHeap[%s]:%s\n",key.c_str(), serviceHeap.toString().c_str());
+	LogTrace("Update TagServiceHeap[%s]:%s",key.c_str(), serviceHeap.toString().c_str());
 	tagServiceHeap[key] = serviceHeap;
 	return 0;
 }
-
 
 int CAppConfig::GetTagServiceHeap(const string& key, ServiceHeap& serviceHeap)
 {
@@ -578,6 +577,8 @@ int CAppConfig::GetTagServiceHeap(const string& key, ServiceHeap& serviceHeap)
 int CAppConfig::DelTagServiceHeap(const string& appID) //delete a batch of tag related to appID
 {
 	map<string, ServiceHeap>::iterator it;
+
+	LogTrace("Delete all TagServiceHeaps of appID[%s]", appID.c_str());
 	for (it = tagServiceHeap.begin(); it != tagServiceHeap.end();)
 	{
 		if (string::npos != (it->first).find(appID))
@@ -864,6 +865,55 @@ unsigned CAppConfig::GetServiceNumber(string appID)
 	return servNum;
 }
 
+int CAppConfig::AddTagOnlineServiceNumber(string appID, string raw_tag)
+{
+	map<string, unsigned>::iterator it;
+	string app_tag = appID + "_" + raw_tag;
+	
+	it = mapOnlineServiceNumber.find(app_tag);
+	if (it == mapOnlineServiceNumber.end())
+	{	
+		mapOnlineServiceNumber[app_tag] = 1;
+	}
+	else
+	{
+		(it->second)++;
+	}
+
+	return 0;
+}
+
+unsigned CAppConfig::GetTagOnlineServiceNumber(string appID, string raw_tag)
+{
+	map<string, unsigned>::iterator it;
+	string app_tag = appID + "_" + raw_tag;
+	
+	it = mapOnlineServiceNumber.find(app_tag);
+	if (it == mapOnlineServiceNumber.end())
+	{
+		return 0;
+	}
+	return it->second;
+}
+
+int CAppConfig::DelTagOnlineServiceNumber(string appID, string raw_tag)
+{
+	map<string, unsigned>::iterator it;
+	string app_tag = appID + "_" + raw_tag;
+	
+	it = mapOnlineServiceNumber.find(app_tag);
+	if (it == mapOnlineServiceNumber.end())
+	{
+		mapOnlineServiceNumber[app_tag] = 0;
+	}
+	else
+	{
+		(it->second)--;
+	}
+
+	return 0;
+}
+
 int CAppConfig::checkAppIDExist(string appID)
 {
     Json::Reader reader;
@@ -1140,6 +1190,22 @@ void CAppConfig::getTagNormalQueueJson(string appID, Json::Value &tags)
 	getTagQueueJson(appID, tags, false);
 }
 
+void CAppConfig::getOnlineServiceNumJson(string appID, Json::Value &tags)
+{
+	map<string, unsigned>::iterator it;
+
+	tags = Json::objectValue;
+	for (it = mapOnlineServiceNumber.begin(); it != mapOnlineServiceNumber.end(); it++)
+	{
+		string app_tag = it->first;
+		if (appID == getappID(app_tag))
+		{
+			string raw_tag = delappID(app_tag);
+			tags[raw_tag]   = it->second; 
+		}
+	}
+}
+
 #if ((((((((0))))))))
 #endif
 /************************************************************************************************/
@@ -1261,49 +1327,6 @@ int CAppConfig::DelKickServiceStatus(const string& key)
 	return 0;
 }
 
-int CAppConfig::AddServiceNumber(unsigned appID)
-{
-	map<unsigned, unsigned>::iterator it;
-	it = mapServiceNumber.find(appID);
-	if(it == mapServiceNumber.end())
-	{	
-		mapServiceNumber[appID] = 1;
-	}
-	else
-	{
-		(it->second)++;
-	}
-
-	return 0;
-}
-
-int CAppConfig::GetServiceNumber(unsigned appID)
-{
-	map<unsigned, unsigned>::iterator it;
-	it = mapServiceNumber.find(appID);
-	if(it == mapServiceNumber.end())
-	{
-		return 0;
-	}
-	return it->second;
-}
-
-
-int CAppConfig::DelServiceNumber(unsigned appID)
-{
-	map<unsigned, unsigned>::iterator it;
-	it = mapServiceNumber.find(appID);
-	if(it == mapServiceNumber.end())
-	{
-		mapServiceNumber[appID] = 0;
-	}
-	else
-	{
-		(it->second)--;
-	}
-
-	return 0;
-}
 
 int CAppConfig::AddOfflineHeap(unsigned appID)
 {

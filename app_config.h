@@ -30,6 +30,8 @@ public:
 	{
 		mapConfigString.clear();
 		mapConfigInt.clear();
+		mapOnlineServiceNumber.clear();
+
 		#if 0
 		mapappIDQueue.clear();
 		mapappIDQueueString.clear();
@@ -47,6 +49,7 @@ public:
 	{
 		mapConfigString.clear();
 		mapConfigInt.clear();
+		mapOnlineServiceNumber.clear();
 		#if 0
 		mapappIDQueue.clear();
 		mapappIDQueueString.clear();
@@ -129,6 +132,10 @@ public:
 	unsigned GetServiceNumber(string appID);
 	unsigned GetTagServiceNumber(string appID, string raw_tag);
 	
+	unsigned GetTagOnlineServiceNumber(string appID, string raw_tag);
+	int AddTagOnlineServiceNumber(string appID, string raw_tag);
+	int DelTagOnlineServiceNumber(string appID, string raw_tag);
+	
 	int checkAppIDExist(string appID);
 	int checkTagExist(string appID, string tag);
 	
@@ -147,6 +154,7 @@ public:
 	void getTagQueueJson(string appID, Json::Value &tags, bool isHighPri);
 	void getTagHighPriQueueJson(string appID, Json::Value &tags);
 	void getTagNormalQueueJson(string appID, Json::Value &tags);
+	void getOnlineServiceNumJson(string appID, Json::Value &tags);
 	
 private:
 	static CAppConfig *m_instance;
@@ -172,6 +180,10 @@ private:
 	
 	/* key: appID_tag, ServiceHeap仅存储serviceID */
 	map<string, ServiceHeap> tagServiceHeap;
+
+	/* key: appID_tag */
+	map<string, unsigned> mapOnlineServiceNumber;
+
 };
 
 #endif

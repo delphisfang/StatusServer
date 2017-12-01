@@ -105,12 +105,14 @@ int32_t CMCDProc::Init(const std::string& conf_file)
         goto err_out;
     }
 
-    /*if (InitLog() < 0)
+	#if 1
+    if (InitLog() < 0)
     {
         LogError("[CMCDProc] InitLog fail\n");
         goto err_out;
-    }*/
-
+    }
+	#endif
+	
     if (InitStat() < 0)
     {
         LogError("[CMCDProc] InitStat fail\n");
@@ -537,7 +539,8 @@ int32_t CMCDProc::HttpParseCmd(char* data, unsigned data_len, string& outdata, u
 		{
 			cmd  = root["cmd"].asString();
 		}
-		LogDebug("==>method: %s", cmd.c_str());
+		LogWarn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+		LogWarn("==>method: %s", cmd.c_str());
 		
         if (!root["data"].isNull())
         {
@@ -703,14 +706,12 @@ int32_t CMCDProc::HandleRequest(char* data, unsigned data_len,
 
     if (ti != NULL)
     {
-		LogTrace("==================================================================================>");
         if (ti->do_next_step(outdata) == 0)
         {
             m_timer_queue.set(ti->GetMsgSeq(), ti, ti->GetTimeGap());
         }
         else
         {
-			LogTrace("<====================================================================================\r\n\r\n");
             delete ti;
         }
     }
@@ -1167,11 +1168,7 @@ void CMCDProc::DispatchUser2Service()
             continue;
         }
 
-        int serverNum = 0;
-	    if (CAppConfig::Instance()->GetValue(appID, "max_conv_num", serverNum) || 0 == serverNum)
-        {
-            serverNum = 5;
-        }
+        int serverNum = CAppConfig::Instance()->getMaxConvNum(appID);
 		
         string strTags;
         vector<string> tags;

@@ -52,7 +52,7 @@ int AdminConfigTimer::do_next_step(string& req_data)
 				//防止重复重建
 				if (m_proc->m_workMode == statsvr::WORKMODE_WORK)
 				{	
-					LogTrace(">>>>>>>>>>>>>>>>>>>Already in workmode, do not restore!");
+					LogTrace(">>>>>>>>>>>>>>>>>>>Already in workmode, need not restore.");
 					m_cur_step = STATE_END;
 					return 1;
 				}
@@ -164,7 +164,7 @@ int AdminConfigTimer::on_admin_ping()
 
     
 	string appIDString = m_data;
-	LogDebug("appIDString: %s", appIDString.c_str());
+	//LogDebug("appIDString: %s", appIDString.c_str());
 	
 	//参数检查
 	unsigned size = ping_req["appIDList"].size();
@@ -217,12 +217,14 @@ int AdminConfigTimer::on_admin_ping()
 	DEBUG_P(loglevel, "PingList:%s, delnum:[%d]\n", appIDString.c_str(), delnum);
 
 	LogDebug("Send ping resp");
-	return on_admin_send_reply(appIDlistVer);
+	Json::Value data;
+	data["appList"] = appIDlistVer;
+	return on_admin_send_reply(data);
 }
 
 int AdminConfigTimer::on_admin_getConf()
 {
-	LogTrace("Receive a new get config request.");
+	LogDebug("Receive a new get config request.");
 
 	Json::Reader reader;
 	Json::Value appList;
@@ -277,7 +279,7 @@ int AdminConfigTimer::on_admin_getConf()
 
 int AdminConfigTimer::on_admin_config()
 {
-	LogTrace("Receive a new push config request.");
+	LogDebug("Receive a new push config request.");
 
     Json::Reader reader;
     Json::Value push_config_req;
@@ -290,14 +292,10 @@ int AdminConfigTimer::on_admin_config()
     CAppConfig::Instance()->UpdateappIDConf(push_config_req);
 
     //construct response and then send it.
-    Json::Value push_cfg_rsp;
-    push_cfg_rsp["cmd"]  = m_cmd + "-reply";
-    push_cfg_rsp["code"] = 0;
-    push_cfg_rsp["msg"]  = "OK";
-    push_cfg_rsp["seq"]  = m_seq;
+    Json::Value data = Json::objectValue;
 
 	LogDebug("Send config resp");
-	return on_admin_send_reply(push_cfg_rsp);
+	return on_admin_send_reply(data);
 }
 
 int AdminConfigTimer::on_admin_getServiceStatus()
