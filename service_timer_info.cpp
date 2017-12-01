@@ -445,11 +445,12 @@ int ServicePullNextTimer::on_send_connect_success()
 #endif
     serviceData["serviceName"]   = m_serviceInfo.serviceName;
     serviceData["serviceAvatar"] = m_serviceInfo.serviceAvatar;
-    serviceData["identity"]      = "service";
+    
     //reader.parse(m_userInfo.userInfo, userInfo);
     //serviceData["userInfo"] = userInfo;
 
 	//发送给user端
+	serviceData["identity"]      = "user";
 	DO_FAIL(on_send_request("connectSuccess", m_session.cpIP, m_session.cpPort, serviceData, true));
 
 #if 0
@@ -460,6 +461,7 @@ int ServicePullNextTimer::on_send_connect_success()
 #endif
 	
 	//发送给service端
+	serviceData["identity"]      = "service";
 	DO_FAIL(on_send_request("connectSuccess", m_serviceInfo.cpIP, m_serviceInfo.cpPort, serviceData, true));
 
 	return SS_OK;
@@ -491,7 +493,8 @@ int ServicePullNextTimer::on_pull_next()
     }
 	else
 	{
-        m_errno = WARN_NO_USER_QUEUE;
+		LogTrace("no user on queue, overload finish.");
+        m_errno  = WARN_NO_USER_QUEUE;
         m_errmsg = "Get userID failed";
         on_error();
 		return SS_OK;
@@ -499,6 +502,7 @@ int ServicePullNextTimer::on_pull_next()
 	
     GET_SERV(CAppConfig::Instance()->GetService(m_serviceID, m_serviceInfo));
 
+	LogTrace("==========>service[%s]", m_serviceID.c_str());
 	//拉取一个user
     CAppConfig::Instance()->GetValue(m_appID, "check_user_queue_num", num);
     CAppConfig::Instance()->GetValue(m_appID, "check_user_queue_dir", direct);
@@ -509,15 +513,19 @@ int ServicePullNextTimer::on_pull_next()
         on_error();
         return SS_OK;
     }
+	LogTrace("============>pull out user[%s]", m_userID.c_str());
 	m_raw_userID = delappID(m_userID);
+
+	//找到user
+	GET_USER(CAppConfig::Instance()->GetUser(m_userID, user));
+	LogTrace("============>user[%s]'s tag: %s", m_userID.c_str(), user.tag.c_str());
 	
 	//user出队
-	GET_QUEUE(pTagQueue->get_tag(m_tag, uq));
+	GET_QUEUE(pTagQueue->get_tag(user.tag, uq));
 	SET_QUEUE(uq->delete_user(m_userID));
-	DO_FAIL(KV_set_queue(m_appID, m_raw_tag, m_queuePriority));
+	DO_FAIL(KV_set_queue(m_appID, user.tag, m_queuePriority));
 	
 	//update user
-	GET_USER(CAppConfig::Instance()->GetUser(m_userID, user));
 	user.status = "inService";
 	user.qtime  = 0;
 	DO_FAIL(UpdateUser(m_userID, user));
@@ -531,31 +539,12 @@ int ServicePullNextTimer::on_pull_next()
 	GET_SESS(pSessQueue->get(m_userID, m_session));
 
 	m_sessionID = m_session.sessionID;
-    m_session.serviceID = m_serviceID;
+    m_session.serviceID = m_raw_serviceID;
     m_session.btime     = m_session.atime = GetCurTimeStamp();
     SET_SESS(pSessQueue->set(m_userID, &m_session, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT));
 	DO_FAIL(KV_set_session(m_userID, m_session, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT));
+	LogWarn("Service[%s] overload user[%s] success.", m_serviceID.c_str(), m_userID.c_str());
 	
-	#if 0
-    Json::Value serviceRsp;
-    Json::Value serviceData;
-
-    serviceData["serviceID"] = delappID(m_serviceID);
-    serviceData["identity"] = "service";
-    serviceRsp["cmd"]  = m_cmd + "-reply";
-    serviceRsp["seq"]  = m_seq;
-    serviceRsp["data"] = serviceData;
-    string strServiceRsp = chatproxyMsg.toStyledString();
-    if (m_proc->EnququeHttp2CCD(m_ret_flow, (char *)strServiceRsp.c_str(), strServiceRsp.size()))
-    {
-        DEBUG_P(LOG_ERROR, "searchid[%s]:Error reply service ping\n", m_search_no.c_str());
-        m_errno = ERROR_SYSTEM_WRONG;
-        m_errmsg = "Error send to client";
-        on_error();
-        return -1;
-    }
-	#endif
-
     return on_send_connect_success();
 }
 

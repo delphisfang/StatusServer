@@ -231,6 +231,7 @@ int32_t CMCDProc::InitStat()
 
     string stat_file = stat_para->path_ + stat_para->name_prefix_;
 
+	LogTrace("stat_file: %s", stat_file.c_str());
     int32_t ret = m_stat.Inittialize((char*)stat_file.c_str()
 								   , stat_para->max_file_size_
 								   , stat_para->max_file_no_
@@ -349,7 +350,7 @@ int32_t CMCDProc::InitCmdMap()
     m_cmdMap["serviceLogin"] = SERVICE_LOGIN;
     m_cmdMap["serviceChangeStatus"] = SERVICE_CHANGESTATUS;
     m_cmdMap["changeService"] = CHANGE_SERVICE;
-
+	m_cmdMap["overload"]      = SERVICE_PULLNEXT;
 	m_cmdMap["refreshSession"] = REFRESH_SESSION;
 	/*
     m_replyMap["sendMsg-reply"] = 31;

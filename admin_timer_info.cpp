@@ -316,15 +316,15 @@ int AdminConfigTimer::on_admin_getServiceStatus()
 
 		if (CAppConfig::Instance()->GetService(app_serviceID, serv))
 		{
-			servInfo["status"] = "offline";
+			servInfo["serviceStatus"] = "offline";
 		}
 		else
 		{
-			servInfo["status"]    = serv.status;
+			servInfo["serviceStatus"]    = serv.status;
 			//当前服务人数>=最大会话人数时，返回busy
 	        if (serv.status == "online" && serv.user_count() >= maxConvNum)
 	        {
-	            servInfo["status"] = "busy";
+	            servInfo["serviceStatus"] = "busy";
 	        }
 		}
 		
