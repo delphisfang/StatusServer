@@ -48,6 +48,7 @@ namespace statsvr
         int do_next_step(string& req_data);
 		int on_serviceLogin_reply();
 		int on_already_online();
+		void set_service_fields(ServiceInfo &serv);
 		int on_service_login();
     };
 

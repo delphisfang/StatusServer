@@ -184,6 +184,17 @@ int UserOnlineTimer::do_next_step(string& req_data)
 	}
 }
 
+void UserOnlineTimer::set_user_fields(UserInfo &user)
+{
+	user.atime   = GetCurTimeStamp();
+	user.channel = m_channel;
+	user.tag     = m_raw_tag;
+	if ("" != m_extends)
+	{
+		user.extends = m_extends;
+	}
+}
+
 /* 
 input: m_userID 
 */
@@ -199,7 +210,10 @@ int UserOnlineTimer::on_user_online()
 	{
 		if (m_cpIP == user.cpIP && m_cpPort == user.cpPort)
 		{
-			LogDebug("user[%s] online in the same CP.", m_userID.c_str());
+			//update user
+			LogDebug("user[%s] online in the same CP, update user info.", m_userID.c_str());
+			set_user_fields(user);
+			DO_FAIL(UpdateUser(m_userID, user));
 			DO_FAIL(reply_user_json_A(m_appID, m_userID, user));
 			return SS_OK;
 		}
@@ -211,10 +225,10 @@ int UserOnlineTimer::on_user_online()
 			set_user_data(data);
 			DO_FAIL(on_send_request("kickOut", user.cpIP, user.cpPort, data, false));
 			
-			LogDebug("update user[%s]'s <cpIP, cpPort, atime>.", m_userID.c_str());
+			LogDebug("update user[%s]'s info.", m_userID.c_str());
+			set_user_fields(user);
 			user.cpIP   = m_cpIP;
 			user.cpPort = m_cpPort;
-			user.atime  = GetCurTimeStamp();
 			DO_FAIL(UpdateUser(m_userID, user));
 			
 			LogDebug("update user[%s]'s session.", m_userID.c_str());

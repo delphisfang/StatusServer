@@ -178,7 +178,11 @@ int CTimerInfo::init(string req_data, int datalen)
 	{
 		m_extends = js_req_data["extends"].toStyledString();
 	}
-
+	else
+	{
+		m_extends = "";
+	}
+	
 	m_serviceName = get_value_str(js_req_data, "serviceName");
 
 	m_serviceAvatar = get_value_str(js_req_data, "serviceAvatar");

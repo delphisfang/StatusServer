@@ -71,6 +71,7 @@ namespace statsvr
         int do_next_step(string& req_data);
 		//int on_resp_cp();
 		//int on_already_online();
+		void set_user_fields(UserInfo &user);
 		int on_user_online();
 
 		string m_status;

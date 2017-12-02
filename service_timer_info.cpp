@@ -123,6 +123,29 @@ int ServiceLoginTimer::on_already_online()
 	return on_send_error_reply(WARN_ALREADY_ONLINE, "Service Already Online", data);
 }
 
+void ServiceLoginTimer::set_service_fields(ServiceInfo &serv)
+{
+	serv.atime = GetCurTimeStamp();
+	serv.serviceName = m_serviceName;
+	serv.serviceAvatar = m_serviceAvatar;
+
+	Json::Reader reader;
+	Json::Value value;
+	if (!reader.parse(m_data, value))
+	{
+		return;
+	}
+	//clear serv.tags first
+	serv.tags.clear();
+	unsigned tagsLen = value["tags"].size();
+	for (unsigned i = 0; i < tagsLen; i++)
+	{
+		serv.tags.insert(value["tags"][i].asString());
+	}
+
+	//do not change serv.userList
+}
+
 int ServiceLoginTimer::on_service_login()
 {
 	ServiceInfo serv;
@@ -135,7 +158,13 @@ int ServiceLoginTimer::on_service_login()
 		LogDebug("Old service: %s, new cpIP: %s, new cpPort: %u", serv.toString().c_str(), m_cpIP.c_str(), m_cpPort);
     	if (m_cpIP == serv.cpIP && m_cpPort == serv.cpPort)
     	{
-			LogDebug("service online in the same CP.");
+			LogDebug("service online in the same CP, update service info.");
+			DO_FAIL(CAppConfig::Instance()->DelServiceFromTags(m_appID, serv));
+			DO_FAIL(DelTagOnlineServNum(m_appID, serv));
+			set_service_fields(serv);
+			DO_FAIL(AddTagOnlineServNum(m_appID, serv));
+			DO_FAIL(CAppConfig::Instance()->AddService2Tags(m_appID, serv));
+			DO_FAIL(UpdateService(m_serviceID, serv));
 			return on_serviceLogin_reply();
     	}
 		else
@@ -144,10 +173,14 @@ int ServiceLoginTimer::on_service_login()
 			set_service_data(data);
 			DO_FAIL(on_send_request("kickOut", serv.cpIP, serv.cpPort, data, false));
 			
-			LogDebug("update service's <cpIP, cpPort, atime>.");
+			LogDebug("update service info.");
+			DO_FAIL(CAppConfig::Instance()->DelServiceFromTags(m_appID, serv));
+			DO_FAIL(DelTagOnlineServNum(m_appID, serv));
+			set_service_fields(serv);
 			serv.cpIP   = m_cpIP;
 			serv.cpPort = m_cpPort;
-			serv.atime  = GetCurTimeStamp();
+			DO_FAIL(AddTagOnlineServNum(m_appID, serv));
+			DO_FAIL(CAppConfig::Instance()->AddService2Tags(m_appID, serv));
 			DO_FAIL(UpdateService(m_serviceID, serv));
     	}
     }

@@ -620,7 +620,6 @@ int CAppConfig::AddService2Tags(const string &appID, ServiceInfo &serv)
 	return 0;
 }
 
-//本接口用于在service因超时被删除时
 int CAppConfig::DelServiceFromTags(const string &appID, ServiceInfo &serv)
 {
 	ServiceHeap servHeap;
