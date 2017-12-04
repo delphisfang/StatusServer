@@ -865,6 +865,7 @@ unsigned CAppConfig::GetServiceNumber(string appID)
 
 }
 
+//注意，1个service可以属于多个tag，不要重复计算
 unsigned CAppConfig::GetOnlineServiceNumber(string appID)
 {
 	map<string, ServiceHeap>::iterator it;
@@ -882,7 +883,7 @@ unsigned CAppConfig::GetOnlineServiceNumber(string appID)
 			{
 				string servID = (*it2);
 				ServiceInfo serv;
-				if (0 == GetService(servID, serv) && serv.status == "online")
+				if (0 == GetService(servID, serv) && serv.status != "offline")
 				{
 					servNum++;
 				}
