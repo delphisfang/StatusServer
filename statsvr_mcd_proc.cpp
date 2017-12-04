@@ -587,6 +587,11 @@ int32_t CMCDProc::HttpParseCmd(char* data, unsigned data_len, string& outdata, u
     {
         return 0;
     }
+    else if (m_workMode == statsvr::WORKMODE_READY)
+    {
+        LogTrace("======> [StatusServer] has not been working yet, m_workMode :%d", m_workMode);
+        return -2;
+    }
 	else
 	{
 		return m_cmdMap[cmd];
@@ -611,22 +616,9 @@ int32_t CMCDProc::HandleRequest(char* data, unsigned data_len,
 	//LogDebug("==>IN: HandleRequest()");
 	
     int ret = HttpParseCmd(data, data_len, outdata, out_len);
-	//LogDebug("==>cmd: %d", ret);
     CWaterLog::Instance()->WriteLog(ccd_time, 0, (char *)str_client_ip.c_str(), 0, ret, (char *)outdata.c_str());
 
-	#if 0
-    if (ret > 0 && (m_workMode == statsvr::WORKMODE_READY))
-    {
-        cmd = -2;
-    }
-    else
-    {
-        cmd = ret;
-    }
-	#else
 	cmd = ret;
-	#endif
-	
     switch (cmd)
     {
 		case ECHO:
