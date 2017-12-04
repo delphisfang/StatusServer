@@ -49,13 +49,25 @@ namespace statsvr
 
                 m_cmd.clear();
                 m_seq = 0;
-                m_identity.clear();
+
+				m_raw_userID.clear();
+				m_raw_serviceID.clear();
+				m_raw_changeServiceID.clear();
+				m_raw_lastServiceID.clear();
+				m_raw_appointServiceID.clear();
+
                 m_userID.clear();
                 m_serviceID.clear();
-                m_content.clear();
                 m_changeServiceID.clear();
                 m_lastServiceID.clear();
-                m_priority.clear();
+				m_appointServiceID.clear();
+
+				m_sessionID.clear();
+				m_identity.clear();
+				m_priority.clear();
+				m_extends.clear();
+                m_content.clear();
+
                 m_ret_code.clear();
                 m_ret_msg.clear();
                 m_search_no.clear();
@@ -700,7 +712,10 @@ namespace statsvr
             Json::Value     m_content;
 			string          m_raw_changeServiceID;
             string          m_changeServiceID;
+			string          m_raw_lastServiceID;
             string          m_lastServiceID;
+			string          m_raw_appointServiceID;
+			string          m_appointServiceID;
             set<string>     m_tags;
             set<string>     m_checkServices;
             string          m_priority;

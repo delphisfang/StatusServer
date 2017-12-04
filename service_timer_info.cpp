@@ -389,10 +389,10 @@ int ChangeServiceTimer::on_change_service()
 		SET_SESS(pSessionQueue->set(m_userID, &sess, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT));
 		DO_FAIL(KV_set_session(m_userID, sess, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT));
 
-		//update user.lastServiceID
+		//update user
 		UserInfo user;
 		GET_USER(CAppConfig::Instance()->GetUser(m_userID, user));
-		user.lastServiceID = m_lastServiceID;
+		user.lastServiceID = m_raw_serviceID;
 		//user.sessionID保持不变
 		DO_FAIL(UpdateUser(m_userID, user));
 		
@@ -509,8 +509,8 @@ int ServicePullNextTimer::on_pull_next()
     TagUserQueue *pTagQueue = NULL;
     SessionQueue* pSessQueue = NULL;
 	UserQueue *uq = NULL;
-    int num    = 0;
-	int direct = 0;
+    int num    = 1;
+	int direct = 1; //默认从队尾拉取
 	UserInfo user;
 
 	//优先从HighPriQueue拉取
@@ -537,8 +537,8 @@ int ServicePullNextTimer::on_pull_next()
 
 	LogTrace("==========>service[%s]", m_serviceID.c_str());
 	//拉取一个user
-    CAppConfig::Instance()->GetValue(m_appID, "check_user_queue_num", num);
-    CAppConfig::Instance()->GetValue(m_appID, "check_user_queue_dir", direct);
+	num    = CAppConfig::Instance()->getUserQueueNum(m_appID);
+	direct = CAppConfig::Instance()->getUserQueueDir(m_appID);
     if (pTagQueue->get_target_user(m_userID, m_serviceID, m_serviceInfo.tags, num, direct))
     {
         m_errno = WARN_NO_USER_QUEUE;
@@ -573,7 +573,7 @@ int ServicePullNextTimer::on_pull_next()
 
 	m_sessionID = m_session.sessionID;
     m_session.serviceID = m_raw_serviceID;
-    m_session.btime     = m_session.atime = GetCurTimeStamp();
+    m_session.atime     = GetCurTimeStamp();
     SET_SESS(pSessQueue->set(m_userID, &m_session, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT));
 	DO_FAIL(KV_set_session(m_userID, m_session, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT));
 	LogWarn("Service[%s] overload user[%s] success.", m_serviceID.c_str(), m_userID.c_str());

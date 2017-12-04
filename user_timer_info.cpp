@@ -353,10 +353,103 @@ int ConnectServiceTimer::on_service_with_noqueue(bool flag)
 	}
 }
 
+int ConnectServiceTimer::on_appoint_service_offline()
+{
+	Json::Value data;
+	data["userID"]    = m_raw_userID;
+	data["serviceID"] = m_raw_appointServiceID;
+	data["status"]    = "ServiceOffLine";
+	return on_send_error_reply(ERROR_NO_ERROR, "ServiceOffLine", data);
+}
+
+int ConnectServiceTimer::on_send_connect_success(Session sess, ServiceInfo serv)
+{
+	Json::Value sessData;
+    Json::Reader reader;
+    Json::Value userInfo;
+    Json::Value json_extends;
+
+	LogDebug("==>IN");
+	//connectSuccess消息的data字段包含的是service的信息
+    sessData["userID"]    = sess.userID;
+    sessData["serviceID"] = sess.serviceID;
+    sessData["sessionID"] = sess.sessionID;
+    sessData["channel"]   = m_channel;
+	#if 0
+    reader.parse(m_extends, json_extends);
+    sessData["extends"]   = json_extends;
+	#else
+	sessData["extends"]   = Json::objectValue;
+	#endif
+	
+    sessData["serviceName"]   = serv.serviceName;
+    sessData["serviceAvatar"] = serv.serviceAvatar;
+    //reader.parse(m_userInfo, userInfo);
+    //serviceData["userInfo"] = userInfo;
+
+	//发送connectSuccess消息给user
+    sessData["identity"] = "user";
+	DO_FAIL(on_send_request("connectSuccess", sess.cpIP, sess.cpPort, sessData, true));
+
+	#if 0
+    if (m_whereFrom == "websocket" || m_session.whereFrom == "iOS" || m_session.whereFrom == "Android")
+    {
+        MsgRetransmit::Instance()->SetMsg(strServiceRsp, m_appID, ui2str(m_msg_seq), m_session.userChatproxyIP, m_session.userChatproxyPort, m_proc->m_cfg._re_msg_send_timeout);
+    }
+	#endif
+	
+	//发送connectSuccess消息给service
+    sessData["identity"] = "service";
+	DO_FAIL(on_send_request("connectSuccess", serv.cpIP, serv.cpPort, sessData, true));
+
+	LogDebug("==>OUT");
+	return SS_OK;
+}
+
+int ConnectServiceTimer::on_appoint_service()
+{
+	LogDebug("==>IN");
+	UserInfo user;
+	ServiceInfo serv;
+	Session sess;
+
+	//无需判定坐席的服务上限，直接服务
+	if (CAppConfig::Instance()->GetService(m_appointServiceID, serv)
+		|| serv.status == "offline")
+	{
+		LogTrace("[%s]: appointService[%s] is offline!", m_appID.c_str(), m_appointServiceID.c_str());
+		return on_appoint_service_offline();
+	}
+
+	//发送connectService-reply报文
+	DO_FAIL(on_service_with_noqueue(false));
+	
+	//更新session
+	GET_SESS(get_user_session(m_appID, m_userID, &sess));
+	sess.serviceID = m_raw_appointServiceID;
+	sess.atime 	   = GetCurTimeStamp();
+	DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT));
+	
+	//更新user
+	GET_USER(CAppConfig::Instance()->GetUser(m_userID, user));
+	user.status = "inService";
+	user.qtime  = 0;
+	user.atime  = GetCurTimeStamp();
+	DO_FAIL(UpdateUser(m_userID, user));
+
+	//更新service
+	SET_SERV(serv.add_user(m_userID));
+	DO_FAIL(UpdateService(m_serviceID, serv));
+	LogTrace("Success to create new session: %s", sess.toString().c_str());
+
+	//发送connectSuccess报文
+	return on_send_connect_success(sess, serv);
+}
+
 int ConnectServiceTimer::on_queue()
 {
 	int max_conv_num         = 0;
-	long long queue_timeout   = 0;
+	long long queue_timeout  = 0;
 	unsigned max_queue_num   = 0;
 	bool serviceWithNoQueue  = false;
     TagUserQueue* pTagQueues = NULL;
@@ -369,10 +462,16 @@ int ConnectServiceTimer::on_queue()
 	
 	LogDebug("==>IN");
 
+	//指定客服
+	if ("" != m_appointServiceID)
+	{
+		return on_appoint_service();
+	}
+	
 	max_conv_num  = CAppConfig::Instance()->getMaxConvNum(m_appID);
 	serviceNum    = CAppConfig::Instance()->GetTagOnlineServiceNumber(m_appID, m_raw_tag);
 	max_queue_num = serviceNum * max_conv_num * m_proc->m_cfg._queue_rate;
-    LogTrace("[%s] serviceNum:%u, max_conv_num:%d, queue rate:%d, max_queue_num: %d\n", 
+    LogTrace("[%s] serviceNum:%u, max_conv_num:%d, queue rate:%d, max_queue_num: %d", 
     		m_appID.c_str(), serviceNum, max_conv_num, m_proc->m_cfg._queue_rate, max_queue_num);
 
     if (CAppConfig::Instance()->GetTagHighPriQueue(m_appID, pTagQueues) ||
@@ -385,7 +484,6 @@ int ConnectServiceTimer::on_queue()
 	highpri_queue_count = pHighPriTagQueues->queue_count(m_raw_tag);
     LogTrace("[%s] queue size:%u, high pri queue size:%u\n", 
     		m_appID.c_str(), queue_count, highpri_queue_count);
-
 
     if (queue_count + highpri_queue_count >= max_queue_num)
     {
@@ -414,10 +512,14 @@ int ConnectServiceTimer::on_queue()
 	GET_USER(CAppConfig::Instance()->GetUser(m_userID, user));
     //user.userID        = m_raw_userID;
     //user.sessionID     = m_sessionID;
-    user.channel       = m_channel;
-    user.extends       = m_extends;///
-    user.tag           = m_raw_tag;///
-    user.lastServiceID = m_lastServiceID;
+    if ("" != m_channel)
+		user.channel       = m_channel;
+	if ("" != m_extends)
+    	user.extends       = m_extends;
+	if ("" != m_raw_tag)
+    	user.tag           = m_raw_tag;
+    if ("" != m_raw_lastServiceID)
+    	user.lastServiceID = m_raw_lastServiceID;
     user.priority      = m_priority;
     user.queuePriority = m_queuePriority;
     user.atime = user.qtime = GetCurTimeStamp();///
@@ -441,7 +543,6 @@ int ConnectServiceTimer::on_queue()
 		DO_FAIL(KV_set_queue(m_appID, m_raw_tag, false));
     }
 	
-
 	//update user
 	user.status = "onQueue";
 	DO_FAIL(UpdateUser(m_userID, user));
@@ -601,8 +702,8 @@ int CloseSessionTimer::on_closeSession_reply()
 	userInfo["chatProxyPort"] = m_session.cpPort;
 	
 	servInfo["ID"] = m_raw_serviceID;
-	servInfo["chatProxyIp"] = m_service.cpIP;
-	servInfo["chatProxyPort"] = m_service.cpPort;
+	servInfo["chatProxyIp"] = m_serviceInfo.cpIP;
+	servInfo["chatProxyPort"] = m_serviceInfo.cpPort;
 
 	data["sessionID"] = m_session.sessionID;
 	data["userInfo"] = userInfo;
@@ -635,8 +736,10 @@ int CloseSessionTimer::on_close_session()
 	
 	GET_SESS(get_user_session(m_appID, m_userID, &m_session));
 	LogTrace("get user[%s]'s session: %s", m_userID.c_str(), m_session.toString().c_str());
-	m_raw_serviceID = m_session.serviceID;
-	m_serviceID     = m_appID + "_" + m_raw_serviceID;
+	m_raw_serviceID     = m_session.serviceID;
+	m_serviceID         = m_appID + "_" + m_raw_serviceID;
+	m_raw_lastServiceID = m_raw_serviceID;
+	m_lastServiceID     = m_serviceID;
 	
 	//delete old session, create new session
 	LogTrace("======>Delete old session: %s", m_session.toString().c_str());
@@ -648,12 +751,13 @@ int CloseSessionTimer::on_close_session()
 	DO_FAIL(CreateUserSession(m_appID, m_userID, &m_session, MAX_INT, MAX_INT));
 
 	//update service.userList
-	GET_SERV(CI->GetService(m_serviceID, m_service));
-	SET_SERV(m_service.delete_user(m_raw_userID));
-	DO_FAIL(UpdateService(m_serviceID, m_service));
+	GET_SERV(CI->GetService(m_serviceID, m_serviceInfo));
+	SET_SERV(m_serviceInfo.delete_user(m_raw_userID));
+	DO_FAIL(UpdateService(m_serviceID, m_serviceInfo));
 	
 	//update user
-	user.status = "inYiBot"; //do not delete user.tag, user.sessionID
+	user.status        = "inYiBot";
+	user.lastServiceID = m_raw_lastServiceID;
 	DO_FAIL(UpdateUser(m_userID, user));
 	
 	DO_FAIL(on_closeSession_reply());

@@ -573,13 +573,14 @@ namespace statsvr
 		}
 
 		// get first user
-		int get_first(string& userID)
+		int get_first(string& userID, long long &expire_time)
 		{
 			list<UserTimer>::iterator it = _user_list.begin();
 			
 			if (_user_list.size() > 0)
 			{
-				userID = it->userID;	
+				userID = it->userID;
+				expire_time = it->expire_time;
 				return 0;
 			}
 			
@@ -588,13 +589,14 @@ namespace statsvr
 		}
 
 		// get last user
-		int get_last(string& userID)
+		int get_last(string& userID, long long &expire_time)
 		{
 			list<UserTimer>::reverse_iterator it = _user_list.rbegin();
 			
 			if (_user_list.size() > 0)
 			{
-				userID = it->userID;			
+				userID = it->userID;
+				expire_time = it->expire_time;
 				return 0;
 			}
 
@@ -818,84 +820,69 @@ namespace statsvr
 		}
 
 		/*
-		direct: 从队头还是队尾查找
-		num: 第几个 
+		tags: service所属的分组
+		direct: 从队头还是队尾查找，0代表队头，1代表队尾
+		num: 第几个 (TODO:暂时忽略该参数)
 		*/
 		int get_target_user(string &userID, const string& serviceID, std::set<string> tags, unsigned num, int direct)
 		{
-			string cur_tag;
 			//UserInfo user;
 			UserQueue *uq = NULL;
-			bool tag_match = false;
+			//bool tag_match = false;
+			
+			bool found = false;
+			string temp_userID;
+			long long temp_expire;
+			long long expire;
+
+			LogTrace("==========>direct = %d", direct);
 			
 			map<string, UserQueue*>::iterator it;
 			for (it = _tag_queue.begin(); it != _tag_queue.end(); it++)
 			{
-				cur_tag = it->first;
-				if (tags.end() != tags.find(cur_tag))
+				//坐席不能拉取不在它服务范围内的用户
+				if (tags.end() == tags.find(it->first))
 				{
-					tag_match = true;
-				}
-				else
-				{
-					tag_match = false;
+					continue;
 				}
 
 				uq = it->second;
-				if (direct == 0)
+				if (direct == 0) //from queue head
 				{
-					list<UserTimer>::iterator it    = uq->_user_list.begin();
-					list<UserTimer>::iterator itEnd = uq->_user_list.end();
-					for (; it != itEnd; it++)
+					if (0 == uq->get_first(temp_userID, temp_expire))
 					{
-						if (num == 0)
+						if (false == found || temp_expire < expire)
 						{
-							break;
-						}
-						else
-						{
-							num--;
-						}
-						/*if (CAppConfig::Instance()->GetUser(it->userID, user))
-						{
-							LogError("Failed to get user: %s", it->userID.c_str());
-							continue;
-						}*/				
-						if (true == tag_match/* || user.lastServiceID == serviceID*/)
-						{
-							userID = it->userID;
-							return 0;
+							expire = temp_expire;
+							userID = temp_userID;
+							found  = true;
 						}
 					}
-					return uq->get_first(userID);
 				}
-				else
+				else			//from queue tail
 				{
-					list<UserTimer>::reverse_iterator it    = uq->_user_list.rbegin();
-					list<UserTimer>::reverse_iterator itEnd = uq->_user_list.rend();
-					for (; it != itEnd; it++)
+					
+					if (0 == uq->get_last(temp_userID, temp_expire))
 					{
-						if(num == 0)
+						if (false == found || temp_expire > expire)
 						{
-							break;
-						}
-						else
-						{
-							num--;
-						}
-						/*if (CAppConfig::Instance()->GetUser(it->userID, user))
-						{
-							LogError("Failed to get user: %s", it->userID.c_str());
-							continue;
-						}*/
-						if (true == tag_match/* || user.lastServiceID == serviceID*/)
-						{
-							userID = it->userID;
-							return 0;
+							expire = temp_expire;
+							userID = temp_userID;
+							found  = true;
 						}
 					}
-					return uq->get_last(userID);
 				}				
+			}
+
+			if (true == found)
+			{
+				LogTrace("=====> pull out user[%s], expire_time[%ld]", userID.c_str(), expire);
+				return 0;
+			}
+			else
+			{
+				LogError("=====> not matched user!");
+				return -1;
 			}
 		}
 

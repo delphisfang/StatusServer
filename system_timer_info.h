@@ -30,6 +30,7 @@ namespace statsvr
 		int  on_send_timeout_msg();
 		int  on_session_timeout();
 
+		UserInfo m_userInfo;
 		ServiceInfo m_serviceInfo;
 	};
 
@@ -49,6 +50,7 @@ namespace statsvr
 		int  on_send_timewarn_msg();
         int  on_session_timewarn();
 
+		UserInfo m_userInfo;
 		ServiceInfo m_serviceInfo;
     };
 

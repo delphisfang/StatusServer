@@ -862,6 +862,35 @@ unsigned CAppConfig::GetServiceNumber(string appID)
 		it++;
 	}
 	return servNum;
+
+}
+
+unsigned CAppConfig::GetOnlineServiceNumber(string appID)
+{
+	map<string, ServiceHeap>::iterator it;
+	int servNum = 0;
+	ServiceHeap sh;
+	set<string>::iterator it2;
+	
+	it = tagServiceHeap.begin();
+	while (it != tagServiceHeap.end())
+	{
+		if (appID == getappID(it->first))
+		{
+			sh = it->second;
+			for (it2 = sh._servlist.begin(); it2 != sh._servlist.end(); it2++)
+			{
+				string servID = (*it2);
+				ServiceInfo serv;
+				if (0 == GetService(servID, serv) && serv.status == "online")
+				{
+					servNum++;
+				}
+			}
+		}
+		it++;
+	}
+	return servNum;
 }
 
 int CAppConfig::AddTagOnlineServiceNumber(string appID, string raw_tag)
@@ -894,6 +923,7 @@ unsigned CAppConfig::GetTagOnlineServiceNumber(string appID, string raw_tag)
 	}
 	return it->second;
 }
+
 
 int CAppConfig::DelTagOnlineServiceNumber(string appID, string raw_tag)
 {
@@ -1023,6 +1053,30 @@ int CAppConfig::getMaxConvNum(string appID)
     }
 	
 	return max_conv_num;
+}
+
+int CAppConfig::getUserQueueNum(string appID)
+{
+	int user_queue_num = 1;
+
+    if (CAppConfig::Instance()->GetValue(appID, "check_user_queue_num", user_queue_num) || 0 == user_queue_num)
+    {
+		user_queue_num = 1;
+    }
+
+	return user_queue_num;
+}
+
+int CAppConfig::getUserQueueDir(string appID)
+{
+	int user_queue_dir = 1; //默认从队尾拉取
+
+    if (CAppConfig::Instance()->GetValue(appID, "check_user_queue_dir", user_queue_dir))
+    {
+		user_queue_dir = 1;
+    }
+
+	return user_queue_dir;
 }
 
 string CAppConfig::getTimeWarnHint(string appID)

@@ -178,10 +178,6 @@ int CTimerInfo::init(string req_data, int datalen)
 	{
 		m_extends = js_req_data["extends"].toStyledString();
 	}
-	else
-	{
-		m_extends = "";
-	}
 	
 	m_serviceName = get_value_str(js_req_data, "serviceName");
 
@@ -200,7 +196,14 @@ int CTimerInfo::init(string req_data, int datalen)
 	
 	if (!js_req_data["lastServiceID"].isNull() && js_req_data["lastServiceID"].isString())
 	{
-		m_lastServiceID = m_appID + "_" + js_req_data["lastServiceID"].asString();
+		m_raw_lastServiceID = js_req_data["lastServiceID"].asString();
+		m_lastServiceID = m_appID + "_" + m_raw_lastServiceID;
+	}
+
+	if (!js_req_data["appointServiceID"].isNull() && js_req_data["appointServiceID"].isString())
+	{
+		m_raw_appointServiceID = js_req_data["appointServiceID"].asString();
+		m_appointServiceID     = m_appID + "_" + m_raw_appointServiceID;
 	}
 
 	//0: normal queue, 1: highpri queue

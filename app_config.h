@@ -133,6 +133,7 @@ public:
 	unsigned GetTagServiceNumber(string appID, string raw_tag);
 	
 	unsigned GetTagOnlineServiceNumber(string appID, string raw_tag);
+	unsigned GetOnlineServiceNumber(string appID);
 	int AddTagOnlineServiceNumber(string appID, string raw_tag);
 	int DelTagOnlineServiceNumber(string appID, string raw_tag);
 	
@@ -143,6 +144,8 @@ public:
 	long long getDefaultSessionTimeOut(string appID);
 	long long getDefaultQueueTimeout(string appID);
 	int getMaxConvNum(string appID);
+	int getUserQueueNum(string appID);
+	int getUserQueueDir(string appID);
 	string getTimeWarnHint(string appID);
 	string getNoServiceOnlineHint(string appID);
 	string getQueueTimeoutHint(string appID);

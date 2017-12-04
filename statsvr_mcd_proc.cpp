@@ -1198,7 +1198,7 @@ void CMCDProc::DispatchUser2Service()
             }
             else
             {
-                LogTrace("[%s]: match user with service...", appID.c_str());
+                //LogTrace("[%s]: match user with service...", appID.c_str());
                 timeval ntv;
 		        gettimeofday(&ntv, NULL);
                 CTimerInfo* ti = new UserServiceTimer(this, GetMsgSeq(), ntv, "", 0, m_cfg._time_out);

@@ -125,6 +125,9 @@ namespace statsvr
 		int on_reject_enqueue();
 		int on_already_inservice();
 		int on_service_with_noqueue(bool flag);
+		int on_appoint_service_offline();
+		int on_send_connect_success(Session sess, ServiceInfo serv);
+		int on_appoint_service();
 		int on_queue();
 		int on_connect_service();
     };
@@ -167,7 +170,7 @@ namespace statsvr
 		int on_close_session();
 
 		Session m_session;
-		ServiceInfo m_service;
+		ServiceInfo m_serviceInfo;
     };
 
 }
