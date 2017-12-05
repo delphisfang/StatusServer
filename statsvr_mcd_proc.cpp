@@ -28,7 +28,7 @@ using namespace statsvr;
 #define BUFF_SIZE (2 * 1024 * 1024)
 #define ARG_CNT_MAX	(32)
 
-static char r_code_200[] = "200";
+static char r_code_200[]   = "200";
 static char r_reason_200[] = "OK";
 
 char BUF[BUFF_SIZE] = {0};
@@ -40,19 +40,16 @@ extern "C"
         CMCDProc *app = (CMCDProc*)papp;
         app->DispatchCCD();
     }
-
     static void disp_dcc(void *papp)
     {
         CMCDProc *app = (CMCDProc*)papp;
         app->DispatchDCC();
     }
-
     static void disp_dcc_http(void *papp)
     {
         CMCDProc *app = (CMCDProc*)papp;
         app->DispatchDCCHttp();
     }
-
 }
 
 void CMCDProc::run(const std::string& conf_file)

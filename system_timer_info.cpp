@@ -80,17 +80,13 @@ int SessionOutTimer::on_session_timeout()
 	//2.设置user的熟客ID
     m_sessionID              = sess.sessionID;
 	m_userInfo.lastServiceID = sess.serviceID;
-	//3.更新session
-#if 0
-	pSessQueue->pop();
-#else
+	//3.删除旧session，创建新session
 	new_sessionID  = gen_sessionID(m_userID);
 	sess.sessionID = new_sessionID;
 	sess.serviceID = "";
-	sess.atime     = GetCurTimeStamp();
-	SET_SESS(pSessQueue->set(m_userID, &sess, MAX_INT, MAX_INT));
-	DO_FAIL(KV_set_session(m_userID, sess, MAX_INT, MAX_INT));
-#endif
+	sess.atime     = sess.btime = GetCurTimeStamp();
+	DO_FAIL(DeleteUserSession(m_appID, m_userID));
+	DO_FAIL(CreateUserSession(m_appID, m_userID, &sess, MAX_INT, MAX_INT));
 
 	//4.更新user
 	m_userInfo.status    = "inYiBot";
