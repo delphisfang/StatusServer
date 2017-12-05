@@ -691,7 +691,7 @@ int CloseSessionTimer::do_next_step(string& req_data)
 	}
 }
 
-int CloseSessionTimer::on_closeSession_reply()
+int CloseSessionTimer::on_closeSession_reply(const string &oldSessionID)
 {
 	Json::Value data;
 	Json::Value userInfo;
@@ -705,7 +705,7 @@ int CloseSessionTimer::on_closeSession_reply()
 	servInfo["chatProxyIp"] = m_serviceInfo.cpIP;
 	servInfo["chatProxyPort"] = m_serviceInfo.cpPort;
 
-	data["sessionID"] = m_session.sessionID;
+	data["sessionID"] = oldSessionID;
 	data["userInfo"] = userInfo;
 	data["serviceInfo"] = servInfo;
 	return on_send_reply(data);
@@ -725,6 +725,7 @@ m_userID
 int CloseSessionTimer::on_close_session()
 {
 	UserInfo user;
+	string oldSessionID;
 
 	LogDebug("==>IN");	
 	
@@ -744,6 +745,7 @@ int CloseSessionTimer::on_close_session()
 	//delete old session, create new session
 	LogTrace("======>Delete old session: %s", m_session.toString().c_str());
 	m_session.serviceID = "";
+	oldSessionID    = m_session.sessionID;
 	user.sessionID  = m_session.sessionID = gen_sessionID(m_userID);
 	m_session.atime = m_session.btime = GetCurTimeStamp();
 	LogTrace("======>Create new session: %s", m_session.toString().c_str());
@@ -760,7 +762,7 @@ int CloseSessionTimer::on_close_session()
 	user.lastServiceID = m_raw_lastServiceID;
 	DO_FAIL(UpdateUser(m_userID, user));
 	
-	DO_FAIL(on_closeSession_reply());
+	DO_FAIL(on_closeSession_reply(oldSessionID));
 	LogDebug("==>OUT");
 	return SS_OK;
 }

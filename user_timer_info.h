@@ -165,7 +165,7 @@ namespace statsvr
         ~CloseSessionTimer();
 
         int do_next_step(string& req_data);
-        int on_closeSession_reply();
+        int on_closeSession_reply(const string &oldSessionID);
 		int on_not_inservice();
 		int on_close_session();
 

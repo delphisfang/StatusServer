@@ -68,9 +68,8 @@ int SessionOutTimer::on_session_timeout()
     if (CAppConfig::Instance()->GetService(m_serviceID, m_serviceInfo) 
     	|| m_serviceInfo.find_user(m_raw_userID))
     {
-        LogError("Failed to find user[%s] in service[%s]", m_raw_userID.c_str(), m_serviceID.c_str());
-		ON_ERROR_GET_DATA("service");
-        pSessQueue->pop();
+        LogError("Failed to find user[%s] in service[%s], panic!!!", m_raw_userID.c_str(), m_serviceID.c_str());
+		//ON_ERROR_GET_DATA("service"); //need not send packet
         return SS_ERROR;
     }
 	GET_USER(CAppConfig::Instance()->GetUser(m_userID, m_userInfo));
