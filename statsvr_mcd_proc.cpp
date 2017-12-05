@@ -904,7 +904,8 @@ int32_t CMCDProc::EnququeHttp2CCD(unsigned long long flow, char *data, unsigned 
 int32_t CMCDProc::EnququeConfigHttp2DCC()
 {
     char uri[4096] = {0};
-    snprintf (uri,  4096, "GET /api/v2/configs/ping HTTP/1.1\r\nHost:%s\r\nUser-Agent:curl/7.45.0\r\nAccept:*/*\r\n\r\n", m_cfg._config_domin.c_str());
+    snprintf(uri,  4096, "GET /api/v2/configs/getConfigForIM HTTP/1.1\r\nHost:%s\r\nUser-Agent:curl/7.45.0\r\nAccept:*/*\r\n\r\n", 
+				m_cfg._config_domin.c_str());
     unsigned msg_len = strlen(uri);
     TCCDHeader* header = (TCCDHeader*)m_send_buf;
     char* data_buff = m_send_buf + CCD_HEADER_LEN;

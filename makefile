@@ -8,10 +8,9 @@ INC +=-I$(LIB_HTTP_PATH) -I./proto -I$(CODE)/thirdparty/ -I$(CODE)/ -I$(CODE)/co
 INC +=-I$(TOP)/mcp++/inc -I$(TOP)/mcp++/mcp++/src/tns/inc
 INC +=-I$(YUN)/common/YiLicense/ -I$(YUN)/build64_release
 INC +=-I$(CODE)/kv_store/kv_server/kv_module -I$(CODE)/kv_store/kv_core/ -I$(CODE)/kv_store/proto
-LIB +=-L$(TFC_WD)/. $(LIB_HTTP_PATH)libhttpcxx.a -liconv -lpthread -lprotobuf \
+LIB +=-L$(TFC_WD)/. $(LIB_HTTP_PATH)libhttpcxx.a -lpthread \
 	  $(CODE)/build64_release/thirdparty/jsoncpp-0.6.0-dev/libjsoncpp.a \
 	  -L$(CODE)/build64_release/common/crypto/symmetric/ -laes -lcrypto_with_length \
-	  $(CODE)/build64_release/common/system/concurrency/libconcurrency.a \
 	  $(CODE)/build64_release/common/system/libcheck_error.a \
 	  $(CODE)/build64_release/thirdparty/glog-0.3.2/src/libglog.a \
 	  $(CODE)/build64_release/thirdparty/gflags-2.0/src/libgflags.a \
