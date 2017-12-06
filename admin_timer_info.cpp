@@ -131,6 +131,7 @@ int AdminConfigTimer::on_admin_send_reply(const Json::Value &data)
 	rsp["data"] = data;
 
     string rsp_str = rsp.toStyledString();
+	LogTrace("=====>admin send reply: %s", rsp_str.c_str());
     if (m_proc->EnququeHttp2CCD (m_ret_flow, (char *)rsp_str.c_str(), rsp_str.size()))
     {
     	LogError("enqueue_2_ccd failed.");
@@ -354,7 +355,7 @@ int AdminConfigTimer::get_app_today_status(string appID, Json::Value &appList)
 	}
 	else
 	{
-		userNumber = pSessQueue->size();
+		userNumber = pSessQueue->get_usernum_in_service();
 	}
 
 	/* 获取当前正在排队的用户人数 */

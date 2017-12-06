@@ -1137,6 +1137,22 @@ namespace statsvr
 		{ 
 			return _sess_list.size();
 		}
+
+		unsigned get_usernum_in_service()
+		{
+			list<SessionTimer>::iterator it;
+			unsigned userNum = 0;
+			
+			for (it = _sess_list.begin(); it != _sess_list.end(); it++)
+			{
+				SessionTimer st = *it;
+				if ("" != st.session.serviceID)
+				{
+					++userNum;
+				}
+			}
+			return userNum;
+		}
 	};
 }
 

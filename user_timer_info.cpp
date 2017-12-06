@@ -413,6 +413,12 @@ int ConnectServiceTimer::on_appoint_service()
 	ServiceInfo serv;
 	Session sess;
 
+	if ("" == m_raw_appointServiceID)
+	{
+		LogTrace("[%s]: appointServiceID is empty, do nothing!", m_appID.c_str());
+		return SS_OK;
+	}
+	
 	//无需判定坐席的服务上限，直接服务
 	if (CAppConfig::Instance()->GetService(m_appointServiceID, serv)
 		|| serv.status == "offline")
@@ -463,7 +469,7 @@ int ConnectServiceTimer::on_queue()
 	LogDebug("==>IN");
 
 	//指定客服
-	if ("" != m_appointServiceID)
+	if (true == m_has_appointServiceID)
 	{
 		return on_appoint_service();
 	}

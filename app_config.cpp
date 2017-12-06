@@ -847,50 +847,44 @@ unsigned CAppConfig::GetTagServiceNumber(string appID, string raw_tag)
 
 unsigned CAppConfig::GetServiceNumber(string appID)
 {
-	map<string, ServiceHeap>::iterator it;
+	map<string, ServiceInfo>::iterator it;
 	int servNum = 0;
-	ServiceHeap sh;
-	
-	it = tagServiceHeap.begin();
-	while (it != tagServiceHeap.end())
+
+	for (it = _servicelist.begin(); it != _servicelist.end(); ++it)
 	{
 		if (appID == getappID(it->first))
 		{
-			sh = it->second;
-			servNum += sh.size();
+			string servID = it->first;
+			ServiceInfo serv;
+			if (0 == GetService(servID, serv))
+			{
+				++servNum;
+			}
 		}
-		it++;
 	}
+	
 	return servNum;
-
 }
 
 //注意，1个service可以属于多个tag，不要重复计算
 unsigned CAppConfig::GetOnlineServiceNumber(string appID)
 {
-	map<string, ServiceHeap>::iterator it;
+	map<string, ServiceInfo>::iterator it;
 	int servNum = 0;
-	ServiceHeap sh;
-	set<string>::iterator it2;
-	
-	it = tagServiceHeap.begin();
-	while (it != tagServiceHeap.end())
+
+	for (it = _servicelist.begin(); it != _servicelist.end(); ++it)
 	{
 		if (appID == getappID(it->first))
 		{
-			sh = it->second;
-			for (it2 = sh._servlist.begin(); it2 != sh._servlist.end(); it2++)
+			string servID = it->first;
+			ServiceInfo serv;
+			if (0 == GetService(servID, serv) && "offline" != serv.status)
 			{
-				string servID = (*it2);
-				ServiceInfo serv;
-				if (0 == GetService(servID, serv) && serv.status != "offline")
-				{
-					servNum++;
-				}
+				++servNum;
 			}
 		}
-		it++;
 	}
+	
 	return servNum;
 }
 
