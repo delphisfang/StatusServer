@@ -79,6 +79,7 @@ void CMCDProc::run(const std::string& conf_file)
 
     while (!obj_checkflag.IsStop())
     {
+		DispatchServiceTimeout();
 		DispatchUser2Service();
 		DispatchSessionTimer();
         run_epoll_4_mq();
@@ -787,7 +788,6 @@ int32_t CMCDProc::HandleResponse(char* data,
 
 								 
 #if 0
-
 int32_t CMCDProc::HandleResponseHttp(char* data,
                                  unsigned data_len,
                                  unsigned long long flow,
@@ -812,7 +812,7 @@ void CMCDProc::DispatchDCCHttp()
         data_len = 0;
         ret = m_mq_dcc_2_mcd_http->try_dequeue(m_recv_buf, BUFF_SIZE, data_len, flow);
 
-        if (ret || data_len < CCD_HEADER_LEN)
+        if (ret || data_len < DCC_HEADER_LEN)
         {
             ++deal_count;
             continue;
@@ -823,11 +823,10 @@ void CMCDProc::DispatchDCCHttp()
 		dcc_time.tv_sec 	= dccheader->_timestamp;
 		dcc_time.tv_usec 	= dccheader->_timestamp_msec * 1000;
 
-        if (ccd_rsp_data != dccheader->_type)
+        if (dcc_rsp_data != dccheader->_type)
         {
-            LogError("[DispatchCcd] ccdheader->_type invalid "
-                    "expect: %d actual: %d down_ip: %s down_port:%d\n",
-                    ccd_rsp_data, dccheader->_type, INET_ntoa(down_ip).c_str(), down_port);
+            LogError("dccheader->_type invalid, expect: %d, actual: %d, down_ip: %s, down_port: %d",
+                    	dcc_rsp_data, dccheader->_type, INET_ntoa(down_ip).c_str(), down_port);
             ++deal_count;
             continue;
         }
@@ -899,17 +898,15 @@ int32_t CMCDProc::EnququeHttp2CCD(unsigned long long flow, char *data, unsigned 
     return 0;
 }
 
-
-#if 0
 int32_t CMCDProc::EnququeConfigHttp2DCC()
 {
-    char uri[4096] = {0};
-    snprintf(uri,  4096, "GET /api/v2/configs/getConfigForIM HTTP/1.1\r\nHost:%s\r\nUser-Agent:curl/7.45.0\r\nAccept:*/*\r\n\r\n", 
+    char uri[20480] = {0};
+    snprintf(uri,  20480, "GET /api/v2/configs/getConfigForIM HTTP/1.1\r\nHost:%s\r\nUser-Agent:curl/7.45.0\r\nAccept:*/*\r\n\r\n", 
 				m_cfg._config_domin.c_str());
-    unsigned msg_len = strlen(uri);
-    TCCDHeader* header = (TCCDHeader*)m_send_buf;
-    char* data_buff = m_send_buf + CCD_HEADER_LEN;
-    unsigned data_max = BUFF_SIZE- CCD_HEADER_LEN;
+    unsigned msg_len   = strlen(uri);
+    TDCCHeader* header = (TDCCHeader*)m_send_buf;
+    char* data_buff    = m_send_buf + DCC_HEADER_LEN;
+    unsigned data_max  = BUFF_SIZE- DCC_HEADER_LEN;
 
 	memcpy(data_buff, uri, msg_len);
 	data_buff += msg_len;
@@ -917,13 +914,13 @@ int32_t CMCDProc::EnququeConfigHttp2DCC()
     unsigned iip = INET_aton(m_cfg._config_ip.c_str());
     unsigned long long flow = make_flow64(iip, m_cfg._config_port);
     header->_type = dcc_req_send;
-    header->_ip = iip;
+    header->_ip   = iip;
     header->_port = m_cfg._config_port;
 
-	int totallen = CCD_HEADER_LEN + msg_len;
-    if (m_mq_mcd_2_dcc_http->enqueue(header, totallen, flow))
+	int totallen = DCC_HEADER_LEN + msg_len;
+    if (m_mq_mcd_2_dcc->enqueue(header, totallen, flow))
     {
-        LogError("[EnququeConfigHttp2DCC] enqueue to DCC fail\n");
+        LogError("Failed to Enqueue HTTP to DCC!");
         timeval nowTime;
 	    gettimeofday(&nowTime, NULL);
         CWaterLog::Instance()->WriteLog(nowTime, 1, (char *)m_cfg._config_ip.c_str(), m_cfg._config_port, -1, uri);
@@ -931,16 +928,14 @@ int32_t CMCDProc::EnququeConfigHttp2DCC()
     }
     else
     {
-        LogDebug("[EnququeConfigHttp2DCC] enqueue to DCC success, total_len:%d, ccd_header:%d\n"
-			   , totallen, CCD_HEADER_LEN);
+        LogDebug("Success to Enqueue HTTP to DCC, total_len:%d, dcc_header_len:%d", totallen, DCC_HEADER_LEN);
         timeval nowTime;
 	    gettimeofday(&nowTime, NULL);
         CWaterLog::Instance()->WriteLog(nowTime, 1, (char *)m_cfg._config_ip.c_str(), m_cfg._config_port, 0, uri);
+		return 0;
     }
-
-    return 0;
 }
-#endif
+
 
 int32_t CMCDProc::EnququeHttp2DCC(char* data, unsigned data_len, const string& ip, unsigned short port)
 {
@@ -994,13 +989,8 @@ int32_t CMCDProc::EnququeErrHttp2DCC(char* data, unsigned data_len)
 {
     char uri[20480] = {0};
 
-    snprintf(uri, 20480, "POST /pushError/ HTTP/1.1\r\nhost:%s:%u\r\nContent-Type:application/json\r\nContent-Length:%u\r\nUser-Agent:Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko\r\nAccept:*/*\r\n\r\n%s\r\n"
+    snprintf(uri, 20480, "POST /pushError/ HTTP/1.1\r\nhost:%s:%u\r\nContent-Type:application/json\r\nContent-Length:%u\r\nUser-Agent:Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko\r\nAccept:*/*\r\n\r\n%s"
     , m_cfg._err_push_ip.c_str(), m_cfg._err_push_port, data_len, data);
-
-    //DEBUG_P(LOG_NORMAL, "uri post error:%s\n", uri);
-
-   //snprintf (uri,  4096, "POST /IM_monitor/MsgTransfer/ HTTP/1.1\r\nhost:%s:%u\r\nContent-Length:%u\r\nUser-Agent:curl/7.45.0\r\nConnection:Keep-Alive\r\nAccept:*/*\r\n\r\n%s\r\n"
-   // , m_cfg._err_push_ip.c_str(), m_cfg._err_push_port, data_len, data);
 
     unsigned msg_len = strlen(uri);
 
@@ -1100,11 +1090,10 @@ int32_t CMCDProc::Enqueue2DCC(char* data, unsigned data_len, const string& ip, u
 
 void CMCDProc::DispatchServiceTimeout()
 {
-	#if 0
     timeval ntv;
 	gettimeofday(&ntv, NULL);
 
-	CTimerInfo *ti  = new OnlineServiceCheck(this, GetMsgSeq(), ntv, "", 0, m_cfg._time_out);
+	CTimerInfo *ti  = new ServiceOutTimer(this, GetMsgSeq(), ntv, "", 0, m_cfg._time_out);
     string req_data = i2str(m_cfg._service_time_gap);
 
     if (ti->do_next_step(req_data) == 0)
@@ -1115,7 +1104,6 @@ void CMCDProc::DispatchServiceTimeout()
     {
         delete ti;
     }
-	#endif
 }
 
 void CMCDProc::DispatchUser2Service()

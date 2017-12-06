@@ -5,6 +5,53 @@
 
 using namespace statsvr;
 
+
+int ServiceOutTimer::do_next_step(string& req_data)
+{
+	m_service_time_gap = atoi(req_data.c_str());
+	if (on_service_timeout())
+	{
+		return -1;
+	}
+	else
+	{
+		return 1;///important
+	}
+}
+
+int ServiceOutTimer::on_service_timeout()
+{
+	CAppConfig::Instance()->CheckOnlineService(m_service_time_gap, m_serviceList);
+	if (m_serviceList.size() == 0)
+    {
+		//LogTrace("no service timeout, do nothing!");
+    	return 0;
+    }
+
+	set<string>::iterator it;
+	for (it = m_serviceList.begin(); it != m_serviceList.end(); it++)
+	{
+		string servID = *it;
+		m_appID = getappID(servID);
+		ServiceInfo serv;
+
+		//强制service下线
+		CAppConfig::Instance()->GetService(servID, serv);
+		serv.status = "offline";
+		DO_FAIL(UpdateService(servID, serv));
+		//更新onlineServiceNum
+		DO_FAIL(DelTagOnlineServNum(m_appID, serv));
+		//无需更新tagServiceHeap
+	}
+}
+
+ServiceOutTimer::~ServiceOutTimer()
+{
+}
+
+
+
+
 int SessionOutTimer::do_next_step(string& req_data)
 {
 	m_appID = req_data;

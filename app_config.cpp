@@ -938,6 +938,26 @@ int CAppConfig::DelTagOnlineServiceNumber(string appID, string raw_tag)
 	return 0;
 }
 
+int CAppConfig::CheckOnlineService(long long time_gap, set<string>& serviceList)
+{
+	long long nowTime = time(NULL);
+	map<string, ServiceInfo>::iterator it;
+	
+	for (it = _servicelist.begin(); it != _servicelist.end(); ++it)
+	{
+		ServiceInfo serv = it->second;
+		long long atime  = (serv.atime / 1000);
+		if (nowTime >= atime + time_gap)
+		{
+			serviceList.insert(it->first);
+		}
+	}
+	return 0;
+}
+
+
+
+
 int CAppConfig::checkAppIDExist(string appID)
 {
     Json::Reader reader;

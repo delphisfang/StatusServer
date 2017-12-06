@@ -14,6 +14,26 @@ using namespace tfc::cache;
 
 namespace statsvr
 {
+    class ServiceOutTimer:public CTimerInfo
+    {
+        public:
+        ServiceOutTimer(CMCDProc* const proc
+                      , unsigned msg_seq
+                      , const timeval& ccd_time
+                      , string ccd_client_ip
+                      , uint64_t ret_flow
+                      , uint64_t max_time_gap) 
+                      : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
+        {}
+		~ServiceOutTimer();
+		
+        int  do_next_step(string& req_data);
+        int  on_service_timeout();
+
+		int  m_service_time_gap;
+		set<string> m_serviceList;
+    };
+
 	class SessionOutTimer:public CTimerInfo
 	{
 		public:
