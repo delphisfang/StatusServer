@@ -69,7 +69,8 @@ public:
     unsigned  _err_push_port;
     string    _env;
     string    _local_ip;
-
+	unsigned  _local_port;
+	
     unsigned  _queue_rate;
     unsigned  _yibot_time;
     time_t    _service_time_gap;

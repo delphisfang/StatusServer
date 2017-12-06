@@ -102,6 +102,7 @@ namespace statsvr
             virtual void run(const std::string& conf_file);
             int32_t Init(const std::string& conf_file);
             int32_t ReloadCfg();
+			int32_t InitSendPing();
             int32_t EnququeHttp2CCD(unsigned long long flow, char *data, unsigned data_len);
             int32_t Enqueue2CCD(unsigned long long flow, char *data, unsigned data_len);
             int32_t Enqueue2DCC(char *data, unsigned data_len, const string& ip, unsigned short port);

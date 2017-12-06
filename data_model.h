@@ -310,9 +310,7 @@ namespace statsvr
 		{
 	    	serviceID.clear();
 			status.clear();
-			atime = 0;
 			cpIP.clear();
-			cpPort = 0;
 			tags.clear();
 			userList.clear();
 			serviceName.clear();
@@ -1099,6 +1097,7 @@ namespace statsvr
 
 			for (it = _sess_list.begin(); it != _sess_list.end(); it++)
 			{
+				//it->isWarn==1表示之前提醒过，不需要再提醒
 				if (nowTime >= it->warn_time && it->isWarn == 0)
 				{
 					LogDebug("[nowTime: %ld] Find session timewarn, session:%s", nowTime, it->toString().c_str());
@@ -1106,10 +1105,10 @@ namespace statsvr
 					it->isWarn = 1;
 					return 0;
 				}
-				else if (nowTime < it->warn_time)
+				/*else if (nowTime < it->warn_time)
 				{
 					return -1;
-				}
+				}*/
 			}
 			
 			return -1;

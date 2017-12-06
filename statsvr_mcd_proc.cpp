@@ -77,9 +77,18 @@ void CMCDProc::run(const std::string& conf_file)
 
 	LogDebug("statsvr server started.....\n");
 
+	if (InitSendPing())
+	{
+		LogError("Failed to send init ping!");
+	}
+	else
+	{
+		LogDebug("Success to send init ping!");
+	}
+	
     while (!obj_checkflag.IsStop())
     {
-		DispatchServiceTimeout();
+		//DispatchServiceTimeout();
 		DispatchUser2Service();
 		DispatchSessionTimer();
         run_epoll_4_mq();
@@ -467,7 +476,7 @@ int32_t CMCDProc::HttpParseCmd(char* data, unsigned data_len, string& outdata, u
 {
     if (data_len < 5)
 	{
-		LogError("http data too small: %s\n", data);
+		LogError("http data too small: %s", data);
         return -1;
 	}
 
@@ -760,20 +769,55 @@ int32_t CMCDProc::HandleResponse(char* data,
                                  unsigned long long flow,
                                  uint32_t down_ip, unsigned down_port, timeval& dcc_time)
 {
-    uint16_t service_type;
-    uint32_t out_buf_len = 0;
+	#if 1
+
+	return 0;
+	
+	#else
+    string outdata;
+    unsigned out_len = 0;
+    int ret = HttpParseCmd(data, data_len, outdata, out_len);
+	if (ret < 0)
+	{
+		LogError("Failed to parse http, ret: %d", ret);
+		return -1;
+	}
+
+	
+	Json::Reader reader;
+	Json::Value  root;
+	if (!reader.parse(outdata, root))
+	{
+		LogError("Failed to parse response: %s", outdata.c_str());
+		return -1;
+	}
+
+
     uint32_t msg_seq = 0;
+	if (!root["innerSeq"].isNull() && root["innerSeq"].isUInt())
+	{
+		msg_seq = root["innerSeq"].asUInt();
+	}
+	else if (!root["seq"].isNull() && root["seq"].isString())
+	{
+		msg_seq = root["seq"].asString();
+	}
+	else
+	{
+		LogError("Failed to parse seq from HTTP response!");
+		return -1;
+	}
+	LogTrace("======>seq: %u", msg_seq);
 
-    //longconn_parse(data, data_len, BUF, DATA_BUF_SIZE, msg_seq, service_type, out_buf_len);
 
-    CTimerInfo* ti = NULL;
+	CTimerInfo* ti = NULL;
     if (m_timer_queue.get(msg_seq, (CFastTimerInfo**)&ti))
     {
         LogError("[CMCDProc] seq_no=%u m_timer_queue.get fail [%s:%u] dcc_time[%s]\n"
 			   , msg_seq, INET_ntoa(down_ip).c_str(), down_port, GetFormatTime(dcc_time).c_str());
         return -1;
     }
-    string req_data = string(BUF, out_buf_len);
+    string req_data = string(BUF, out_len);
 	if (ti->do_next_step(req_data) !=0 )
 	{
 		delete ti;
@@ -784,6 +828,7 @@ int32_t CMCDProc::HandleResponse(char* data,
 	}
 	
     return 0;
+	#endif
 }
 
 								 
@@ -852,7 +897,7 @@ int32_t CMCDProc::EnququeHttp2CCD(unsigned long long flow, char *data, unsigned 
 
 	int   ret_len  = 0;
     char* head_msg = NULL;
-    int msg_len = m_http_template.ProduceRef(&head_msg, &ret_len, m_arg_vals, m_arg_cnt);
+    int msg_len    = m_http_template.ProduceRef(&head_msg, &ret_len, m_arg_vals, m_arg_cnt);
     if (NULL == head_msg || msg_len <= 0)
     {
     	LogError("enqueue to client error! flow:%lu, datalen:%u, data:%s\n", flow, data_len ,data);
@@ -860,13 +905,13 @@ int32_t CMCDProc::EnququeHttp2CCD(unsigned long long flow, char *data, unsigned 
 	}
 
 	TCCDHeader* header = (TCCDHeader*)m_send_buf;
-    char* data_buff = m_send_buf + CCD_HEADER_LEN;
-    unsigned data_max = BUFF_SIZE- CCD_HEADER_LEN;
+    char* data_buff    = m_send_buf + CCD_HEADER_LEN;
+    unsigned data_max  = BUFF_SIZE- CCD_HEADER_LEN;
 
 	/* 包大小检查 */
     if (data_len + msg_len > data_max)
     {
-        LogError("[Enqueue2CCD] data_len+msg_len > data_max (%u+%d > %u)\n", data_len, msg_len, data_max);
+        LogError("data_len+msg_len > data_max (%u+%d > %u)\n", data_len, msg_len, data_max);
         return -1;
     }
 
@@ -880,7 +925,7 @@ int32_t CMCDProc::EnququeHttp2CCD(unsigned long long flow, char *data, unsigned 
 
     if (m_mq_mcd_2_ccd->enqueue(header, totallen, flow))
     {
-        LogError("[Enqueue2CCD] enqueue to CCD fail\n");
+        LogError("Failed to enqueue to CCD!");
         timeval nowTime;
 	    gettimeofday(&nowTime, NULL);
         CWaterLog::Instance()->WriteLog(nowTime, 1, (char *)"", 0, -1, data);
@@ -888,7 +933,7 @@ int32_t CMCDProc::EnququeHttp2CCD(unsigned long long flow, char *data, unsigned 
     }
     else
     {
-        /*LogDebug("[Enqueue2CCD] enqueue to CCD success, total_len:%d, ccd_header:%d\n"
+        /*LogDebug("Success to enqueue to CCD, total_len:%d, ccd_header:%d\n"
 			   , totallen, CCD_HEADER_LEN);*/
         timeval nowTime;
 	    gettimeofday(&nowTime, NULL);
@@ -898,11 +943,20 @@ int32_t CMCDProc::EnququeHttp2CCD(unsigned long long flow, char *data, unsigned 
     return 0;
 }
 
-int32_t CMCDProc::EnququeConfigHttp2DCC()
+
+int32_t CMCDProc::InitSendPing()
 {
     char uri[20480] = {0};
-    snprintf(uri,  20480, "GET /api/v2/configs/getConfigForIM HTTP/1.1\r\nHost:%s\r\nUser-Agent:curl/7.45.0\r\nAccept:*/*\r\n\r\n", 
-				m_cfg._config_domin.c_str());
+	char *httpPostFmt = ""
+		"/api/v2/configs/ping?name=yiServer HTTP/1.1\r\n"
+		"Host:%s\r\n"
+		"User-Agent:curl/7.45.0\r\n"
+		"Accept:*/*\r\n"
+		"\r\n";
+
+	snprintf(uri, 20480, httpPostFmt, m_cfg._config_domin.c_str());
+	LogTrace("===>uri: %s", uri);
+	
     unsigned msg_len   = strlen(uri);
     TDCCHeader* header = (TDCCHeader*)m_send_buf;
     char* data_buff    = m_send_buf + DCC_HEADER_LEN;
@@ -937,6 +991,72 @@ int32_t CMCDProc::EnququeConfigHttp2DCC()
 }
 
 
+#if 1
+int32_t CMCDProc::EnququeConfigHttp2DCC()
+{
+    char uri[20480] = {0};
+	char *httpPostFmt = ""
+		"/api/v2/configs/getConfigForIM HTTP/1.1\r\n"
+		"Host:%s\r\n"
+		"User-Agent:curl/7.45.0\r\n"
+		"Content-Length:%d\r\n"
+		"Accept:*/*\r\n"
+		"\r\n"
+		"%s";
+
+	unsigned msg_seq = GetMsgSeq();
+	string seqStr    = ui2str(msg_seq);
+
+	Json::Value data;
+	Json::Value req;
+	string reqStr;
+	data["identity"] = "";
+	data["name"]     = "yiServer";
+	req["cmd"]       = "getConfigForIM";
+	req["data"]      = data;
+    req["seq"]       = seqStr;
+    reqStr = req.toStyledString();
+	
+	snprintf(uri, 20480, httpPostFmt,
+		m_cfg._config_domin.c_str(),
+		reqStr.length(),
+		reqStr.c_str()
+		);
+	
+    unsigned msg_len   = strlen(uri);
+    TDCCHeader* header = (TDCCHeader*)m_send_buf;
+    char* data_buff    = m_send_buf + DCC_HEADER_LEN;
+    unsigned data_max  = BUFF_SIZE- DCC_HEADER_LEN;
+
+	memcpy(data_buff, uri, msg_len);
+	data_buff += msg_len;
+
+    unsigned iip = INET_aton(m_cfg._config_ip.c_str());
+    unsigned long long flow = make_flow64(iip, m_cfg._config_port);
+    header->_type = dcc_req_send;
+    header->_ip   = iip;
+    header->_port = m_cfg._config_port;
+
+	int totallen = DCC_HEADER_LEN + msg_len;
+    if (m_mq_mcd_2_dcc->enqueue(header, totallen, flow))
+    {
+        LogError("Failed to Enqueue HTTP to DCC!");
+        timeval nowTime;
+	    gettimeofday(&nowTime, NULL);
+        CWaterLog::Instance()->WriteLog(nowTime, 1, (char *)m_cfg._config_ip.c_str(), m_cfg._config_port, -1, uri);
+        return -1;
+    }
+    else
+    {
+        LogDebug("Success to Enqueue HTTP to DCC, total_len:%d, dcc_header_len:%d", totallen, DCC_HEADER_LEN);
+        timeval nowTime;
+	    gettimeofday(&nowTime, NULL);
+        CWaterLog::Instance()->WriteLog(nowTime, 1, (char *)m_cfg._config_ip.c_str(), m_cfg._config_port, 0, uri);
+		return 0;
+    }
+}
+#endif
+
 int32_t CMCDProc::EnququeHttp2DCC(char* data, unsigned data_len, const string& ip, unsigned short port)
 {
     char uri[20480] = {0};
@@ -945,9 +1065,9 @@ int32_t CMCDProc::EnququeHttp2DCC(char* data, unsigned data_len, const string& i
     //DEBUG_P(LOG_TRACE, "DCC send packet:%s\n", uri);
     unsigned msg_len = strlen(uri);
 
-	TCCDHeader* header = (TCCDHeader*)m_send_buf;
-    char* data_buff = m_send_buf + CCD_HEADER_LEN;
-    unsigned data_max = BUFF_SIZE- CCD_HEADER_LEN;
+	TDCCHeader* header = (TDCCHeader*)m_send_buf;
+    char* data_buff = m_send_buf + DCC_HEADER_LEN;
+    unsigned data_max = BUFF_SIZE- DCC_HEADER_LEN;
 
     if (data_len + msg_len > data_max)
     {
@@ -964,7 +1084,7 @@ int32_t CMCDProc::EnququeHttp2DCC(char* data, unsigned data_len, const string& i
     header->_ip = iip;
     header->_port = port;
 
-	int totallen = CCD_HEADER_LEN + msg_len;
+	int totallen = DCC_HEADER_LEN + msg_len;
     if (m_mq_mcd_2_dcc->enqueue(header, totallen, flow))
     {
         LogError("[EnququeHttp2DCC] enqueue to DCC fail\n");
@@ -994,9 +1114,9 @@ int32_t CMCDProc::EnququeErrHttp2DCC(char* data, unsigned data_len)
 
     unsigned msg_len = strlen(uri);
 
-	TCCDHeader* header = (TCCDHeader*)m_send_buf;
-    char* data_buff = m_send_buf + CCD_HEADER_LEN;
-    unsigned data_max = BUFF_SIZE- CCD_HEADER_LEN;
+	TDCCHeader* header = (TDCCHeader*)m_send_buf;
+    char* data_buff = m_send_buf + DCC_HEADER_LEN;
+    unsigned data_max = BUFF_SIZE- DCC_HEADER_LEN;
 
     if (data_len + msg_len > data_max)
     {
@@ -1013,7 +1133,7 @@ int32_t CMCDProc::EnququeErrHttp2DCC(char* data, unsigned data_len)
     header->_ip = iip;
     header->_port = m_cfg._err_push_port;
 
-	int totallen = CCD_HEADER_LEN + msg_len;
+	int totallen = DCC_HEADER_LEN + msg_len;
     if (m_mq_mcd_2_dcc->enqueue(header, totallen, flow))
     {
         LogError("[EnququeErrHttp2DCC] enqueue to DCC fail\n");
@@ -1088,6 +1208,7 @@ int32_t CMCDProc::Enqueue2DCC(char* data, unsigned data_len, const string& ip, u
     return 0;
 }
 
+#if 0
 void CMCDProc::DispatchServiceTimeout()
 {
     timeval ntv;
@@ -1105,6 +1226,7 @@ void CMCDProc::DispatchServiceTimeout()
         delete ti;
     }
 }
+#endif
 
 void CMCDProc::DispatchUser2Service()
 {

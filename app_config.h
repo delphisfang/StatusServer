@@ -148,6 +148,8 @@ public:
 	int getMaxConvNum(string appID);
 	int getUserQueueNum(string appID);
 	int getUserQueueDir(string appID);
+	
+	string getTimeOutHint(string appID);
 	string getTimeWarnHint(string appID);
 	string getNoServiceOnlineHint(string appID);
 	string getQueueTimeoutHint(string appID);

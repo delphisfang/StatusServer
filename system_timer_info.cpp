@@ -5,7 +5,7 @@
 
 using namespace statsvr;
 
-
+#if 0
 int ServiceOutTimer::do_next_step(string& req_data)
 {
 	m_service_time_gap = atoi(req_data.c_str());
@@ -49,7 +49,7 @@ ServiceOutTimer::~ServiceOutTimer()
 {
 }
 
-
+#endif
 
 
 int SessionOutTimer::do_next_step(string& req_data)
@@ -68,6 +68,11 @@ int SessionOutTimer::do_next_step(string& req_data)
 int SessionOutTimer::on_send_timeout_msg()
 {
 	Json::Value data;
+
+	//if(m_session.whereFrom == "wx" || m_session.whereFrom == "wxpro")
+    //{
+        data["des"] = CAppConfig::Instance()->getTimeOutHint(m_appID);
+    //}
 
 	data["userID"]    = m_raw_userID;
 	data["serviceID"] = m_raw_serviceID;

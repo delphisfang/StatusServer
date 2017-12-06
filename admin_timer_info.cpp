@@ -107,7 +107,7 @@ int AdminConfigTimer::do_next_step(string& req_data)
 			}
 			else
             {
-                LogError("Error unknown cmd: %s\n", m_cmd.c_str());
+                LogError("Error unknown cmd: %s", m_cmd.c_str());
 				ON_ERROR_PARSE_PACKET();
                 return -1;
             }
@@ -404,7 +404,7 @@ int AdminConfigTimer::on_admin_get_today_status()
 	unsigned size = req["appIDList"].size();
 	if (size > MAXSIZE)
 	{
-		LogError("size:%d > MAXSIZE:%d\n", size, MAXSIZE);
+		LogError("size:%d > MAXSIZE:%d", size, MAXSIZE);
 		on_error_parse_packet("Error appIDList too long");
 		return -1;
 	}

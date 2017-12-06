@@ -4,6 +4,7 @@
 #include "tfc_base_str.h"
 #include "tfc_debug_log.h"
 #include "common_api.h"
+#include "debug.h"
 
 using namespace statsvr;
 
@@ -88,13 +89,17 @@ int CStatSvrCfgMng::loadConfig()
     struct hostent *hptr;
     if ((hptr = gethostbyname(_config_domin.c_str())) == NULL)
     {
+		LogError("Failed to gethostbyname()!");
         _config_ip = "127.0.0.1";
     }
     else
     {
+		LogTrace("Success to gethostbyname().");
         _config_ip.assign(inet_ntoa(*((struct in_addr *)hptr->h_addr)));
     }
     _config_port = GetDefault(page, "root\\config_port", 80);
+	LogTrace("====> config_domain: %s, config_ip: %s, config_port: %u", 
+				_config_domin.c_str(), _config_ip.c_str(), _config_port);
 
     _err_push_ip = GetDefault(page, "root\\err_push_ip", "127.0.0.1");
     if (_err_push_ip == "127.0.0.1")
@@ -108,6 +113,7 @@ int CStatSvrCfgMng::loadConfig()
     _err_push_port = GetDefault(page, "root\\err_push_port", 80);
     _env           = GetDefault(page, "root\\env", "test");
     _local_ip      = GetDefault(page, "root\\local_ip", "127.0.0.1");
+	_local_port	   = GetDefault(page, "root\\local_port", 80);
 
     _service_time_gap = GetDefault(page, "root\\service_time_gap", 900); //second
 

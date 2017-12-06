@@ -1094,6 +1094,13 @@ int CAppConfig::getUserQueueDir(string appID)
 	return user_queue_dir;
 }
 
+string CAppConfig::getTimeOutHint(string appID)
+{
+	string hint;
+	CAppConfig::Instance()->GetValue(appID, "timeout_end_hint", hint);
+	return hint;
+}
+
 string CAppConfig::getTimeWarnHint(string appID)
 {
 	string hint;

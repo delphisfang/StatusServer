@@ -66,7 +66,7 @@ int CTimerInfo::init(string req_data, int datalen)
 	}
 	//LogDebug("m_cmd: %s", m_cmd.c_str());
 
-	if ((m_cmd != "getUserInfo" && m_cmd != "getServiceInfo" && m_cmd != "updateConf")
+	if ((m_cmd != "getUserInfo" && m_cmd != "getServiceInfo")
 	/*	|| 0 == access("/home/fht/sskv_10302/debug_switch", F_OK)*/)
 	{
 		LogDebug("req_data: %s", req_data.c_str());
@@ -469,14 +469,7 @@ int CTimerInfo::on_send_error_reply(ERROR_TYPE code, string msg, const Json::Val
 	rsp["appID"]	 = m_appID;
 	rsp["method"]	 = m_cmd + "-reply";
 	rsp["innerSeq"]  = m_seq;
-	if (code > 0)
-	{
-		rsp["code"] = 0;
-	}
-	else
-	{
-		rsp["code"] = code;
-	}
+	rsp["code"]      = code;
 	rsp["msg"]		 = msg;
 	rsp["data"] 	 = data;
 	string strRsp	 = rsp.toStyledString();

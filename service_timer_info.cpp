@@ -120,7 +120,8 @@ int ServiceLoginTimer::on_already_online()
 {
 	Json::Value data;
 	set_service_data(data);
-	return on_send_error_reply(WARN_ALREADY_ONLINE, "Service Already Online", data);
+	//return on_send_error_reply(WARN_ALREADY_ONLINE, "Service Already Online", data);
+	return on_send_error_reply(ERROR_NO_ERROR, "Service Already Online", data);
 }
 
 void ServiceLoginTimer::set_service_fields(ServiceInfo &serv)
@@ -158,7 +159,7 @@ int ServiceLoginTimer::on_service_login()
 		LogDebug("Old service: %s, new cpIP: %s, new cpPort: %u", serv.toString().c_str(), m_cpIP.c_str(), m_cpPort);
     	if (m_cpIP == serv.cpIP && m_cpPort == serv.cpPort)
     	{
-			LogDebug("service online in the same CP, update service info.");
+			LogDebug("service login in the same CP, update service info.");
 			DO_FAIL(CAppConfig::Instance()->DelServiceFromTags(m_appID, serv));
 			DO_FAIL(DelTagOnlineServNum(m_appID, serv));
 			set_service_fields(serv);
@@ -169,7 +170,7 @@ int ServiceLoginTimer::on_service_login()
     	}
 		else
 		{
-			LogDebug("service online in another CP, kick out.");
+			LogDebug("service login in another CP, kick out.");
 			set_service_data(data);
 			DO_FAIL(on_send_request("kickOut", serv.cpIP, serv.cpPort, data, false));
 			
@@ -184,12 +185,13 @@ int ServiceLoginTimer::on_service_login()
 			DO_FAIL(UpdateService(m_serviceID, serv));
     	}
     }
-	else //service first online, create and add new service
+	else //service first login, create and add new service
 	{
 		serv = ServiceInfo(m_data);
 		LogDebug("Add new service: %s", m_serviceID.c_str());
 		DO_FAIL(AddService(m_appID, m_serviceID, serv));
 		DO_FAIL(AddTagOnlineServNum(m_appID, serv));
+		
 		/*unsigned servNum = CAppConfig::Instance()->GetServiceNumber(m_appID);
 		LogDebug("total service num: %u", servNum);*/
 	}
