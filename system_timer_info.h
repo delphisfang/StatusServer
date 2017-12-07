@@ -14,7 +14,6 @@ using namespace tfc::cache;
 
 namespace statsvr
 {
-	#if 0
     class ServiceOutTimer:public CTimerInfo
     {
         public:
@@ -34,7 +33,6 @@ namespace statsvr
 		int  m_service_time_gap;
 		set<string> m_serviceList;
     };
-	#endif
 	
 	class SessionOutTimer:public CTimerInfo
 	{

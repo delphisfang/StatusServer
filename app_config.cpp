@@ -938,7 +938,9 @@ int CAppConfig::DelTagOnlineServiceNumber(string appID, string raw_tag)
 	return 0;
 }
 
-int CAppConfig::CheckOnlineService(long long time_gap, set<string>& serviceList)
+
+///TODO: 优化性能
+int CAppConfig::CheckTimeoutServices(long long time_gap, set<string>& serviceList)
 {
 	long long nowTime = time(NULL);
 	map<string, ServiceInfo>::iterator it;

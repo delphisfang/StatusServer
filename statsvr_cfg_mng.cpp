@@ -115,16 +115,11 @@ int CStatSvrCfgMng::loadConfig()
     _local_ip      = GetDefault(page, "root\\local_ip", "127.0.0.1");
 	_local_port	   = GetDefault(page, "root\\local_port", 80);
 
-    _service_time_gap = GetDefault(page, "root\\service_time_gap", 900); //second
+    _service_time_gap = GetDefault(page, "root\\service_time_gap", 1800); //30min
+    _queue_rate       = GetDefault(page, "root\\operation\\queue_rate", 10000);
+    _yibot_time       = GetDefault(page, "root\\operation\\yibot_time", 480); //min
+	LogTrace("====> service_time_gap: %d, queue_rate: %d", _service_time_gap, _queue_rate);
 
-    _queue_rate = GetDefault(page, "root\\operation\\queue_rate", 3);
-    _yibot_time = GetDefault(page, "root\\operation\\yibot_time", 480); //min
-
-	// 重发
-	_trsf_max_retry_times = GetDefault(page, "root\\policy\\max_retry_times", 2);
-	_state_server_ip      = GetDefault(page, "root\\policy\\state_server_ip", "127.0.0.1");
-	_state_server_port    = GetDefault(page, "root\\policy\\state_server_port", 0);
-	
     LoadCacheConfig(page);
     return 0;
 }

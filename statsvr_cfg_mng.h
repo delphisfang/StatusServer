@@ -77,10 +77,6 @@ public:
 
 	string    _handler_so_path;
 
-	unsigned  _trsf_max_retry_times;
-	string    _state_server_ip;
-	unsigned short _state_server_port;
-
 	// add end
 private:
     int loadConfig();

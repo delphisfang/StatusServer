@@ -422,7 +422,7 @@ namespace statsvr
 			return 0;
 		}
 
-		unsigned user_count()
+		unsigned user_count() const
 		{
 			return userList.size();
 		}

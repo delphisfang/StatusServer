@@ -156,7 +156,7 @@ namespace statsvr
 			void construct_user_json(const UserInfo &user, const Session &sess, Json::Value &userJson);
 			int reply_user_json_A(string appID, string app_userID, const UserInfo &user);
 			int reply_user_json_B(const UserInfo &user, const Session &sess);
-			void get_service_json(string appID, const ServiceInfo &serv, Json::Value &servJson);
+			int get_service_json(string appID, const ServiceInfo &serv, Json::Value &servJson);
 			int update_user_session(string appID, string app_userID, Session *sess, long long gap_warn, long long gap_expire);
 			int delete_user_session(string appID, string app_userID);
 			int create_user_session(string appID, string app_userID, Session *sess, long long gap_warn, long long gap_expire);
@@ -170,6 +170,7 @@ namespace statsvr
 			int KV_set_servIDList();
 			int KV_set_user(string app_userID, const UserInfo &user);
 			int KV_set_service(string app_serviceID, const ServiceInfo &serv);
+			int KV_del_service(const string &app_serviceID);
 			int KV_set_session(string app_userID, const Session &sess, long long gap_warn, long long gap_expire);
 			int KV_del_session(string app_userID);
 			int KV_set_queue(string appID, string raw_tag, int highpri);
@@ -184,6 +185,7 @@ namespace statsvr
 			int UpdateUser(string app_userID, const UserInfo &user);
 			int AddService(string appID, string app_servID, ServiceInfo &serv);
 			int UpdateService(string app_servID, const ServiceInfo &serv);
+			int DeleteService(string app_servID);
 			int UpdateUserSession(string appID, string app_userID, Session *sess, long long gap_warn, long long gap_expire);
 			int DeleteUserSession(string appID, string app_userID);
 			int CreateUserSession(string appID, string app_userID, Session *sess, long long gap_warn, long long gap_expire);

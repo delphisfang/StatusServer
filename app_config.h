@@ -137,7 +137,7 @@ public:
 	int AddTagOnlineServiceNumber(string appID, string raw_tag);
 	int DelTagOnlineServiceNumber(string appID, string raw_tag);
 
-	int CheckOnlineService(long long time_gap, set<string>& serviceList);
+	int CheckTimeoutServices(long long time_gap, set<string>& serviceList);
 
 	int checkAppIDExist(string appID);
 	int checkTagExist(string appID, string tag);

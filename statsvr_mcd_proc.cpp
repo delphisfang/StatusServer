@@ -88,9 +88,9 @@ void CMCDProc::run(const std::string& conf_file)
 
     while (!obj_checkflag.IsStop())
     {
-		//DispatchServiceTimeout();
 		DispatchUser2Service();
 		DispatchSessionTimer();
+		DispatchServiceTimeout();
         run_epoll_4_mq();
         CheckFlag(true);
     }
@@ -948,7 +948,7 @@ int32_t CMCDProc::InitSendPing()
 {
     char uri[20480] = {0};
 	char *httpPostFmt = ""
-		"/api/v2/configs/ping?name=yiServer HTTP/1.1\r\n"
+		"GET /api/v2/configs/ping?name=yiServer HTTP/1.1\r\n"
 		"Host:%s\r\n"
 		"User-Agent:curl/7.45.0\r\n"
 		"Accept:*/*\r\n"
@@ -996,7 +996,7 @@ int32_t CMCDProc::EnququeConfigHttp2DCC()
 {
     char uri[20480] = {0};
 	char *httpPostFmt = ""
-		"/api/v2/configs/getConfigForIM HTTP/1.1\r\n"
+		"POST /api/v2/configs/getConfigForIM HTTP/1.1\r\n"
 		"Host:%s\r\n"
 		"User-Agent:curl/7.45.0\r\n"
 		"Content-Length:%d\r\n"
@@ -1081,7 +1081,7 @@ int32_t CMCDProc::EnququeHttp2DCC(char* data, unsigned data_len, const string& i
     unsigned iip = INET_aton(ip.c_str());
     unsigned long long flow = make_flow64(iip, port);
     header->_type = dcc_req_send;
-    header->_ip = iip;
+    header->_ip   = iip;
     header->_port = port;
 
 	int totallen = DCC_HEADER_LEN + msg_len;
@@ -1208,12 +1208,24 @@ int32_t CMCDProc::Enqueue2DCC(char* data, unsigned data_len, const string& ip, u
     return 0;
 }
 
-#if 0
 void CMCDProc::DispatchServiceTimeout()
 {
+	static struct timeval last_check_time = {0, 0};
+	
     timeval ntv;
 	gettimeofday(&ntv, NULL);
 
+	//check every 30 seconds
+	if (ntv.tv_sec - last_check_time.tv_sec < 15)
+	{
+		return;
+	}
+	else
+	{
+		last_check_time = ntv;
+	}
+
+	LogTrace("====> Check service timeout at time: %d", ntv.tv_sec);
 	CTimerInfo *ti  = new ServiceOutTimer(this, GetMsgSeq(), ntv, "", 0, m_cfg._time_out);
     string req_data = i2str(m_cfg._service_time_gap);
 
@@ -1226,7 +1238,6 @@ void CMCDProc::DispatchServiceTimeout()
         delete ti;
     }
 }
-#endif
 
 void CMCDProc::DispatchUser2Service()
 {

@@ -33,18 +33,14 @@ int GetServiceInfoTimer::on_not_online()
 int GetServiceInfoTimer::on_get_serviceinfo()
 {
 	Json::Value data = Json::objectValue;
-	Json::Value servInfoList;
-	servInfoList.resize(0);
-	Json::Value servInfo;
+	Json::Value servJsonList;
+	servJsonList.resize(0);
+	Json::Value servJson;
 	int i = 0;
 	
 	ServiceInfo serv;
-	UserQueue *uq = NULL, *highpri_uq = NULL;
-	unsigned queueNum = 0;
 	string app_serviceID;
 	
-    int maxConvNum = CAppConfig::Instance()->getMaxConvNum(m_appID);
-
 	LogDebug("==>IN");
 
 	for (set<string>::iterator it = m_serviceID_list.begin(); it != m_serviceID_list.end(); it++)
@@ -57,37 +53,19 @@ int GetServiceInfoTimer::on_get_serviceinfo()
 			return SS_ERROR;
 		}
 		//serv.toJson(servInfo);
-		get_service_json(m_appID, serv, servInfo);
-
-		//calculate service's queueNumber
-		for (set<string>::iterator it = serv.tags.begin(); it != serv.tags.end(); it++)
-		{
-			LogDebug("==>service tag: %s", (*it).c_str());
-			
-			DO_FAIL(get_normal_queue(m_appID, *it, &uq));
-			queueNum += uq->size();
-			DO_FAIL(get_highpri_queue(m_appID, *it, &highpri_uq));
-			queueNum += highpri_uq->size();
-		}
-		servInfo["queueNumber"] = queueNum;
-
-		//当前服务人数>=最大会话人数时，返回busy
-        if (serv.status == "online" && serv.user_count() >= maxConvNum)
-        {
-            servInfo["status"] = "busy";
-        }
+		DO_FAIL(get_service_json(m_appID, serv, servJson));
 
 		//更新坐席atime
 		serv.atime = GetCurTimeStamp();
-		UpdateService(app_serviceID, serv);
+		DO_FAIL(UpdateService(app_serviceID, serv));
 		
-		servInfoList[i] = servInfo;
+		servJsonList[i] = servJson;
 		++i;
 	}
 
 	LogDebug("==>OUT");
 
-	data["serviceInfo"] = servInfoList;
+	data["serviceInfo"] = servJsonList;
 	return on_send_reply(data);
 }
 
@@ -116,8 +94,12 @@ int ServiceLoginTimer::do_next_step(string& req_data)
 
 int ServiceLoginTimer::on_serviceLogin_reply()
 {
-	Json::Value data = Json::objectValue;
-	return on_send_reply(data);
+	ServiceInfo serv;
+	Json::Value servJson = Json::objectValue;
+	
+	DO_FAIL(CAppConfig::Instance()->GetService(m_serviceID, serv));
+	DO_FAIL(get_service_json(m_appID, serv, servJson));
+	return on_send_reply(servJson);
 }
 
 int ServiceLoginTimer::on_already_online()

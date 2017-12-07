@@ -5,10 +5,11 @@
 
 using namespace statsvr;
 
-#if 0
+
 int ServiceOutTimer::do_next_step(string& req_data)
 {
 	m_service_time_gap = atoi(req_data.c_str());
+
 	if (on_service_timeout())
 	{
 		return -1;
@@ -21,10 +22,10 @@ int ServiceOutTimer::do_next_step(string& req_data)
 
 int ServiceOutTimer::on_service_timeout()
 {
-	CAppConfig::Instance()->CheckOnlineService(m_service_time_gap, m_serviceList);
+	CAppConfig::Instance()->CheckTimeoutServices(m_service_time_gap, m_serviceList);
 	if (m_serviceList.size() == 0)
     {
-		//LogTrace("no service timeout, do nothing!");
+		LogTrace("no service timeout, do nothing!");
     	return 0;
     }
 
@@ -32,24 +33,38 @@ int ServiceOutTimer::on_service_timeout()
 	for (it = m_serviceList.begin(); it != m_serviceList.end(); it++)
 	{
 		string servID = *it;
-		m_appID = getappID(servID);
-		ServiceInfo serv;
 
-		//强制service下线
-		CAppConfig::Instance()->GetService(servID, serv);
+		#if 0
+		LogTrace("====>going to delete timeout service[%s]", servID.c_str());
+		
+		//获取service
+		ServiceInfo serv;
+		DO_FAIL(CAppConfig::Instance()->GetService(servID, serv));
+		//删除service
+		DO_FAIL(DeleteService(servID));
+		//更新tagServiceHeap
+		m_appID = getappID(servID);
+		DO_FAIL(CAppConfig::Instance()->DelServiceFromTags(m_appID, serv));
+		//更新onlineServiceNum
+		DO_FAIL(DelTagOnlineServNum(m_appID, serv));
+
+		#else
+		LogTrace("====>going to force-offline timeout-service[%s]", servID.c_str());
+		ServiceInfo serv;
+		DO_FAIL(CAppConfig::Instance()->GetService(servID, serv));
+		//更新service
 		serv.status = "offline";
 		DO_FAIL(UpdateService(servID, serv));
 		//更新onlineServiceNum
+		m_appID = getappID(servID);
 		DO_FAIL(DelTagOnlineServNum(m_appID, serv));
-		//无需更新tagServiceHeap
+		#endif
 	}
 }
 
 ServiceOutTimer::~ServiceOutTimer()
 {
 }
-
-#endif
 
 
 int SessionOutTimer::do_next_step(string& req_data)

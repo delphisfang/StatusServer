@@ -548,13 +548,15 @@ int CTimerInfo::reply_user_json_B(const UserInfo &user, const Session &sess)
 	return SS_OK;
 }
 
-void CTimerInfo::get_service_json(string appID, const ServiceInfo &serv, Json::Value &servJson)
+int CTimerInfo::get_service_json(string appID, const ServiceInfo &serv, Json::Value &servJson)
 {
 	Json::Value arrayUserList;
 	string userID;
 	string app_userID;
 	
 	serv.toJson(servJson);
+
+	//获取userList
 	arrayUserList.resize(0);
 	for (set<string>::iterator it = serv.userList.begin(); it != serv.userList.end(); it++)
 	{
@@ -580,6 +582,27 @@ void CTimerInfo::get_service_json(string appID, const ServiceInfo &serv, Json::V
 	}
 	servJson["userList"].resize(0);
 	servJson["userList"] = arrayUserList;
+
+	//获取排队人数
+	UserQueue *uq = NULL, *highpri_uq = NULL;
+	unsigned queueNum = 0;
+	for (set<string>::iterator it = serv.tags.begin(); it != serv.tags.end(); it++)
+	{
+		LogDebug("==>service tag: %s", (*it).c_str());
+		
+		DO_FAIL(get_normal_queue(m_appID, *it, &uq));
+		queueNum += uq->size();
+		DO_FAIL(get_highpri_queue(m_appID, *it, &highpri_uq));
+		queueNum += highpri_uq->size();
+	}
+	servJson["queueNumber"] = queueNum;
+	
+	//当前服务人数>=最大会话人数时，返回busy
+	int maxConvNum = CAppConfig::Instance()->getMaxConvNum(m_appID);
+	if ("online" == serv.status && serv.user_count() >= maxConvNum)
+	{
+		servJson["status"] = "busy";
+	}
 }
 
 int CTimerInfo::update_user_session(string appID, string app_userID, Session *sess, long long gap_warn, long long gap_expire)
@@ -676,6 +699,13 @@ int CTimerInfo::KV_set_user(string app_userID, const UserInfo &user)
 int CTimerInfo::KV_set_service(string app_serviceID, const ServiceInfo &serv)
 {
 	DO_FAIL(KVSetKeyValue(KV_CACHE, SERV_PREFIX+app_serviceID, serv.toString()));
+	DO_FAIL(KV_set_servIDList());
+	return SS_OK;
+}
+
+int CTimerInfo::KV_del_service(const string &app_serviceID)
+{
+	DO_FAIL(KVDelKeyValue(KV_CACHE, SERV_PREFIX+app_serviceID));
 	DO_FAIL(KV_set_servIDList());
 	return SS_OK;
 }
@@ -859,6 +889,13 @@ int CTimerInfo::UpdateService(string app_servID, const ServiceInfo &serv)
 	return SS_OK;
 }
 
+int CTimerInfo::DeleteService(string app_servID)
+{
+	SET_SERV(CAppConfig::Instance()->DelService(app_servID));
+	DO_FAIL(KV_del_service(app_servID));
+	return SS_OK;
+}
+
 int CTimerInfo::UpdateUserSession(string appID, string app_userID, Session *sess, long long gap_warn, long long gap_expire)
 {
 	SET_SESS(update_user_session(appID, app_userID, sess, gap_warn, gap_expire));
@@ -882,6 +919,13 @@ int CTimerInfo::CreateUserSession(string appID, string app_userID, Session *sess
 
 int CTimerInfo::AddTagOnlineServNum(string appID, const ServiceInfo &serv)
 {
+	if ("online" != serv.status)
+	{
+		string app_servID = appID + "_" + serv.serviceID;
+		LogWarn("Service[%s] is not online, just return.", app_servID.c_str());
+		return 0;
+	}
+
 	for (set<string>::iterator it = serv.tags.begin(); it != serv.tags.end(); it++)
 	{
 		DO_FAIL(CAppConfig::Instance()->AddTagOnlineServiceNumber(appID, *it));
@@ -891,6 +935,13 @@ int CTimerInfo::AddTagOnlineServNum(string appID, const ServiceInfo &serv)
 
 int CTimerInfo::DelTagOnlineServNum(string appID, const ServiceInfo &serv)
 {
+	if ("online" != serv.status)
+	{
+		string app_servID = appID + "_" + serv.serviceID;
+		LogWarn("Service[%s] is not online, just return.", app_servID.c_str());
+		return 0;
+	}
+	
 	for (set<string>::iterator it = serv.tags.begin(); it != serv.tags.end(); it++)
 	{
 		DO_FAIL(CAppConfig::Instance()->DelTagOnlineServiceNumber(appID, *it));
