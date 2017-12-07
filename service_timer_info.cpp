@@ -76,6 +76,10 @@ int GetServiceInfoTimer::on_get_serviceinfo()
         {
             servInfo["status"] = "busy";
         }
+
+		//更新坐席atime
+		serv.atime = GetCurTimeStamp();
+		UpdateService(app_serviceID, serv);
 		
 		servInfoList[i] = servInfo;
 		++i;

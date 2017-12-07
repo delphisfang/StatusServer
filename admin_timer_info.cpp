@@ -345,8 +345,9 @@ int AdminConfigTimer::get_app_today_status(string appID, Json::Value &appList)
 	unsigned userNumber = 0;
 	unsigned queueNumber = 0;
 	unsigned onlineServiceNumber = 0;
-	SessionQueue* pSessQueue = NULL;
-	TagUserQueue* pTagQueues = NULL;
+	SessionQueue *pSessQueue = NULL;
+	TagUserQueue *pTagQueues = NULL;
+	TagUserQueue *pTagHighPriQueues = NULL;
 
 	//获取某个appID下当前正在会话的用户人数
 	if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue))
@@ -359,13 +360,13 @@ int AdminConfigTimer::get_app_today_status(string appID, Json::Value &appList)
 	}
 
 	/* 获取当前正在排队的用户人数 */
-	if (CAppConfig::Instance()->GetTagQueue(appID, pTagQueues))
+	if (0 == CAppConfig::Instance()->GetTagQueue(appID, pTagQueues))
 	{
-		queueNumber = 0;
+		queueNumber += pTagQueues->total_queue_count();
 	}
-	else
+	if (0 == CAppConfig::Instance()->GetTagQueue(appID, pTagHighPriQueues))
 	{
-		queueNumber = pTagQueues->total_queue_count();
+		queueNumber += pTagHighPriQueues->total_queue_count();
 	}
 
 	/* 在线客服人数 */

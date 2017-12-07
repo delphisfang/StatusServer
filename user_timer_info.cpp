@@ -340,15 +340,15 @@ int ConnectServiceTimer::on_service_with_noqueue(bool flag)
 	Json::Value data;
 
 	set_data(data);
-	data["status"] = "onQueue";
+	
 	if (flag)
 	{
-		//data["status"] = "inServiceNow";
+		data["status"] = "inServiceNow";
 		return on_send_error_reply(SERVICE_WITH_NO_QUEUE, "OK", data);
 	}
 	else
 	{
-		//data["status"] = "onQueue";
+		data["status"] = "onQueue";
 		return on_send_error_reply(ERROR_NO_ERROR, "OK", data);
 	}
 }
@@ -456,7 +456,7 @@ int ConnectServiceTimer::on_queue()
 {
 	int max_conv_num         = 0;
 	long long queue_timeout  = 0;
-	unsigned max_queue_num   = 0;
+	unsigned long max_queue_num   = 0;
 	bool serviceWithNoQueue  = false;
     TagUserQueue* pTagQueues = NULL;
     TagUserQueue* pHighPriTagQueues = NULL;

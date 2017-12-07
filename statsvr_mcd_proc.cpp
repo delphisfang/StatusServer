@@ -83,9 +83,9 @@ void CMCDProc::run(const std::string& conf_file)
 	}
 	else
 	{
-		LogDebug("Success to send init ping!");
+		LogDebug("Success to send init ping.");
 	}
-	
+
     while (!obj_checkflag.IsStop())
     {
 		//DispatchServiceTimeout();
