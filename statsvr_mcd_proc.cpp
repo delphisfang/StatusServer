@@ -1361,47 +1361,60 @@ void CMCDProc::DispatchSessionTimer()
     return;
 }
 
-void CMCDProc::DispatchCheckQueue(string appID)
+void CMCDProc::CheckTimeoutQueue(string appID, TagUserQueue *pTagQueues, unsigned queuePriority)
 {
-    TagUserQueue* pTagQueues = NULL;
-	map<string, UserQueue*>::iterator it;
 	UserQueue *uq = NULL;
 	int expire_count = 0;
-	timeval ntv;
 	string req_data;
-
-    if (CAppConfig::Instance()->GetTagQueue(appID, pTagQueues) 
-		|| pTagQueues->total_queue_count() <= 0)
-    {
-		//LogTrace("[%s]: no user in queue to timeout", appID.c_str());
-        return;
-    }
-    else
-    {
-		//check every tag queue
-		for (it = pTagQueues->_tag_queue.begin(); it != pTagQueues->_tag_queue.end(); it++)
+	timeval ntv;
+	
+	//check every tag queue
+	map<string, UserQueue*>::iterator it;
+	for (it = pTagQueues->_tag_queue.begin(); it != pTagQueues->_tag_queue.end(); it++)
+	{
+		uq	= it->second;
+		expire_count = uq->check_expire();
+		LogTrace("[%s]: expire_count[%d] > 0, queue timeout...", appID.c_str(), expire_count);
+		
+		for (int i = 0; i < expire_count; ++i)
 		{
-			uq	= it->second;
-			
-			expire_count = uq->check_expire();
-			//LogDebug("[%s]: expire count is %d of tag %s", appID.c_str(), expire_count, (it->first).c_str());
-			for (int i = 0; i < expire_count; ++i)
+			LogTrace("=====>i: %d", i);
+			gettimeofday(&ntv, NULL);
+			CTimerInfo* ti = new QueueOutTimer(this, GetMsgSeq(), ntv, "", 0, m_cfg._time_out);
+
+			Json::Value data;
+			data["appID"]         = appID;
+			data["tag"]           = it->first;
+			data["queuePriority"] = queuePriority;
+			req_data = data.toStyledString();
+			LogTrace("======> [timeoutDequeue] req_data: %s", req_data.c_str());
+			if (ti->do_next_step(req_data) == 0)
 			{
-				LogTrace("[%s]: expire_count[%d] > 0, queue timeout...", appID.c_str(), expire_count);
-				gettimeofday(&ntv, NULL);
-				CTimerInfo* ti = new QueueOutTimer(this, GetMsgSeq(), ntv, "", 0, m_cfg._time_out);
-				req_data = appID + "_" + it->first;
-				if (ti->do_next_step(req_data) == 0)
-				{
-					m_timer_queue.set(ti->GetMsgSeq(), ti, ti->GetTimeGap());
-				}
-				else
-				{
-					delete ti;
-				}
+				m_timer_queue.set(ti->GetMsgSeq(), ti, ti->GetTimeGap());
+			}
+			else
+			{
+				delete ti;
 			}
 		}
-    }
+	}
+}
+
+void CMCDProc::DispatchCheckQueue(string appID)
+{
+    TagUserQueue *pTagQueues = NULL;
+	
+	if (0 == CAppConfig::Instance()->GetTagHighPriQueue(appID, pTagQueues) && pTagQueues->total_queue_count() > 0)
+	{
+		//LogTrace("====> Choose HighPriQueue to timeoutDequeue.");
+		CheckTimeoutQueue(appID, pTagQueues, 1);
+	}
+
+	if (0 == CAppConfig::Instance()->GetTagQueue(appID, pTagQueues) && pTagQueues->total_queue_count() > 0)
+	{
+		//LogTrace("====> Choose NormalQueue to timeoutDequeue.");
+		CheckTimeoutQueue(appID, pTagQueues, 0);
+	}
 }
 
 void CMCDProc::DispatchCheckSession(string appID)

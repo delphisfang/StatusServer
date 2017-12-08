@@ -454,7 +454,7 @@ int ConnectServiceTimer::on_appoint_service()
 
 int ConnectServiceTimer::on_queue()
 {
-	int max_conv_num         = 0;
+	unsigned max_conv_num    = 0;
 	long long queue_timeout  = 0;
 	unsigned long max_queue_num   = 0;
 	bool serviceWithNoQueue  = false;
@@ -477,7 +477,7 @@ int ConnectServiceTimer::on_queue()
 	max_conv_num  = CAppConfig::Instance()->getMaxConvNum(m_appID);
 	serviceNum    = CAppConfig::Instance()->GetTagOnlineServiceNumber(m_appID, m_raw_tag);
 	max_queue_num = serviceNum * max_conv_num * m_proc->m_cfg._queue_rate;
-    LogTrace("[%s] serviceNum:%u, max_conv_num:%d, queue rate:%d, max_queue_num: %d", 
+    LogTrace("[%s] serviceNum:%u, max_conv_num:%u, queue rate:%u, max_queue_num: %lu", 
     		m_appID.c_str(), serviceNum, max_conv_num, m_proc->m_cfg._queue_rate, max_queue_num);
 
 	if (serviceNum <= 0)
@@ -493,7 +493,7 @@ int ConnectServiceTimer::on_queue()
     }
 	queue_count         = pTagQueues->queue_count(m_raw_tag);
 	highpri_queue_count = pHighPriTagQueues->queue_count(m_raw_tag);
-    LogTrace("[%s] queue size:%u, high pri queue size:%u\n", 
+    LogTrace("[%s] queue size:%u, highpri queue size:%u", 
     		m_appID.c_str(), queue_count, highpri_queue_count);
 
     if (queue_count + highpri_queue_count >= max_queue_num)
@@ -535,21 +535,24 @@ int ConnectServiceTimer::on_queue()
     user.queuePriority = m_queuePriority;
     user.atime = user.qtime = GetCurTimeStamp();///
 
-	LogDebug("Go to add user onqueue. tag: %s, user: %s", m_raw_tag.c_str(), user.toString().c_str());
+	LogDebug("Go to add user onQueue. tag: %s, user: %s, queuePriority: %u", 
+				m_raw_tag.c_str(), user.toString().c_str(), m_queuePriority);
 	
 	//将user插入排队队列
 	qtime = (user.qtime / 1000);
 	queue_timeout = CAppConfig::Instance()->getDefaultQueueTimeout(m_appID);
-	expire_time = qtime + queue_timeout;
+	expire_time   = qtime + queue_timeout;
 	LogDebug("qtime: %lu, queue_timeout: %lu", qtime, queue_timeout);
 	
     if (m_queuePriority != 0)
     {
+		LogTrace("==========>add user on HighPri Queue.");
 		DO_FAIL(pHighPriTagQueues->add_user(m_raw_tag, m_userID, expire_time));
 		DO_FAIL(KV_set_queue(m_appID, m_raw_tag, true));
     }
     else
     {
+		LogTrace("==========>add user on Normal Queue.");
 		DO_FAIL(pTagQueues->add_user(m_raw_tag, m_userID, expire_time));
 		DO_FAIL(KV_set_queue(m_appID, m_raw_tag, false));
     }

@@ -212,7 +212,7 @@ int CTimerInfo::init(string req_data, int datalen)
 	}
 
 	//0: normal queue, 1: highpri queue
-	m_queuePriority = get_value_uint(js_req_data, "priority");
+	m_queuePriority = get_value_uint(js_req_data, "queuePriority");
 
 	if (!js_req_data["tags"].isNull() && js_req_data["tags"].isArray())
 	{
@@ -590,15 +590,15 @@ int CTimerInfo::get_service_json(string appID, const ServiceInfo &serv, Json::Va
 	{
 		LogDebug("==>service tag: %s", (*it).c_str());
 		
-		DO_FAIL(get_normal_queue(m_appID, *it, &uq));
+		DO_FAIL(get_normal_queue(appID, *it, &uq));
 		queueNum += uq->size();
-		DO_FAIL(get_highpri_queue(m_appID, *it, &highpri_uq));
+		DO_FAIL(get_highpri_queue(appID, *it, &highpri_uq));
 		queueNum += highpri_uq->size();
 	}
 	servJson["queueNumber"] = queueNum;
 	
 	//当前服务人数>=最大会话人数时，返回busy
-	int maxConvNum = CAppConfig::Instance()->getMaxConvNum(m_appID);
+	int maxConvNum = CAppConfig::Instance()->getMaxConvNum(appID);
 	if ("online" == serv.status && serv.user_count() >= maxConvNum)
 	{
 		servJson["status"] = "busy";

@@ -17,7 +17,7 @@
 //#include "app_config.h"
 //#include "statsvr_timer_info.h"
 #include "kv_cache_ctrl.h"
-
+#include "data_model.h"
 #include <time.h>
 
 using namespace tfc::base;
@@ -138,6 +138,7 @@ namespace statsvr
 			void DispatchServiceTimeout();
 			void DispatchUser2Service();
 			void DispatchSessionTimer();
+			void CheckTimeoutQueue(string appID, TagUserQueue *pTagQueues, unsigned queuePriority);
 			void DispatchCheckQueue(string appID);
 			void DispatchCheckSession(string appID);
 

@@ -295,7 +295,7 @@ namespace statsvr
 	    ServiceInfo()
 	    {
 	    	serviceID.clear();
-			status = "online";
+			status = "offline";
 			atime = 0;
 			cpIP.clear();
 			cpPort = 0;
@@ -330,7 +330,7 @@ namespace statsvr
 			}
 
 			serviceID = value["serviceID"].asString();
-			status    = "online";
+			status    = "offline";
 
 			/*atime     = value["activeTime"].asInt64();*/
 			gettimeofday(&nowTime, NULL);
@@ -362,7 +362,7 @@ namespace statsvr
 
 			value["serviceID"]     = serviceID;
 			value["status"]        = status;
-			value["activeTime"]         = atime;
+			value["activeTime"]    = atime;
 			value["chatProxyIp"]   = cpIP;
 	        value["chatProxyPort"] = cpPort;
 			value["serviceName"]   = serviceName;

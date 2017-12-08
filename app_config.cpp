@@ -848,15 +848,14 @@ unsigned CAppConfig::GetTagServiceNumber(string appID, string raw_tag)
 unsigned CAppConfig::GetServiceNumber(string appID)
 {
 	map<string, ServiceInfo>::iterator it;
-	int servNum = 0;
+	unsigned servNum = 0;
 
 	for (it = _servicelist.begin(); it != _servicelist.end(); ++it)
 	{
 		if (appID == getappID(it->first))
 		{
-			string servID = it->first;
 			ServiceInfo serv;
-			if (0 == GetService(servID, serv))
+			if (0 == GetService(it->first, serv))
 			{
 				++servNum;
 			}
@@ -869,16 +868,15 @@ unsigned CAppConfig::GetServiceNumber(string appID)
 //注意，1个service可以属于多个tag，不要重复计算
 unsigned CAppConfig::GetOnlineServiceNumber(string appID)
 {
-	map<string, ServiceInfo>::iterator it;
-	int servNum = 0;
+	unsigned servNum = 0;
 
+	map<string, ServiceInfo>::iterator it;
 	for (it = _servicelist.begin(); it != _servicelist.end(); ++it)
 	{
 		if (appID == getappID(it->first))
 		{
-			string servID = it->first;
 			ServiceInfo serv;
-			if (0 == GetService(servID, serv) && "offline" != serv.status)
+			if (0 == GetService(it->first, serv) && "offline" != serv.status)
 			{
 				++servNum;
 			}
@@ -908,6 +906,7 @@ int CAppConfig::AddTagOnlineServiceNumber(string appID, string raw_tag)
 
 unsigned CAppConfig::GetTagOnlineServiceNumber(string appID, string raw_tag)
 {
+	#if 0
 	map<string, unsigned>::iterator it;
 	string app_tag = appID + "_" + raw_tag;
 	
@@ -917,6 +916,33 @@ unsigned CAppConfig::GetTagOnlineServiceNumber(string appID, string raw_tag)
 		return 0;
 	}
 	return it->second;
+	#else
+	unsigned servNum = 0;
+
+	map<string, ServiceInfo>::iterator it;
+	for (it = _servicelist.begin(); it != _servicelist.end(); ++it)
+	{
+		if (appID == getappID(it->first))
+		{
+			ServiceInfo &serv = it->second;
+			if ("offline" != serv.status)
+			{
+				set<string>::iterator it2;
+				for (it2 = serv.tags.begin(); it2 != serv.tags.end(); ++it2)
+				{
+					if (*it2 == raw_tag)
+					{
+						++servNum;
+						break;
+					}
+				}
+			}
+		}
+	}
+	
+	return servNum;
+
+	#endif
 }
 
 
@@ -1047,15 +1073,15 @@ long long CAppConfig::getDefaultSessionTimeOut(string appID)
 
 long long CAppConfig::getDefaultQueueTimeout(string appID)
 {
-	int queue_timeout        = 0;
+	int queue_timeout = 0;
 	
     if (CAppConfig::Instance()->GetValue(appID, "queue_timeout", queue_timeout) || 0 == queue_timeout)
     {
-        queue_timeout = 40 * 60 * 1000;
+        queue_timeout = 30 * 60;
     }
     else
     {
-        queue_timeout *= 60 * 1000;
+        queue_timeout *= 60;
     }
 	return (long long)queue_timeout;
 }

@@ -52,12 +52,12 @@ int ServiceOutTimer::on_service_timeout()
 		LogTrace("====>going to force-offline timeout-service[%s]", servID.c_str());
 		ServiceInfo serv;
 		DO_FAIL(CAppConfig::Instance()->GetService(servID, serv));
-		//更新service
-		serv.status = "offline";
-		DO_FAIL(UpdateService(servID, serv));
-		//更新onlineServiceNum
+		//先更新onlineServiceNum
 		m_appID = getappID(servID);
 		DO_FAIL(DelTagOnlineServNum(m_appID, serv));
+		//再更新service
+		serv.status = "offline";
+		DO_FAIL(UpdateService(servID, serv));
 		#endif
 	}
 }
@@ -268,10 +268,20 @@ SessionWarnTimer::~SessionWarnTimer()
 
 int QueueOutTimer::do_next_step(string& req_data)
 {
+	Json::Reader reader;
+	Json::Value  data;
+	
 	LogDebug("req_data: %s", req_data.c_str());
-	m_appID   = getappID(req_data);
-	m_raw_tag = delappID(req_data);
-	LogDebug("m_appID: %s, m_raw_tag: %s", m_appID.c_str(), m_raw_tag.c_str());
+	if (!reader.parse(req_data, data))
+	{
+		LogError("Failed to parse req_data!");
+		return -1;
+	}
+	
+	m_appID         = data["appID"].asString();
+	m_raw_tag       = data["tag"].asString();
+	m_queuePriority = data["queuePriority"].asUInt();
+	LogDebug("m_appID: %s, m_raw_tag: %s, queuePriority: %d", m_appID.c_str(), m_raw_tag.c_str(), m_queuePriority);
 
 	if (on_queue_timeout(req_data))
 	{
@@ -287,36 +297,45 @@ int QueueOutTimer::on_queue_timeout(string &req_data)
 {
     TagUserQueue *pTagQueues = NULL;
 	UserQueue *uq = NULL;
-	Json::Value data;
-	string userID;
 	long long expire_time;
 	UserInfo user;
 
 	LogDebug("==>IN");
+
+	if (1 == m_queuePriority)
+	{
+		DO_FAIL(CAppConfig::Instance()->GetTagHighPriQueue(m_appID, pTagQueues));
+	}
+	else
+	{
+		DO_FAIL(CAppConfig::Instance()->GetTagQueue(m_appID, pTagQueues));
+	}
 	
 	//get first user on queue
-    if (SS_OK != CAppConfig::Instance()->GetTagQueue(m_appID, pTagQueues) 
-		|| SS_OK != pTagQueues->get_tag(m_raw_tag, uq)
-		|| SS_OK != uq->get_first(userID, expire_time)
-		|| SS_OK != CAppConfig::Instance()->GetUser(userID, user))
+    if (SS_OK != pTagQueues->get_tag(m_raw_tag, uq)
+		|| SS_OK != uq->get_first(m_userID, expire_time)
+		|| SS_OK != CAppConfig::Instance()->GetUser(m_userID, user))
     {
-        LogError("[%s]: Error get queue or empty queue\n", m_appID.c_str());
+        LogError("[%s]: Error get queue or empty queue", m_appID.c_str());
 		ON_ERROR_GET_DATA("user");
         return SS_ERROR;
     }
 	
 	//delete user from queue
-	SET_USER(pTagQueues->del_user(m_raw_tag, userID));
-	///TODO: highpri?
-	DO_FAIL(KV_set_queue(m_appID, m_raw_tag, false));
+	SET_USER(pTagQueues->del_user(m_raw_tag, m_userID));
+	DO_FAIL(KV_set_queue(m_appID, m_raw_tag, m_queuePriority));
 	
 	//update user
 	user.status = "inYiBot";
 	user.qtime  = 0;
-	DO_FAIL(UpdateUser(userID, user));
+	DO_FAIL(UpdateUser(m_userID, user));
 	
 	//send timeoutDequeue msg to user
-	set_user_data(data);
+	Json::Value data;
+	data["identity"]  = "user";
+	data["userID"]	  = delappID(m_userID);
+	data["sessionID"] = user.sessionID;
+	
     //if(m_whereFrom == "wx" || m_whereFrom == "wxpro")
     //{
         data["des"] = CAppConfig::Instance()->getQueueTimeoutHint(m_appID);
