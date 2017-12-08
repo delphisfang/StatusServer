@@ -480,6 +480,11 @@ int ConnectServiceTimer::on_queue()
     LogTrace("[%s] serviceNum:%u, max_conv_num:%d, queue rate:%d, max_queue_num: %d", 
     		m_appID.c_str(), serviceNum, max_conv_num, m_proc->m_cfg._queue_rate, max_queue_num);
 
+	if (serviceNum <= 0)
+	{
+		return on_no_service();
+	}
+	
     if (CAppConfig::Instance()->GetTagHighPriQueue(m_appID, pTagQueues) ||
     	CAppConfig::Instance()->GetTagQueue(m_appID, pHighPriTagQueues))
     {
@@ -493,7 +498,7 @@ int ConnectServiceTimer::on_queue()
 
     if (queue_count + highpri_queue_count >= max_queue_num)
     {
-        if (serviceNum == 0)
+        if (serviceNum <= 0)
 			return on_no_service();
         else
 			return on_reject_enqueue();

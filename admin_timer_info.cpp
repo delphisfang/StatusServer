@@ -364,7 +364,7 @@ int AdminConfigTimer::get_app_today_status(string appID, Json::Value &appList)
 	{
 		queueNumber += pTagQueues->total_queue_count();
 	}
-	if (0 == CAppConfig::Instance()->GetTagQueue(appID, pTagHighPriQueues))
+	if (0 == CAppConfig::Instance()->GetTagHighPriQueue(appID, pTagHighPriQueues))
 	{
 		queueNumber += pTagHighPriQueues->total_queue_count();
 	}
