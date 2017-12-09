@@ -138,7 +138,7 @@ namespace statsvr
 			void DispatchServiceTimeout();
 			void DispatchUser2Service();
 			void DispatchSessionTimer();
-			void CheckTimeoutQueue(string appID, TagUserQueue *pTagQueues, unsigned queuePriority);
+			void CheckTimeoutQueue(const string &appID, TagUserQueue *pTagQueues, unsigned queuePriority);
 			void DispatchCheckQueue(string appID);
 			void DispatchCheckSession(string appID);
 

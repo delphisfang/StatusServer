@@ -115,6 +115,7 @@ public:
 	int AddService2Tags(const string& appID, ServiceInfo &serv);
 	int DelServiceFromTags(const string &appID, ServiceInfo &serv);
 	int CanOfferService(const ServiceHeap& servHeap, int serverNum);
+	int CanAppOfferService(const string& appID);
 
 	int AddTagQueue(string appID);
 	int DelTagQueue(string appID);

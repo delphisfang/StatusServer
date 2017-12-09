@@ -406,6 +406,18 @@ int ChangeServiceTimer::on_change_service()
 		sessData["serviceName"]   = dst.serviceName;
 		sessData["serviceAvatar"] = dst.serviceAvatar;
 
+		//解析extends
+		Json::Reader reader;
+		Json::Value json_extends;
+		if (!reader.parse(user.extends, json_extends))
+		{
+			sessData["extends"]   = Json::objectValue;
+		}
+		else
+		{
+			sessData["extends"]   = json_extends;
+		}
+
 		sessData["identity"]      = "user";
 		DO_FAIL(on_send_request("changeSuccess", sess.cpIP, sess.cpPort, sessData, true));
 		

@@ -606,6 +606,12 @@ int UserServiceTimer::on_dequeue_first_user()
        	return SS_ERROR;
 	}
 
+	if (CAppConfig::Instance()->CanAppOfferService(m_appID))
+	{
+		LogTrace("=======> No need to dequeue user[%s].", m_userID.c_str());
+		return SS_OK;
+	}
+	
 	LogTrace("dequeue userID: %s", m_userID.c_str());
 
 	m_raw_userID    = delappID(m_userID);
@@ -702,9 +708,7 @@ int UserServiceTimer::on_offer_service()
 int UserServiceTimer::on_send_connect_success_msg()
 {
 	Json::Value sessData;
-    Json::Reader reader;
     Json::Value userInfo;
-    Json::Value json_extends;
 
 	LogDebug("==>IN");
 	//connectSuccess消息的data字段包含的是service的信息
@@ -712,12 +716,18 @@ int UserServiceTimer::on_send_connect_success_msg()
     sessData["serviceID"] = m_raw_serviceID;
     sessData["sessionID"] = m_sessionID;
     sessData["channel"]   = m_channel;
-	#if 0
-    reader.parse(m_extends, json_extends);
-    sessData["extends"]   = json_extends;
-	#else
-	sessData["extends"]   = Json::objectValue;
-	#endif
+
+	//解析extends
+    Json::Reader reader;
+    Json::Value json_extends;
+    if (!reader.parse(m_userInfo.extends, json_extends))
+    {
+		sessData["extends"]   = Json::objectValue;
+    }
+	else
+	{
+    	sessData["extends"]   = json_extends;
+	}
 	
     sessData["serviceName"]   = m_serviceInfo.serviceName;
     sessData["serviceAvatar"] = m_serviceInfo.serviceAvatar;

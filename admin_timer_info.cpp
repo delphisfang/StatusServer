@@ -151,14 +151,14 @@ int AdminConfigTimer::on_admin_ping()
 	
     if (!reader.parse(m_data, ping_req))
     {
-    	LogError("Parse ping request error. buf: [%s]\n", m_data.c_str());
+    	LogError("Failed to parse ping request! data: [%s]", m_data.c_str());
         return -1;
     }
 
     // construct ping response
 	if (ping_req["appIDList"].isNull() || !ping_req["appIDList"].isArray())
 	{
-		LogError("Parse appIDlist error. buf: [%s]\n", m_data.c_str());
+		LogError("Failed to parse appIDlist! data: [%s]", m_data.c_str());
 		on_error_parse_packet("Error parse appIDList");
         return -1;
 	}
@@ -171,7 +171,7 @@ int AdminConfigTimer::on_admin_ping()
 	unsigned size = ping_req["appIDList"].size();
 	if (size > MAXSIZE)
 	{
-		LogError("size:%d > MAXSIZE:%d\n", size, MAXSIZE);
+		LogError("size:%d > MAXSIZE:%d", size, MAXSIZE);
 		on_error_parse_packet("Error appIDList too long");
 		return -1;
 	}
@@ -193,31 +193,29 @@ int AdminConfigTimer::on_admin_ping()
 
 		/* 核心代码，为appIDList里的每一个appID创建各种数据结构 */
 		#if 0
-        CAppConfig::Instance()->AddQueue(appID);
 		CAppConfig::Instance()->AddOfflineHeap(appID);
 		#endif
 		DO_FAIL(CAppConfig::Instance()->AddTagQueue(appID));
 		DO_FAIL(CAppConfig::Instance()->AddTagHighPriQueue(appID));
 		DO_FAIL(CAppConfig::Instance()->AddSessionQueue(appID));
-		//此处暂时不调用AddServiceHeap(tag)，taglist需要等到updateConf操作时才知道
+		//此处暂不调用AddServiceHeap(tag)，taglist需要等到updateConf操作时才知道
 		
 		map_now[appID] = true;
     }
 	
-	//LogDebug("Parse data finish");
+	//LogDebug("Parse ping request finish");
 	
 	int delnum = CAppConfig::Instance()->CheckDel(map_now);
 	CAppConfig::Instance()->SetNowappIDList(appIDString);
-	//LogDebug("SetNowappIDList(%s) finish", appIDString.c_str());
 
 	int loglevel = LOG_TRACE;
 	if (delnum > 0)
 	{
 		loglevel = LOG_ERROR;
 	}
-	DEBUG_P(loglevel, "PingList:%s, delnum:[%d]\n", appIDString.c_str(), delnum);
+	DEBUG_P(loglevel, "PingList:%s, delnum:[%d]", appIDString.c_str(), delnum);
 
-	LogDebug("Send ping resp");
+	LogDebug("Send ping response.");
 	Json::Value data;
 	data["appList"] = appIDlistVer;
 	return on_admin_send_reply(data);
@@ -286,7 +284,7 @@ int AdminConfigTimer::on_admin_config()
     Json::Value push_config_req;
     if (!reader.parse(m_data, push_config_req))
     {
-		LogError("Parse config request error. buf: [%s]\n", m_data.c_str());
+		LogError("Failed to parse updateConf request. data: [%s]", m_data.c_str());
 		ON_ERROR_PARSE_PACKET();
         return -1;
     }
@@ -504,9 +502,9 @@ int AdminConfigTimer::restore_serviceList()
 
 int AdminConfigTimer::restore_queue(string appID, vector<string> appID_tags, bool highpri)
 {
-	for (unsigned j = 0; j < appID_tags.size(); j++)
+	for (unsigned i = 0; i < appID_tags.size(); i++)
 	{
-		DO_FAIL(KV_parse_queue(appID_tags[j], highpri));
+		DO_FAIL(KV_parse_queue(appID_tags[i], highpri));
 	}
 
 	return SS_OK;
@@ -551,6 +549,7 @@ int AdminConfigTimer::on_admin_restore()
 		CAppConfig::Instance()->GetValue(appID, "tags", str_appID_tags);
 		vector<string> appID_tags;
 		MySplitTag((char *)str_appID_tags.c_str(), ";", appID_tags);
+
 		/* 解析普通队列 - 先解析userList，再解析排队队列 */
 		DO_FAIL(restore_queue(appID, appID_tags, false));
 		/* 解析高优先级队列 */

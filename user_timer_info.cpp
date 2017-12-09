@@ -484,7 +484,7 @@ int ConnectServiceTimer::on_queue()
 	{
 		return on_no_service();
 	}
-	
+
     if (CAppConfig::Instance()->GetTagHighPriQueue(m_appID, pTagQueues) ||
     	CAppConfig::Instance()->GetTagQueue(m_appID, pHighPriTagQueues))
     {
@@ -519,6 +519,13 @@ int ConnectServiceTimer::on_queue()
             serviceWithNoQueue = false;
     }
 
+	//所有的坐席都busy或offline时，应该让用户排队，而不是返回71001
+	if (CAppConfig::Instance()->CanAppOfferService(m_appID))
+	{
+		LogTrace("==================>let user on queue");
+		serviceWithNoQueue = false;
+	}
+	
 	//获取user
 	GET_USER(CAppConfig::Instance()->GetUser(m_userID, user));
     //user.userID        = m_raw_userID;
@@ -526,7 +533,10 @@ int ConnectServiceTimer::on_queue()
     if ("" != m_channel)
 		user.channel       = m_channel;
 	if ("" != m_extends)
-    	user.extends       = m_extends;
+    {
+		LogTrace("============> get user extends: %s", m_extends.c_str());
+		user.extends       = m_extends;
+	}
 	if ("" != m_raw_tag)
     	user.tag           = m_raw_tag;
     if ("" != m_raw_lastServiceID)

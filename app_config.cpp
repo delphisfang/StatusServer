@@ -34,7 +34,7 @@ int CAppConfig::UpdateappIDConf (const Json::Value &push_config_req)
 		appID_conf = configList[i];
 		if (appID_conf["appID"].isNull() || (!appID_conf["appID"].isString() && !appID_conf["appID"].isUInt()))
 		{
-			LogError("[UpdateappIDConf] Unknown appID\n");
+			LogError("Failed to get <appID> field in request!");
 			return -1;
 		}
 
@@ -152,6 +152,7 @@ int CAppConfig::UpdateappIDConf (const Json::Value &push_config_req)
 			string recommendEnd = appID_conf["recommendEnd"].asString();
 			SetValue (appID, "recommendEnd", recommendEnd);
 		}
+		
 		if (!appID_conf["tags"].isNull() && appID_conf["tags"].isArray())
 		{
 			string tags = "";
@@ -159,8 +160,30 @@ int CAppConfig::UpdateappIDConf (const Json::Value &push_config_req)
 			TagUserQueue *pTagQueues = NULL;
 			TagUserQueue *pTagHighPriQueues = NULL;
 			
+			#if 0
+			//兼容没收到pingConf只收到updateConf的情况
+			SessionQueue *pSessQueue = NULL;
+			if (GetTagQueue(appID, pTagQueues))
+			{
+				DO_FAIL(AddTagQueue(appID));
+				GetTagQueue(appID, pTagQueues);
+			}
+			if (GetTagHighPriQueue(appID, pTagHighPriQueues))
+			{
+				DO_FAIL(AddTagHighPriQueue(appID));
+				GetTagHighPriQueue(appID, pTagHighPriQueues);
+			}
+			if (GetSessionQueue(appID, pSessQueue))
+			{
+				DO_FAIL(AddSessionQueue(appID));
+				GetSessionQueue(appID, pSessQueue);
+			}
+			assert(pSessQueue != NULL);
+			#else
 			DO_FAIL(GetTagQueue(appID, pTagQueues));
 			DO_FAIL(GetTagHighPriQueue(appID, pTagHighPriQueues));
+			#endif
+			
 			assert(pTagQueues != NULL);
 			assert(pTagHighPriQueues != NULL);
 			
@@ -177,6 +200,7 @@ int CAppConfig::UpdateappIDConf (const Json::Value &push_config_req)
 			}
 			SetValue(appID, "tags", tags);
 		}
+		
 		#if 0
 		if (!appID_conf["changeServiceWord"].isNull() && appID_conf["changeServiceWord"].isArray())
 		{
@@ -209,17 +233,17 @@ int CAppConfig::GetNowappIDList(string& value)
 
 void CAppConfig::DelappID(string appID)
 {
-	LogDebug("DelApp:appID:%s", appID.c_str());
+	LogDebug("Delete all data structures of appID: %s", appID.c_str());
 	DelVersion(appID);
 	DelConf(appID);
 	#if 0
-	DelQueue(appID);
-	DelHighPriQueue(appID);
 	DelQueueString(appID);
 	DelOfflineHeap(appID);
 	#endif
+	DelTagQueue(appID);
+	DelTagHighPriQueue(appID);
 	DelSessionQueue(appID);
-
+	DelTagServiceHeap(appID);
 	#if 0
 	string key = i2str(appID) + "_";
 	DelTagHeap(key);
@@ -664,6 +688,46 @@ int CAppConfig::CanOfferService(const ServiceHeap& servHeap, int serverNum)
 	return -1;
 }
 
+//如果APP下所有坐席都busy或offline，则让用户排队
+int CAppConfig::CanAppOfferService(const string& appID)
+{
+    string strTags;
+    vector<string> tags;
+	unsigned serverNum = 0;
+	
+	serverNum = CAppConfig::Instance()->getMaxConvNum(appID);
+	CAppConfig::Instance()->GetValue(appID, "tags", strTags);
+	LogDebug("[%s]: strTags:%s", appID.c_str(), strTags.c_str());
+    MySplitTag((char *)strTags.c_str(), ";", tags);
+
+	for (int i = 0; i < tags.size(); ++i)
+	{
+		LogTrace("====> tags[%d]: %s", i, tags[i].c_str());
+		
+        ServiceHeap servHeap;
+        if (CAppConfig::Instance()->GetTagServiceHeap(tags[i], servHeap))
+        {
+			LogWarn("Failed to get service heap for tag: %s, find next service heap!", tags[i].c_str());
+            continue;
+        }
+
+		for (set<string>::iterator it = servHeap._servlist.begin(); it != servHeap._servlist.end(); ++it)
+		{
+			ServiceInfo serv;
+
+			if (CAppConfig::Instance()->GetService(*it, serv) || serv.status == "offline" || serv.user_count() >= serverNum)
+			{
+				continue;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+	}
+	
+	return -1;
+}
 
 int CAppConfig::AddTagQueue(string appID)
 {

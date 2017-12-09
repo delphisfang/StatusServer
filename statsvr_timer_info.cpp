@@ -822,19 +822,27 @@ int CTimerInfo::KV_parse_queue(string app_tag, bool highpri)
 	
 	if (true == highpri)
 	{
-		DO_FAIL(CAppConfig::Instance()->GetTagHighPriQueue(appID, pTagQueues));
-		key_queueList  = QUEUE_PREFIX + app_tag;
+		if (CAppConfig::Instance()->GetTagHighPriQueue(appID, pTagQueues))
+		{
+			LogError("Failed to GetTagHighPriQueue(appID: %s)! But we force KV Restore continues...", appID.c_str());
+			return SS_OK;
+		}
+		key_queueList  = HIGHQ_PREFIX + app_tag;
 	}
 	else
 	{
-		DO_FAIL(CAppConfig::Instance()->GetTagQueue(appID, pTagQueues));
-		key_queueList  = HIGHQ_PREFIX + app_tag;
+		if (CAppConfig::Instance()->GetTagQueue(appID, pTagQueues))
+		{
+			LogError("Failed to GetTagQueue(appID: %s)! But we force KV Restore continues...", appID.c_str());
+			return SS_OK;
+		}
+		key_queueList  = QUEUE_PREFIX + app_tag;
 	}
 
 	/*获取*/
 	if (KVGetKeyValue(KV_CACHE, key_queueList, val_queueList))
 	{
-		LogTrace("[statsvr_KV] queue[%s] is empty!", key_queueList.c_str());
+		LogTrace("queue[%s] is empty!", key_queueList.c_str());
 		return SS_OK;
 	}
 

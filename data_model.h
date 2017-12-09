@@ -264,7 +264,19 @@ namespace statsvr
 			//value["userInfo"] = userInfo;
 			value["queuePriority"] = queuePriority;
 			value["channel"]   = channel;
-			//value["extends"]...
+
+			#if 0
+			Json::Reader reader;
+			Json::Value  obj_extends;
+			if (!reader.parse(extends, obj_extends))
+			{
+				value["extends"] = Json::objectValue;				
+			}
+			else
+			{
+				value["extends"] = obj_extends;
+			}
+			#endif
 		}
 		
 	    string toString() const

@@ -77,15 +77,7 @@ void CMCDProc::run(const std::string& conf_file)
 
 	LogDebug("statsvr server started.....\n");
 
-	if (InitSendPing())
-	{
-		LogError("Failed to send init ping!");
-	}
-	else
-	{
-		LogDebug("Success to send init ping.");
-	}
-
+	int isPingSent = 0;
     while (!obj_checkflag.IsStop())
     {
 		DispatchUser2Service();
@@ -93,6 +85,19 @@ void CMCDProc::run(const std::string& conf_file)
 		DispatchServiceTimeout();
         run_epoll_4_mq();
         CheckFlag(true);
+
+		if (0 == isPingSent)
+		{
+			if (InitSendPing())
+			{
+				LogError("Failed to send init ping!");
+			}
+			else
+			{
+				LogDebug("Success to send init ping.");
+			}
+			isPingSent = 1;
+		}
     }
 
     LogDebug("statsvr server stopped.....\n");
@@ -1361,7 +1366,7 @@ void CMCDProc::DispatchSessionTimer()
     return;
 }
 
-void CMCDProc::CheckTimeoutQueue(string appID, TagUserQueue *pTagQueues, unsigned queuePriority)
+void CMCDProc::CheckTimeoutQueue(const string &appID, TagUserQueue *pTagQueues, unsigned queuePriority)
 {
 	UserQueue *uq = NULL;
 	int expire_count = 0;
@@ -1374,11 +1379,11 @@ void CMCDProc::CheckTimeoutQueue(string appID, TagUserQueue *pTagQueues, unsigne
 	{
 		uq	= it->second;
 		expire_count = uq->check_expire();
-		LogTrace("[%s]: expire_count[%d] > 0, queue timeout...", appID.c_str(), expire_count);
-		
+
 		for (int i = 0; i < expire_count; ++i)
 		{
-			LogTrace("=====>i: %d", i);
+			LogTrace("[%s]: expire_count[%d] > 0, queue timeout...", appID.c_str(), expire_count);
+
 			gettimeofday(&ntv, NULL);
 			CTimerInfo* ti = new QueueOutTimer(this, GetMsgSeq(), ntv, "", 0, m_cfg._time_out);
 
