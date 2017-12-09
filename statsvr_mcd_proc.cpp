@@ -86,7 +86,7 @@ void CMCDProc::run(const std::string& conf_file)
         run_epoll_4_mq();
         CheckFlag(true);
 
-		if (0 == isPingSent)
+		if (isPingSent < 30)
 		{
 			if (InitSendPing())
 			{
@@ -96,7 +96,7 @@ void CMCDProc::run(const std::string& conf_file)
 			{
 				LogDebug("Success to send init ping.");
 			}
-			isPingSent = 1;
+			++isPingSent;
 		}
     }
 
@@ -107,60 +107,57 @@ int32_t CMCDProc::Init(const std::string& conf_file)
 {
     if (m_cfg.LoadCfg(conf_file) < 0)
     {
-        LogError("[CMCDProc] LoadCfg fail\n");
+        LogError("[CMCDProc] LoadCfg fail!");
         goto err_out;
     }
 
     if (InitBuffer() < 0)
     {
-        LogError("[CMCDProc] InitBuffer fail\n");
+        LogError("[CMCDProc] InitBuffer fail!");
         goto err_out;
     }
 
 	#if 1
     if (InitLog() < 0)
     {
-        LogError("[CMCDProc] InitLog fail\n");
+        LogError("[CMCDProc] InitLog fail!");
         goto err_out;
     }
 	#endif
 	
     if (InitStat() < 0)
     {
-        LogError("[CMCDProc] InitStat fail\n");
+        LogError("[CMCDProc] InitStat fail!");
         goto err_out;
     }
     
     if (InitIpc() < 0)
     {
-        LogError("[CMCDProc] InitIpc fail\n");
+        LogError("[CMCDProc] InitIpc fail!");
         goto err_out;
     }
 
 	if (InitTemplate())
 	{
-		LogError("Build http response template fail!\n");
+		LogError("Build http response template fail!");
 		goto err_out;
 	}
 
     if (InitCmdMap())
     {
-        LogError("InitCmdMap fail!\n");
+        LogError("InitCmdMap fail!");
 		goto err_out;
     }
 
     if (InitKVServer())
     {
-        LogError("InitKVServer fail!\n");
+        LogError("InitKVServer fail!");
 		goto err_out;
     }
 	
 	srand((int)time(0));
 	m_msg_seq = rand();
 	//LogDebug("%s, msg_seq begin:%u", m_cfg.ToString().c_str(), m_msg_seq);
-
-	///TODO
-	//init busi config
 
     signal(SIGUSR1, sigusr1_handle);
     signal(SIGUSR2, sigusr2_handle);

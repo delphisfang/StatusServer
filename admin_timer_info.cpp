@@ -432,7 +432,7 @@ int AdminConfigTimer::get_id_list(string value, string idListName, vector<string
 	
 	if (!reader.parse(value, obj))
 	{
-		LogError("parse value to JSON failed:%s", value.c_str());
+		LogError("Failed to parse value:%s!", value.c_str());
 		return 0;
 	}
 	idNum = obj[idListName].size();
@@ -528,7 +528,7 @@ int AdminConfigTimer::on_admin_restore()
 	GET_FAIL(CAppConfig::Instance()->GetNowappIDList(appListString), "appIDList");
 	if (!reader.parse(appListString, appList))
 	{
-		LogError("parse appIDlist to JSON failed:%s", appListString.c_str());
+		LogError("Failed to parse appIDlist:%s!", appListString.c_str());
 		ON_ERROR_PARSE_DATA("appIDList");
        	return SS_ERROR;
 	}

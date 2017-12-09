@@ -17,7 +17,7 @@ void set_global(int glob);
 class CAppConfig
 {
 public:
-	static CAppConfig* Instance ()
+	static CAppConfig* Instance()
 	{
 		if (m_instance == NULL)
 		{
@@ -26,11 +26,47 @@ public:
 		return m_instance;
 	}
 
-	CAppConfig ()
+	CAppConfig()
 	{
 		mapConfigString.clear();
 		mapConfigInt.clear();
+
+		_userlist.clear();
+		_servicelist.clear();
+		tagServiceHeap.clear();
 		mapOnlineServiceNumber.clear();
+		
+		appTagQueues.clear();
+		appTagHighPriQueues.clear();
+		appSessionQueue.clear();
+		
+		
+		#if 0
+		mapappIDQueue.clear();
+		mapappIDQueueString.clear();
+		tagServiceList.clear();
+		mapServiceStatus.clear();
+		mapServiceNumber.clear();
+		mapOfflineHeap.clear();
+		mapappIDSessionQueue.clear();
+		mapKickServiceStatus.clear();
+		mapHighPriAppIDQueue.clear();
+		needConnectServiceWord.clear();
+		#endif
+	}
+	~CAppConfig()
+	{
+		mapConfigString.clear();
+		mapConfigInt.clear();
+
+		_userlist.clear();
+		_servicelist.clear();
+		tagServiceHeap.clear();
+		mapOnlineServiceNumber.clear();
+		
+		appTagQueues.clear();
+		appTagHighPriQueues.clear();
+		appSessionQueue.clear();
 
 		#if 0
 		mapappIDQueue.clear();
@@ -45,25 +81,7 @@ public:
 		needConnectServiceWord.clear();
 		#endif
 	}
-	~CAppConfig ()
-	{
-		mapConfigString.clear();
-		mapConfigInt.clear();
-		mapOnlineServiceNumber.clear();
-		#if 0
-		mapappIDQueue.clear();
-		mapappIDQueueString.clear();
-		tagServiceList.clear();
-		mapServiceStatus.clear();
-		mapServiceNumber.clear();
-		mapOfflineHeap.clear();
-		mapappIDSessionQueue.clear();
-		mapKickServiceStatus.clear();
-		mapHighPriAppIDQueue.clear();
-		needConnectServiceWord.clear();
-		#endif
-	}
-	int Init ()
+	int Init()
 	{
 		return 0;
 	}
@@ -169,29 +187,19 @@ private:
 	map<string, string> mapConfigString;
 	map<string, int> mapConfigInt;
 
-	/* key: appID */
-	map<string, TagUserQueue*> appTagQueues;
-	map<string, TagUserQueue*> appTagHighPriQueues;
-	map<string, SessionQueue*> appSessionQueue;
-	#if 0
-	/* 以serviceID为索引 */
-	map<string, ServiceInfo> _servicelist;
-	/* 每个user带有一个session */
-	map<string, Session> _map_user_session;
-	map<string, UserQueue> _queuelist;
-	#endif
-
 	/* key: appID_userID */
 	map<string, UserInfo> _userlist;
 	/* key: appID_servID */
 	map<string, ServiceInfo> _servicelist;
-	
 	/* key: appID_tag, ServiceHeap仅存储serviceID */
 	map<string, ServiceHeap> tagServiceHeap;
-
 	/* key: appID_tag */
 	map<string, unsigned> mapOnlineServiceNumber;
 
+	/* key: appID */
+	map<string, TagUserQueue*> appTagQueues;
+	map<string, TagUserQueue*> appTagHighPriQueues;
+	map<string, SessionQueue*> appSessionQueue;
 };
 
 #endif

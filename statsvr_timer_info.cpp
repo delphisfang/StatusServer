@@ -50,7 +50,7 @@ int CTimerInfo::init(string req_data, int datalen)
 
 	if (!reader.parse(req_data, js_req_root))
 	{
-		LogError("Error init SerializeToString Fail: %s\n", req_data.c_str());
+		LogError("Failed to parse req_data: %s!", req_data.c_str());
 		return -1;
 	}
 
@@ -612,7 +612,7 @@ int CTimerInfo::update_user_session(string appID, string app_userID, Session *se
 	if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue)
 		|| pSessQueue->set(app_userID, sess, gap_warn, gap_expire))
 	{
-		LogError("Failed to set session of user[%s]", app_userID.c_str());
+		LogError("Failed to set session of user[%s]!", app_userID.c_str());
 		return SS_ERROR;
 	}
 
@@ -626,7 +626,7 @@ int CTimerInfo::delete_user_session(string appID, string app_userID)
 	if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue)
 		|| pSessQueue->delete_session(app_userID))
 	{
-		LogError("Failed to delete session of user[%s]", app_userID.c_str());
+		LogError("Failed to delete session of user[%s]!", app_userID.c_str());
 		return SS_ERROR;
 	}
 
@@ -640,7 +640,7 @@ int CTimerInfo::create_user_session(string appID, string app_userID, Session *se
 	if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue)
 		|| pSessQueue->insert(app_userID, sess, gap_warn, gap_expire))
 	{
-		LogError("Failed to create session of user[%s]", app_userID.c_str());
+		LogError("Failed to create session of user[%s]!", app_userID.c_str());
 		return SS_ERROR;
 	}
 
