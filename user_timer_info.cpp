@@ -49,8 +49,6 @@ int EchoTimer::on_echo()
 	data["normalQueue"] = normalQueueJson;
 	data["highpriQueue"] = highpriQueueJson;
 	data["onlineServNum"] = onlineServNumJson;
-	//遍历排队队列、高优先级队列
-	//遍历会话队列
 	
 	return on_send_reply(data);
 }
@@ -81,7 +79,6 @@ int GetUserInfoTimer::do_next_step(string& req_data)
 int GetUserInfoTimer::on_not_online()
 {
 	Json::Value data;
-	LogDebug("==>IN");
 	set_user_data(data);
 	return on_send_error_reply(ERROR_USER_NOT_ONLINE, "User Not Online", data);
 }
@@ -102,16 +99,15 @@ int GetUserInfoTimer::on_get_userinfo()
     SessionQueue*  pSessQueue = NULL;
 	Session sess;
 	int queueRank = 0;
-	string app_userID;
 
 	LogDebug("userID count: %u", m_userID_list.size());
 	for (set<string>::iterator it = m_userID_list.begin(); it != m_userID_list.end(); it++)
 	{
-		app_userID   = (*it);
-		m_raw_userID = delappID(app_userID);
-		LogDebug("try to get userInfo: %s", app_userID.c_str());
+		m_userID   = (*it);
+		m_raw_userID = delappID(m_userID);
+		LogDebug("try to get userInfo: %s", m_userID.c_str());
 
-		if (CAppConfig::Instance()->GetUser(app_userID, user))
+		if (CAppConfig::Instance()->GetUser(m_userID, user))
 		{
 			on_not_online();
 			return SS_ERROR;
@@ -119,36 +115,36 @@ int GetUserInfoTimer::on_get_userinfo()
 
 		// get user queueRank
 		if (SS_OK == CAppConfig::Instance()->GetTagHighPriQueue(m_appID, pTagQueues)
-			  && -1 != (queueRank = pTagQueues->find_user(app_userID))
+			  && -1 != (queueRank = pTagQueues->find_user(m_userID))
 		   )
 		{
-			LogTrace("user[%s] is on HighPriQueue", app_userID.c_str());
-			get_user_json(m_appID, app_userID, user, userJson);
+			LogTrace("user[%s] is on HighPriQueue", m_userID.c_str());
+			get_user_json(m_appID, m_userID, user, userJson);
 			userJson["status"] = "onQueue";
 			userJson["queueRank"] = queueRank;
 		}
 		else if (SS_OK == CAppConfig::Instance()->GetTagQueue(m_appID, pTagQueues)
-			  		&& -1 != (queueRank = pTagQueues->find_user(app_userID))
+			  		&& -1 != (queueRank = pTagQueues->find_user(m_userID))
 			    )
 		{
-			LogTrace("user[%s] is on NormalQueue", app_userID.c_str());
-			get_user_json(m_appID, app_userID, user, userJson);
+			LogTrace("user[%s] is on NormalQueue", m_userID.c_str());
+			get_user_json(m_appID, m_userID, user, userJson);
 			userJson["status"] = "onQueue";
 			userJson["queueRank"] = queueRank;
 		}
 		else if (SS_OK == CAppConfig::Instance()->GetSessionQueue(m_appID, pSessQueue)
-					&& SS_OK == pSessQueue->get(app_userID, sess)
+					&& SS_OK == pSessQueue->get(m_userID, sess)
 					&& sess.serviceID != "")
 		{
-			LogTrace("user[%s] is inService", app_userID.c_str());
+			LogTrace("user[%s] is inService", m_userID.c_str());
 			construct_user_json(user, sess, userJson);
 			userJson["status"]    = "inService";
 			userJson["queueRank"] = 0;
 		}
 		else
 		{
-			LogTrace("user[%s] is inYiBot", app_userID.c_str());
-			get_user_json(m_appID, app_userID, user, userJson);
+			LogTrace("user[%s] is inYiBot", m_userID.c_str());
+			get_user_json(m_appID, m_userID, user, userJson);
 			userJson["status"]	  = "inYiBot";
 			userJson["queueRank"] = 0;
 		}

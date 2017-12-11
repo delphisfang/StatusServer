@@ -761,7 +761,7 @@ void CMCDProc::DispatchDCC()
 
         if (dcc_rsp_data != dccheader->_type) {
 
-            LogError("[DispatchDCC] dccheader->_type invalid expect: %d actual: %d down_ip: %s\n",
+            LogError("[DispatchDCC] Invalid DCC header type! expect type: %d, actual type: %d, IP: %s.",
                 dcc_rsp_data, dccheader->_type, INET_ntoa(down_ip).c_str());
 
             deal_count++;
@@ -769,10 +769,9 @@ void CMCDProc::DispatchDCC()
         }
 
         ret = HandleResponse(m_recv_buf + DCC_HEADER_LEN, data_len - DCC_HEADER_LEN, flow, down_ip, down_port, dcc_time);
-
         if ( ret < 0)
         {
-            LogError("[DispatchDCC] HandleResponse fail down_ip: %s ret: %d\n", INET_ntoa(down_ip).c_str(), ret);
+            LogError("[DispatchDCC] Failed to HandleResponse() from IP: %s, ret: %d!", INET_ntoa(down_ip).c_str(), ret);
         }
 
         deal_count++;
@@ -916,7 +915,7 @@ int32_t CMCDProc::EnququeHttp2CCD(unsigned long long flow, char *data, unsigned 
     int msg_len    = m_http_template.ProduceRef(&head_msg, &ret_len, m_arg_vals, m_arg_cnt);
     if (NULL == head_msg || msg_len <= 0)
     {
-    	LogError("enqueue to client error! flow:%lu, datalen:%u, data:%s\n", flow, data_len ,data);
+    	LogError("Failed to enqueue HTTP to CCD! flow:%lu, datalen:%u, data:%s", flow, data_len ,data);
 		return -1;
 	}
 
@@ -927,7 +926,7 @@ int32_t CMCDProc::EnququeHttp2CCD(unsigned long long flow, char *data, unsigned 
 	/* 包大小检查 */
     if (data_len + msg_len > data_max)
     {
-        LogError("data_len+msg_len > data_max (%u+%d > %u)\n", data_len, msg_len, data_max);
+        LogError("data_len+msg_len > data_max (%u+%d > %u)!", data_len, msg_len, data_max);
         return -1;
     }
 
@@ -990,7 +989,7 @@ int32_t CMCDProc::InitSendPing()
 	int totallen = DCC_HEADER_LEN + msg_len;
     if (m_mq_mcd_2_dcc->enqueue(header, totallen, flow))
     {
-        LogError("Failed to Enqueue HTTP to DCC!");
+        LogError("Failed to Enqueue to DCC!");
         timeval nowTime;
 	    gettimeofday(&nowTime, NULL);
         CWaterLog::Instance()->WriteLog(nowTime, 1, (char *)m_cfg._config_ip.c_str(), m_cfg._config_port, -1, uri);
@@ -998,7 +997,7 @@ int32_t CMCDProc::InitSendPing()
     }
     else
     {
-        LogDebug("Success to Enqueue HTTP to DCC, total_len:%d, dcc_header_len:%d", totallen, DCC_HEADER_LEN);
+        LogDebug("Success to Enqueue HTTP to DCC, total_len:%d, dcc_header_len:%d.", totallen, DCC_HEADER_LEN);
         timeval nowTime;
 	    gettimeofday(&nowTime, NULL);
         CWaterLog::Instance()->WriteLog(nowTime, 1, (char *)m_cfg._config_ip.c_str(), m_cfg._config_port, 0, uri);

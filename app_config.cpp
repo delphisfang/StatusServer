@@ -1368,7 +1368,7 @@ void CAppConfig::getOnlineServiceNumJson(string appID, Json::Value &tags)
 		if (appID == getappID(app_tag))
 		{
 			string raw_tag = delappID(app_tag);
-			tags[raw_tag]   = it->second; 
+			tags[raw_tag]   = it->second;
 		}
 	}
 }
