@@ -41,6 +41,7 @@ namespace statsvr
 	    string    serviceID;    //坐席ID
 	    long long atime;        //活跃时间，即有消息时间到达就更新
 		long long btime;        //建立连接的时间
+		int       notified;		//欢迎语通知
 	    //bool      toIM;       //标记数据流向，默认为0
 		//string	  whereFrom;	//标记使用http还是websocket
 		//string    channel;
@@ -696,7 +697,7 @@ namespace statsvr
 			value["warn_time"]   = warn_time;
 			value["expire_time"] = expire_time;
 		}
-
+		
 		string toString() const
 		{
 			Json::Value value;

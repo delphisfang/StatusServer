@@ -12,6 +12,7 @@ Session::Session()
 	btime = 0;
 	cpIP.clear();
 	cpPort = 0;
+	notified = 0;
 	/*toIM = 0;
 	whereFrom.clear();
 	channel.clear();
@@ -28,6 +29,7 @@ Session::~Session()
 	btime = 0;
 	cpIP.clear();
 	cpPort = 0;
+	notified = 0;
 	/*toIM = 0;
 	whereFrom.clear();
 	channel.clear();
@@ -52,7 +54,8 @@ Session::Session(const string& strSession)
 	btime     = get_value_uint64(value, BUILD_TIME);
 	cpIP      = get_value_str(value, CP_IP);
 	cpPort    = get_value_uint(value, CP_PORT);
-
+	notified  = 0;
+	
 	/*if (!value["toIM"].isNull() && (value["toIM"].isBool() || value["toIM"].isInt()))
 	{
 		toIM = value["toIM"].asBool();
@@ -80,6 +83,8 @@ void Session::toJson(Json::Value &value) const
 	value[BUILD_TIME]  = btime;
 	value[CP_IP]	   = cpIP;
 	value[CP_PORT]	   = cpPort;
+	value[NOTIFIED]    = notified;
+
 	//value["toIM"] = toIM;
 	//value["whereFrom"] = whereFrom;
 	//value["channel"] = channel;

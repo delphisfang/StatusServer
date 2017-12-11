@@ -182,6 +182,7 @@ int UserOnlineTimer::do_next_step(string& req_data)
 
 void UserOnlineTimer::set_user_fields(UserInfo &user)
 {
+	//don't set user["status"]
 	user.atime   = GetCurTimeStamp();
 	user.channel = m_channel;
 	user.tag     = m_raw_tag;
@@ -189,6 +190,19 @@ void UserOnlineTimer::set_user_fields(UserInfo &user)
 	{
 		user.extends = m_extends;
 	}
+}
+
+int UserOnlineTimer::update_session_notified(Session &sess)
+{
+	GET_SESS(get_user_session(m_appID, m_userID, &sess));
+	if (0 == sess.notified)
+	{
+		sess.notified = 1;
+		long long gap_warn   = ("" != sess.serviceID) ? (DEF_SESS_TIMEWARN) : (MAX_INT);
+		long long gap_expire = ("" != sess.serviceID) ? (DEF_SESS_TIMEOUT) : (MAX_INT);
+		DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess, gap_warn, gap_expire));
+	}
+	return 0;
 }
 
 /* 
@@ -210,6 +224,11 @@ int UserOnlineTimer::on_user_online()
 			DO_FAIL(UpdateUser(m_userID, user));
 			//send reply
 			DO_FAIL(reply_user_json_A(m_appID, m_userID, user));
+
+			//update session["notified"]
+			GET_SESS(get_user_session(m_appID, m_userID, &sess));
+			DO_FAIL(update_session_notified(sess));
+			
 			return SS_OK;
 		}
 		else
@@ -224,14 +243,22 @@ int UserOnlineTimer::on_user_online()
 			user.cpIP   = m_cpIP;
 			user.cpPort = m_cpPort;
 			DO_FAIL(UpdateUser(m_userID, user));
+
 			//update session
 			LogDebug("update user[%s]'s session.", m_userID.c_str());
 			GET_SESS(get_user_session(m_appID, m_userID, &sess));
 			sess.cpIP   = m_cpIP;
 			sess.cpPort = m_cpPort;
-			DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess, MAX_INT, MAX_INT));//超时时间设为无限大
+			long long gap_warn	 = ("" != sess.serviceID) ? (DEF_SESS_TIMEWARN) : (MAX_INT);
+			long long gap_expire = ("" != sess.serviceID) ? (DEF_SESS_TIMEOUT) : (MAX_INT);
+			DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess, gap_warn, gap_expire));
+
 			//send reply
 			DO_FAIL(reply_user_json_B(user, sess));
+
+			//update session["notified"]
+			DO_FAIL(update_session_notified(sess));
+
 			return SS_OK;
 		}
 	}
@@ -250,11 +277,17 @@ int UserOnlineTimer::on_user_online()
 		sess.cpIP      = m_cpIP;
 		sess.cpPort    = m_cpPort;
 		sess.atime     = GetCurTimeStamp();
-		sess.btime     = GetCurTimeStamp();		
+		sess.btime     = GetCurTimeStamp();
 		sess.serviceID = "";/// no service yet
+		sess.notified  = 0;
 		DO_FAIL(CreateUserSession(m_appID, m_userID, &sess, MAX_INT, MAX_INT));
+		
 		//send reply
 		DO_FAIL(reply_user_json_B(user, sess));
+
+		//update session["notified"]
+		DO_FAIL(update_session_notified(sess));
+		
 		return SS_OK;
 	}
 }
@@ -284,9 +317,9 @@ int ConnectServiceTimer::do_next_step(string& req_data)
 
 int ConnectServiceTimer::set_data(Json::Value &data)
 {
-	data["sessionID"] = m_sessionID;
-	data["userID"]    = m_raw_userID;
 	data["identity"]  = "user";
+	data["userID"]    = m_raw_userID;
+	data["sessionID"] = m_sessionID;
 }
 
 int ConnectServiceTimer::on_already_onqueue()
@@ -360,13 +393,10 @@ int ConnectServiceTimer::on_appoint_service_offline()
 	return on_send_error_reply(ERROR_NO_ERROR, "ServiceOffLine", data);
 }
 
-int ConnectServiceTimer::on_send_connect_success(Session sess, ServiceInfo serv)
+int ConnectServiceTimer::on_send_connect_success(const Session &sess, const ServiceInfo &serv)
 {
 	Json::Value sessData;
-    Json::Reader reader;
-    Json::Value userInfo;
-    Json::Value json_extends;
-
+    
 	LogDebug("==>IN");
 	//connectSuccess消息的data字段包含的是service的信息
     sessData["userID"]    = sess.userID;
@@ -374,6 +404,7 @@ int ConnectServiceTimer::on_send_connect_success(Session sess, ServiceInfo serv)
     sessData["sessionID"] = sess.sessionID;
     sessData["channel"]   = m_channel;
 	#if 0
+	Json::Value json_extends;
     reader.parse(m_extends, json_extends);
     sessData["extends"]   = json_extends;
 	#else
@@ -382,6 +413,7 @@ int ConnectServiceTimer::on_send_connect_success(Session sess, ServiceInfo serv)
 	
     sessData["serviceName"]   = serv.serviceName;
     sessData["serviceAvatar"] = serv.serviceAvatar;
+	//Json::Reader reader;
     //reader.parse(m_userInfo, userInfo);
     //serviceData["userInfo"] = userInfo;
 
@@ -406,11 +438,6 @@ int ConnectServiceTimer::on_send_connect_success(Session sess, ServiceInfo serv)
 
 int ConnectServiceTimer::on_appoint_service()
 {
-	LogDebug("==>IN");
-	UserInfo user;
-	ServiceInfo serv;
-	Session sess;
-
 	if ("" == m_raw_appointServiceID)
 	{
 		LogTrace("[%s]: appointServiceID is empty, do nothing!", m_appID.c_str());
@@ -418,23 +445,26 @@ int ConnectServiceTimer::on_appoint_service()
 	}
 	
 	//无需判定坐席的服务上限，直接服务
+	ServiceInfo serv;
 	if (CAppConfig::Instance()->GetService(m_appointServiceID, serv)
-		|| serv.status == "offline")
+		|| "offline" == serv.status)
 	{
 		LogTrace("[%s]: appointService[%s] is offline!", m_appID.c_str(), m_appointServiceID.c_str());
 		return on_appoint_service_offline();
 	}
 
-	//发送connectService-reply报文
+	//发送connectService-reply报文，让用户排队
 	DO_FAIL(on_service_with_noqueue(false));
 	
 	//更新session
+	Session sess;
 	GET_SESS(get_user_session(m_appID, m_userID, &sess));
 	sess.serviceID = m_raw_appointServiceID;
 	sess.atime 	   = GetCurTimeStamp();
 	DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT));
 	
 	//更新user
+	UserInfo user;
 	GET_USER(CAppConfig::Instance()->GetUser(m_userID, user));
 	user.status = "inService";
 	user.qtime  = 0;
@@ -442,7 +472,7 @@ int ConnectServiceTimer::on_appoint_service()
 	DO_FAIL(UpdateUser(m_userID, user));
 
 	//更新service
-	SET_SERV(serv.add_user(m_userID));
+	SET_SERV(serv.add_user(m_raw_userID));
 	DO_FAIL(UpdateService(m_serviceID, serv));
 	LogTrace("Success to create new session: %s", sess.toString().c_str());
 
@@ -461,7 +491,6 @@ int ConnectServiceTimer::on_queue()
 	unsigned queue_count         = 0;
 	unsigned highpri_queue_count = 0;
     unsigned serviceNum = 0;
-	UserInfo user;
 	long long qtime = 0, expire_time = 0;
 	
 	LogDebug("==>IN");
@@ -478,6 +507,7 @@ int ConnectServiceTimer::on_queue()
     LogTrace("[%s] serviceNum:%u, max_conv_num:%u, queue rate:%u, max_queue_num: %lu", 
     		m_appID.c_str(), serviceNum, max_conv_num, m_proc->m_cfg._queue_rate, max_queue_num);
 
+	//无客服在线
 	if (serviceNum <= 0)
 	{
 		return on_no_service();
@@ -494,6 +524,7 @@ int ConnectServiceTimer::on_queue()
     LogTrace("[%s] queue size:%u, highpri queue size:%u", 
     		m_appID.c_str(), queue_count, highpri_queue_count);
 
+	//排队人数已达上限
     if (queue_count + highpri_queue_count >= max_queue_num)
     {
         if (serviceNum <= 0)
@@ -502,6 +533,7 @@ int ConnectServiceTimer::on_queue()
 			return on_reject_enqueue();
     }
 
+	//该分组下没有用户在排队，可以直接转人工
     if (m_queuePriority != 0)
     {
         if (highpri_queue_count == 0 && max_queue_num > 0)
@@ -517,22 +549,21 @@ int ConnectServiceTimer::on_queue()
             serviceWithNoQueue = false;
     }
 
-	//所有的坐席都busy或offline时，应该让用户排队，而不是返回71001
+	//所有的坐席都busy或offline时，仍然让用户排队，而不是直接转人工（返回71001）
 	if (CAppConfig::Instance()->CanAppOfferService(m_appID))
 	{
-		LogTrace("==================>let user on queue");
+		LogTrace("====>let user on queue");
 		serviceWithNoQueue = false;
 	}
 	
 	//获取user
+	UserInfo user;
 	GET_USER(CAppConfig::Instance()->GetUser(m_userID, user));
-    //user.userID        = m_raw_userID;
-    //user.sessionID     = m_sessionID;
     if ("" != m_channel)
 		user.channel       = m_channel;
 	if ("" != m_extends)
     {
-		LogTrace("============> get user extends: %s", m_extends.c_str());
+		LogTrace("====> get user extends: %s", m_extends.c_str());
 		user.extends       = m_extends;
 	}
 	if ("" != m_raw_tag)
@@ -543,11 +574,9 @@ int ConnectServiceTimer::on_queue()
     user.queuePriority = m_queuePriority;
     user.atime = user.qtime = GetCurTimeStamp();///
 
-	LogDebug("Go to add user onQueue. tag: %s, user: %s, queuePriority: %u", 
-				m_raw_tag.c_str(), user.toString().c_str(), m_queuePriority);
-	
 	//将user插入排队队列
-	qtime = (user.qtime / 1000);
+	LogDebug("Go to add user onQueue. tag: %s, queuePriority: %u, user: %s", m_raw_tag.c_str(), m_queuePriority, user.toString().c_str());
+	qtime         = (user.qtime / 1000);
 	queue_timeout = CAppConfig::Instance()->getDefaultQueueTimeout(m_appID);
 	expire_time   = qtime + queue_timeout;
 	LogDebug("qtime: %lu, queue_timeout: %lu", qtime, queue_timeout);
@@ -565,7 +594,7 @@ int ConnectServiceTimer::on_queue()
 		DO_FAIL(KV_set_queue(m_appID, m_raw_tag, false));
     }
 	
-	//update user
+	//更新user
 	user.status = "onQueue";
 	DO_FAIL(UpdateUser(m_userID, user));
 	

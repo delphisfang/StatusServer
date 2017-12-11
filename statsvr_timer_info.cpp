@@ -676,12 +676,10 @@ int CTimerInfo::KV_del_service(const string &app_serviceID)
 
 int CTimerInfo::KV_set_session(string app_userID, const Session &sess, long long gap_warn, long long gap_expire)
 {
-	long long warn_time   = (sess.atime/1000) + gap_warn;
-	long long expire_time = (sess.atime/1000) + gap_expire;
 	Json::Value sessJson;
 	sess.toJson(sessJson);
-	sessJson["warn_time"]	= warn_time;
-	sessJson["expire_time"] = expire_time;
+	sessJson["gap_warn"]   = gap_warn;
+	sessJson["gap_expire"] = gap_expire;
 	return KVSetKeyValue(KV_CACHE, SESS_PREFIX+app_userID, sessJson.toStyledString());
 }
 
@@ -742,10 +740,10 @@ int CTimerInfo::KV_parse_session(string app_userID)
 		return SS_ERROR;
 	}
 	
-	long long warn_time   = obj["warn_time"].asInt64();
-	long long expire_time = obj["expire_time"].asInt64();
+	long long gap_warn   = obj["gap_warn"].asInt64();
+	long long gap_expire = obj["gap_expire"].asInt64();
 	string appID = getappID(app_userID);
-	SET_SESS(CreateUserSession(appID, app_userID, &sess, warn_time, expire_time));
+	SET_SESS(CreateUserSession(appID, app_userID, &sess, gap_warn, gap_expire));
 	return SS_OK;
 }
 
@@ -884,6 +882,8 @@ int CTimerInfo::DeleteUserSession(string appID, string app_userID)
 
 int CTimerInfo::CreateUserSession(string appID, string app_userID, Session *sess, long long gap_warn, long long gap_expire)
 {
+	//新创建的session，未发送欢迎语
+	sess->notified = 0;
 	SET_SESS(create_user_session(appID, app_userID, sess, gap_warn, gap_expire));
 	DO_FAIL(KV_set_session(app_userID, *sess, gap_warn, gap_expire));
 	return SS_OK;

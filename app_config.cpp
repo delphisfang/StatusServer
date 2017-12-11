@@ -680,7 +680,7 @@ int CAppConfig::CanOfferService(const ServiceHeap& servHeap, int serverNum)
 		{
 			continue;
 		}
-		else if (serv.user_count() < serverNum)
+		else if (serv.user_count() < serverNum && "offline" != serv.status)
 		{
 			return 0;
 		}
@@ -697,12 +697,12 @@ int CAppConfig::CanAppOfferService(const string& appID)
 	
 	serverNum = CAppConfig::Instance()->getMaxConvNum(appID);
 	CAppConfig::Instance()->GetValue(appID, "tags", strTags);
-	LogDebug("[%s]: strTags:%s", appID.c_str(), strTags.c_str());
+	//LogDebug("[%s]: strTags:%s", appID.c_str(), strTags.c_str());
     MySplitTag((char *)strTags.c_str(), ";", tags);
 
 	for (int i = 0; i < tags.size(); ++i)
 	{
-		LogTrace("====> tags[%d]: %s", i, tags[i].c_str());
+		//LogTrace("====> tags[%d]: %s", i, tags[i].c_str());
 		
         ServiceHeap servHeap;
         if (CAppConfig::Instance()->GetTagServiceHeap(tags[i], servHeap))
@@ -715,7 +715,7 @@ int CAppConfig::CanAppOfferService(const string& appID)
 		{
 			ServiceInfo serv;
 
-			if (CAppConfig::Instance()->GetService(*it, serv) || serv.status == "offline" || serv.user_count() >= serverNum)
+			if (CAppConfig::Instance()->GetService(*it, serv) || "offline" == serv.status || serv.user_count() >= serverNum)
 			{
 				continue;
 			}

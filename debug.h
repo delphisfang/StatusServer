@@ -128,6 +128,7 @@
 #define BUILD_TIME ("buildTime")
 #define CP_IP ("chatProxyIp")
 #define CP_PORT ("chatProxyPort")
+#define NOTIFIED ("notified")
 #define STATUS ("status")
 #define QUEUE_RANK ("queueRank")
 

@@ -72,6 +72,7 @@ namespace statsvr
 		//int on_resp_cp();
 		//int on_already_online();
 		void set_user_fields(UserInfo &user);
+		int update_session_notified(Session &sess);
 		int on_user_online();
 
 		string m_status;
@@ -126,7 +127,7 @@ namespace statsvr
 		int on_already_inservice();
 		int on_service_with_noqueue(bool flag);
 		int on_appoint_service_offline();
-		int on_send_connect_success(Session sess, ServiceInfo serv);
+		int on_send_connect_success(const Session &sess, const ServiceInfo &serv);
 		int on_appoint_service();
 		int on_queue();
 		int on_connect_service();

@@ -590,10 +590,10 @@ int UserServiceTimer::on_dequeue_first_user()
 {
 	//LogDebug("==>IN");
 
-    //LogDebug("[%s]: start connect service", m_appID.c_str());
 	long long expire_time;
 	UserQueue *uq = NULL;
-	
+
+	//从m_raw_tag排队队列弹出一个user
     if (0 == get_highpri_queue(m_appID, m_raw_tag, &uq)
 		&& 0 == uq->get_first(m_userID, expire_time)
 		&& 0 == CAppConfig::Instance()->GetUser(m_userID, m_userInfo))
@@ -613,54 +613,51 @@ int UserServiceTimer::on_dequeue_first_user()
         LogError("[%s]: Failed to get user from highpri and normal queue.", m_appID.c_str());
        	return SS_ERROR;
 	}
-
-	if (CAppConfig::Instance()->CanAppOfferService(m_appID))
-	{
-		LogTrace("=======> No need to dequeue user[%s].", m_userID.c_str());
-		return SS_OK;
-	}
-	
 	LogTrace("dequeue userID: %s", m_userID.c_str());
 
-	m_raw_userID    = delappID(m_userID);
+	//获取user信息
+	m_raw_userID        = delappID(m_userID);
+    m_sessionID         = m_userInfo.sessionID;
+    m_channel           = m_userInfo.channel;
+    m_extends           = m_userInfo.extends;
     m_raw_lastServiceID = m_userInfo.lastServiceID;
-	m_lastServiceID = m_appID + "_" + m_raw_lastServiceID;
+	m_lastServiceID     = m_appID + "_" + m_raw_lastServiceID;
 
-    m_sessionID     = m_userInfo.sessionID;
-    m_channel       = m_userInfo.channel;
-    m_extends       = m_userInfo.extends;
-
-	//获取user的session
+	//获取user的session，后续使用
 	GET_SESS(get_user_session(m_appID, m_userID, &m_session));
-
+	//获取最大会话数，后续使用
 	m_serverNum = CAppConfig::Instance()->getMaxConvNum(m_appID);
 
-	//弹出排队队列的队头，即第一个用户
-    //uq->pop();
+	//排队队列删除user
 	SET_USER(uq->delete_user(m_userID));
 	DO_FAIL(KV_set_queue(m_appID, m_raw_tag, m_queuePriority));
 	
-	//update user
+	//更新user
 	UserInfo user;
 	GET_USER(CAppConfig::Instance()->GetUser(m_userID, user));
 	user.status = "inYiBot";
 	user.qtime  = 0;
 	DO_FAIL(UpdateUser(m_userID, user));
-	
+
 	LogDebug("==>OUT");
 	
     return SS_OK;
 }
 
+
 int UserServiceTimer::on_offer_service()
 {
-	//LogDebug("==>IN");
+	if (CAppConfig::Instance()->CanAppOfferService(m_appID))
+	{
+		//LogTrace("====> No need to dequeue user from queue.");
+		return SS_OK;
+	}
 
 	DO_FAIL(on_dequeue_first_user());
 
-    //LogDebug("[%s]: Start to try connect service", m_appID.c_str());
+    //LogDebug("[%s]: Try offer service", m_appID.c_str());
 	
-    if (m_userInfo.priority == "lastServiceID") //用户请求熟客优先
+    if (m_userInfo.priority == "lastServiceID")
     {
         LogDebug("[%s]: 1 try <lastService>", m_appID.c_str());
         ServiceInfo serv;
@@ -684,7 +681,7 @@ int UserServiceTimer::on_offer_service()
             }
         }
     }
-    else //用户请求分组优先
+    else
     {
         LogDebug("[%s]: 1 try <tagService>", m_appID.c_str());
         ServiceHeap serv_heap;
@@ -716,7 +713,6 @@ int UserServiceTimer::on_offer_service()
 int UserServiceTimer::on_send_connect_success_msg()
 {
 	Json::Value sessData;
-    Json::Value userInfo;
 
 	LogDebug("==>IN");
 	//connectSuccess消息的data字段包含的是service的信息
@@ -739,10 +735,13 @@ int UserServiceTimer::on_send_connect_success_msg()
 	
     sessData["serviceName"]   = m_serviceInfo.serviceName;
     sessData["serviceAvatar"] = m_serviceInfo.serviceAvatar;
-    //reader.parse(m_userInfo, userInfo);
-    //serviceData["userInfo"] = userInfo;
 
-	//发送connectSuccess消息给user
+	/*Json::Value userInfo;
+    reader.parse(m_userInfo, userInfo);
+    serviceData["userInfo"] = userInfo;
+	*/
+	
+	//发送给user
     sessData["identity"] = "user";
 	DO_FAIL(on_send_request("connectSuccess", m_session.cpIP, m_session.cpPort, sessData, true));
 
@@ -753,7 +752,7 @@ int UserServiceTimer::on_send_connect_success_msg()
     }
 	#endif
 	
-	//发送connectSuccess消息给service
+	//发送给service
     sessData["identity"] = "service";
 	DO_FAIL(on_send_request("connectSuccess", m_serviceInfo.cpIP, m_serviceInfo.cpPort, sessData, true));
 
@@ -791,15 +790,14 @@ m_userID
 */
 int RefreshSessionTimer::on_refresh_session()
 {
+	//get session
 	Session sess;
-
 	GET_SESS(get_user_session(m_appID, m_userID, &sess));
 
 	//update session.activeTime
 	sess.atime = GetCurTimeStamp();
 	if ("" == sess.serviceID)
 	{
-		LogWarn("===============>session.serviceID is empty! do not refresh!");
 		DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess, MAX_INT, MAX_INT));
 	}
 	else
@@ -807,9 +805,9 @@ int RefreshSessionTimer::on_refresh_session()
 		DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT));
 	}
 
+	//send reply
 	Json::Value data = Json::objectValue;
 	DO_FAIL(on_send_reply(data));
-	
 	return SS_OK;
 }
 
