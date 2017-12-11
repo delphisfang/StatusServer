@@ -19,11 +19,14 @@
 #include "user_timer_info.h"
 #include "service_timer_info.h"
 #include "system_timer_info.h"
+#include "txf_timer_info.h"
 
 #include "statsvr_kv.h"
 
 using namespace std;
 using namespace statsvr;
+
+#define HTTP_PACKET_MAX_LEN (20480)
 
 #define BUFF_SIZE (2 * 1024 * 1024)
 #define ARG_CNT_MAX	(32)
@@ -361,6 +364,9 @@ int32_t CMCDProc::InitCmdMap()
     m_cmdMap["changeService"] = CHANGE_SERVICE;
 	m_cmdMap["overload"]      = SERVICE_PULLNEXT;
 	m_cmdMap["refreshSession"] = REFRESH_SESSION;
+
+	m_cmdMap["getChatProxyAddress"] = GET_CP_ADDR;
+	
 	/*
     m_replyMap["sendMsg-reply"] = 31;
     m_replyMap["connectSuccess-reply"] = 32;
@@ -681,6 +687,10 @@ int32_t CMCDProc::HandleRequest(char* data, unsigned data_len,
 		case REFRESH_SESSION:
 			ti = new RefreshSessionTimer(this, msg_seq, ccd_time, str_client_ip, flow, m_cfg._time_out);
 			break;
+
+		case GET_CP_ADDR:
+			ti = new TransferTimer(this, msg_seq, ccd_time, str_client_ip, flow, m_cfg._time_out);
+			break;
 			
         default:
             LogError( "Can't handle data from:%s ret:%d\n", str_client_ip.c_str(), ret);
@@ -948,7 +958,7 @@ int32_t CMCDProc::EnququeHttp2CCD(unsigned long long flow, char *data, unsigned 
 
 int32_t CMCDProc::InitSendPing()
 {
-    char uri[20480] = {0};
+    char uri[HTTP_PACKET_MAX_LEN] = {0};
 	char *httpPostFmt = ""
 		"GET /api/v2/configs/ping?name=yiServer HTTP/1.1\r\n"
 		"Host:%s\r\n"
@@ -956,7 +966,7 @@ int32_t CMCDProc::InitSendPing()
 		"Accept:*/*\r\n"
 		"\r\n";
 
-	snprintf(uri, 20480, httpPostFmt, m_cfg._config_domin.c_str());
+	snprintf(uri, HTTP_PACKET_MAX_LEN, httpPostFmt, m_cfg._config_domin.c_str());
 	LogTrace("===>uri: %s", uri);
 	
     unsigned msg_len   = strlen(uri);
@@ -993,10 +1003,10 @@ int32_t CMCDProc::InitSendPing()
 }
 
 
-#if 1
+#if 0
 int32_t CMCDProc::EnququeConfigHttp2DCC()
 {
-    char uri[20480] = {0};
+    char uri[HTTP_PACKET_MAX_LEN] = {0};
 	char *httpPostFmt = ""
 		"POST /api/v2/configs/getConfigForIM HTTP/1.1\r\n"
 		"Host:%s\r\n"
@@ -1019,7 +1029,7 @@ int32_t CMCDProc::EnququeConfigHttp2DCC()
     req["seq"]       = seqStr;
     reqStr = req.toStyledString();
 	
-	snprintf(uri, 20480, httpPostFmt,
+	snprintf(uri, HTTP_PACKET_MAX_LEN, httpPostFmt,
 		m_cfg._config_domin.c_str(),
 		reqStr.length(),
 		reqStr.c_str()
@@ -1061,8 +1071,8 @@ int32_t CMCDProc::EnququeConfigHttp2DCC()
 
 int32_t CMCDProc::EnququeHttp2DCC(char* data, unsigned data_len, const string& ip, unsigned short port)
 {
-    char uri[20480] = {0};
-    snprintf(uri, 20480, "POST /chatpass HTTP/1.1\r\nhost:%s:%u\r\nContent-Length:%u\r\nUser-Agent:curl/7.45.0\r\nConnection:Keep-Alive\r\nAccept:*/*\r\n\r\n%s"
+    char uri[HTTP_PACKET_MAX_LEN] = {0};
+    snprintf(uri, HTTP_PACKET_MAX_LEN, "POST /chatpass HTTP/1.1\r\nhost:%s:%u\r\nContent-Length:%u\r\nUser-Agent:curl/7.45.0\r\nConnection:Keep-Alive\r\nAccept:*/*\r\n\r\n%s"
     , ip.c_str(), port, data_len, data);
     //DEBUG_P(LOG_TRACE, "DCC send packet:%s\n", uri);
     unsigned msg_len = strlen(uri);
@@ -1109,9 +1119,9 @@ int32_t CMCDProc::EnququeHttp2DCC(char* data, unsigned data_len, const string& i
 
 int32_t CMCDProc::EnququeErrHttp2DCC(char* data, unsigned data_len)
 {
-    char uri[20480] = {0};
+    char uri[HTTP_PACKET_MAX_LEN] = {0};
 
-    snprintf(uri, 20480, "POST /pushError/ HTTP/1.1\r\nhost:%s:%u\r\nContent-Type:application/json\r\nContent-Length:%u\r\nUser-Agent:Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko\r\nAccept:*/*\r\n\r\n%s"
+    snprintf(uri, HTTP_PACKET_MAX_LEN, "POST /pushError/ HTTP/1.1\r\nhost:%s:%u\r\nContent-Type:application/json\r\nContent-Length:%u\r\nUser-Agent:Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko\r\nAccept:*/*\r\n\r\n%s"
     , m_cfg._err_push_ip.c_str(), m_cfg._err_push_port, data_len, data);
 
     unsigned msg_len = strlen(uri);
@@ -1344,7 +1354,7 @@ void CMCDProc::DispatchSessionTimer()
 
 	if (CAppConfig::Instance()->GetNowappIDList(appListString))
 	{
-		LogError("get appIDlist failed. \n");
+		LogError("get appIDlist failed.");
        	return;
 	}
 

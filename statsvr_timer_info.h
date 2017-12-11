@@ -1,19 +1,21 @@
 #ifndef __SS_TIMER_INFO_H__
 #define __SS_TIMER_INFO_H__
 
+/* TFC headers */
 #include "tfc_cache_proc.h"
 #include "tfc_base_http.h"
 #include "tfc_base_fast_timer.h"
-#include "common_api.h"
 #include "tfc_debug_log.h"
 
+/* module headers */
 #include "debug.h"
+#include "common_api.h"
 #include "data_model.h"
 #include "app_config.h"
 #include "statsvr_error.h"
-//#include "longconn_parse/longconn_parse.h"
 #include "statsvr_mcd_proc.h"
 #include "statsvr_kv.h"
+//#include "longconn_parse/longconn_parse.h"
 
 using namespace tfc::base;
 
@@ -133,10 +135,6 @@ namespace statsvr
                 return m_max_time_gap;
             }
 
-			string get_value_str(Json::Value &jv, const string &key, const string def_val = "");
-			unsigned int get_value_uint(Json::Value &jv, const string &key, const unsigned int def_val = 0);
-			int get_value_int(Json::Value &jv, const string &key, const int def_val = 0);
-			
 			void on_error_parse_packet(string errmsg);
 			void on_error_get_data(string data_name);
 			void on_error_set_data(string data_name);

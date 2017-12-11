@@ -981,3 +981,66 @@ int cancelUserFromString(const string& userID, string& queueString)
 		queueString.replace(pos1, pos2 - pos1, "");
 	}
 }
+
+
+
+string get_value_str(Json::Value &jv, const string &key, const string def_val)
+{
+	if (!jv[key].isNull() && jv[key].isString())
+	{
+		return jv[key].asString();
+	}
+	else
+	{
+		return def_val;
+	}
+}
+
+int get_value_int(Json::Value &jv, const string &key, const int def_val)
+{
+	if (!jv[key].isNull() && jv[key].isInt())
+	{
+		return jv[key].asInt();
+	}
+	else
+	{
+		return def_val;
+	}
+}
+
+unsigned int get_value_uint(Json::Value &jv, const string &key, const unsigned int def_val)
+{
+	if (!jv[key].isNull() && jv[key].isUInt())
+	{
+		return jv[key].asUInt();
+	}
+	else
+	{
+		return def_val;
+	}
+}
+
+long long get_value_int64(Json::Value &jv, const string &key, const long long def_val)
+{
+	if (!jv[key].isNull() && jv[key].isInt64())
+	{
+		return jv[key].asInt64();
+	}
+	else
+	{
+		return def_val;
+	}
+}
+
+unsigned long long get_value_uint64(Json::Value &jv, const string &key, const unsigned long long def_val)
+{
+	if (!jv[key].isNull() && jv[key].isUInt64())
+	{
+		return jv[key].asUInt64();
+	}
+	else
+	{
+		return def_val;
+	}
+}
+

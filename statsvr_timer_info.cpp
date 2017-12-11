@@ -4,43 +4,7 @@
 using namespace tfc::base;
 using namespace statsvr;
 
-extern char BUF[DATA_BUF_SIZE];
-
-string CTimerInfo::get_value_str(Json::Value &jv, const string &key, const string def_val)
-{
-	if (!jv[key].isNull() && jv[key].isString())
-	{
-		return jv[key].asString();
-	}
-	else
-	{
-		return def_val;
-	}
-}
-
-unsigned int CTimerInfo::get_value_uint(Json::Value &jv, const string &key, const unsigned int def_val)
-{
-	if (!jv[key].isNull() && jv[key].isUInt())
-	{
-		return jv[key].asUInt();
-	}
-	else
-	{
-		return def_val;
-	}
-}
-
-int CTimerInfo::get_value_int(Json::Value &jv, const string &key, const int def_val)
-{
-	if (!jv[key].isNull() && jv[key].isInt())
-	{
-		return jv[key].asInt();
-	}
-	else
-	{
-		return def_val;
-	}
-}
+//extern char BUF[DATA_BUF_SIZE];
 
 int CTimerInfo::init(string req_data, int datalen)
 {

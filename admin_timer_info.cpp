@@ -2,7 +2,7 @@
 #include "statsvr_mcd_proc.h"
 #include <algorithm>
 
-extern char BUF[DATA_BUF_SIZE];
+//extern char BUF[DATA_BUF_SIZE];
 
 #define MAXSIZE (1024*sizeof(unsigned))
 

@@ -1,19 +1,21 @@
-#include "tfc_debug_log.h"
 
+/* OS headers */
 #include <sys/file.h>
 #include <fstream>
 #include <time.h>
 
+/* TFC headers */
+#include "tfc_debug_log.h"
 #include "kv_define.h"
 #include "kv_errno.h"
+#include "kv_proto.h"
 #include "water_log.h"
 #include "feedback_log.h"
 #include "longconn_utils.h"
 #include "md5.hpp"
 
-#include "kv_proto.h"
+/* module headers */
 #include "statsvr_mcd_proc.h"
-
 #include "statsvr_kv.h"
 
 using namespace std;

@@ -3,12 +3,13 @@
 
 #include "tfc_object.h"
 #include "tfc_base_fast_timer.h"
+#include "tfc_base_http.h"
 #include "tfc_cache_proc.h"
+#include "tfc_debug_log.h"
 #include "tfc_net_ipc_mq.h"
 #include "tfc_net_ccd_define.h"
 #include "tfc_net_dcc_define.h"
-#include "tfc_base_http.h"
-#include "tfc_debug_log.h"
+
 
 #include "statsvr_cfg_mng.h"
 #include "Statistic.hpp"
@@ -59,6 +60,8 @@ namespace statsvr
 			QUEUE_OUT = 23,
 			CONNECT_SUCCESS = 24,
 			REFRESH_SESSION = 25,
+
+			GET_CP_ADDR = 31,
 			
 			ECHO = 41,
         };

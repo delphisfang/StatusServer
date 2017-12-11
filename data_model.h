@@ -1,7 +1,7 @@
 #ifndef _DATA_MODEL_H_
 #define _DATA_MODEL_H_
 
-#include "common_api.h"
+/* OS headers */
 #include <sys/time.h>
 #include <time.h>
 #include <map>
@@ -9,8 +9,17 @@
 #include <set>
 #include "list.h"
 #include <algorithm>
-#include "debug.h"
 #include <string>
+
+/* TFC headers */
+#include "tfc_object.h"
+#include "tfc_base_fast_timer.h"
+#include "tfc_base_http.h"
+#include "tfc_debug_log.h"
+
+/* module headers */
+#include "debug.h"
+#include "common_api.h"
 
 using namespace std;
 
@@ -18,116 +27,12 @@ namespace statsvr
 {
 	struct Session
 	{
-	    Session()
-	    {
-			sessionID.clear();
-			userID.clear();
-			serviceID.clear();
-			atime = 0;
-			btime = 0;
-			/*toIM = 0;
-			whereFrom.clear();
-			channel.clear();
-			userCount = 0;
-			*/
-		}
-
-		~Session()
-	    {
-			sessionID.clear();
-			userID.clear();
-			serviceID.clear();
-			atime = 0;
-			btime = 0;
-			/*toIM = 0;
-			whereFrom.clear();
-			channel.clear();
-			userCount = 0;
-			*/
-		}
-
-	    Session(const string& strSession)
-	    {
-	        Json::Reader reader;
-	        Json::Value value;
-			
-	        if (!reader.parse(strSession, value))
-			{
-				return;
-			}
-			if (!value["sessionID"].isNull() && value["sessionID"].isString())
-			{
-				sessionID = value["sessionID"].asString();
-			}
-			if (!value["userID"].isNull() && value["userID"].isString())
-			{
-	        	userID = value["userID"].asString();
-			}
-			if (!value["serviceID"].isNull() && value["serviceID"].isString())
-			{
-	        	serviceID = value["serviceID"].asString();
-			}
-			if (!value["activeTime"].isNull() && value["activeTime"].isInt64())
-			{
-				atime = value["activeTime"].asUInt64();
-			}
-			if (!value["buildTime"].isNull() && value["buildTime"].isInt64())
-			{
-				btime = value["buildTime"].asUInt64();
-			}
-			/*if (!value["toIM"].isNull() && (value["toIM"].isBool() || value["toIM"].isInt()))
-			{
-				toIM = value["toIM"].asBool();
-			}
-			if (!value["whereFrom"].isNull() && value["whereFrom"].isString())
-			{
-				whereFrom = value["whereFrom"].asString();
-			}
-			if (!value["channel"].isNull() && value["channel"].isString())
-			{
-				channel = value["channel"].asString();
-			}
-			if(!value["userCount"].isNull() && value["userCount"].isUInt())
-			{
-				userCount = value["userCount"].asUInt();
-			}*/
-	    }
-
-		void toJson(Json::Value &value) const
-    	{
-	        value["sessionID"]  = sessionID;
-	        value["userID"]     = userID;
-	        value["serviceID"]  = serviceID;
-	        value["activeTime"] = atime;
-	        value["buildTime"]  = btime;
-			value["chatProxyIp"]    = cpIP;
-			value["chatProxyPort"]  = cpPort;
-	        //value["toIM"] = toIM;
-			//value["whereFrom"] = whereFrom;
-			//value["channel"] = channel;
-			//value["userCount"] = userCount;
-		}
-
-		void toUserJson(Json::Value &user) const
-		{
-			Json::Value sess;
-			toJson(sess);
-			user["session"] = sess;
-			
-			user["userID"]  = userID;
-			user["chatProxyIp"]    = cpIP;
-			user["chatProxyPort"]  = cpPort;
-			user["status"]  = "inService";
-			//user["channel"] = channel;
-			user["queueRank"] = 0;
-		}
+	    Session();
+		~Session();
+	    Session(const string& strSession);
 		
-	    string toString() const
-	    {
-			Json::Value value;
-			toJson(value);
-			return value.toStyledString();
-	    }
+		void toJson(Json::Value &value) const;
+	    string toString() const;
 		
 		string    sessionID;
 		string    userID;
@@ -144,147 +49,12 @@ namespace statsvr
 
 	struct UserInfo
 	{
-	    UserInfo()
-	    {
-			userID.clear();
-			cpIP.clear();
-			cpPort = 0;
-			tag.clear();
-			status = "inYiBot";
-			atime = 0;
-			qtime = 0;
-			sessionID.clear();
-			lastServiceID.clear();
-			priority.clear();
-			//userInfo.clear();
-			queuePriority = 0;
-			channel.clear();
-			extends.clear();
-		}
-
-		~UserInfo()
-	    {
-			userID.clear();
-			cpIP.clear();
-			cpPort = 0;
-			tag.clear();
-			status = "inYiBot";
-			atime = 0;
-			qtime = 0;
-			sessionID.clear();
-			lastServiceID.clear();
-			priority.clear();
-			//userInfo.clear();
-			queuePriority = 0;
-			channel.clear();
-			extends.clear();
-		}
-
-	    UserInfo(const string& strUserInfo)
-	    {
-	        Json::Reader reader;
-	        Json::Value value;
-            timeval nowTime;
-			
-	        if (!reader.parse(strUserInfo, value))
-			{
-				return;
-			}
-
-			UserInfo();
-			
-			//LogDebug("value: %s", value.toStyledString().c_str());
-			if (!value["userID"].isNull() && value["userID"].isString())
-	        {
-				userID = value["userID"].asString();
-			}
-			if (!value["chatProxyIp"].isNull() && value["chatProxyIp"].isString())
-			{
-				cpIP = value["chatProxyIp"].asString();
-			}
-			if (!value["chatProxyPort"].isNull() && value["chatProxyPort"].isUInt())
-			{
-				cpPort = value["chatProxyPort"].asUInt();
-			}
-			if (!value["tag"].isNull() && value["tag"].isString())
-			{
-				tag = value["tag"].asString();
-			}
-			if (!value["status"].isNull() && value["status"].isString())
-			{
-				status = value["status"].asString();
-			}
-			/*if (!value["activeTime"].isNull() && value["activeTime"].isInt64())
-			{
-				atime = value["activeTime"].asInt64();
-			}*/
-			gettimeofday(&nowTime, NULL);
-			atime = (nowTime.tv_sec*1000 + nowTime.tv_usec / 1000);
-
-			if (!value["qtime"].isNull() && value["qtime"].isInt64())
-			{
-				qtime = value["qtime"].asUInt64();
-			}
-			if (!value["sessionID"].isNull() && value["sessionID"].isString())
-			{
-				sessionID = value["sessionID"].asString();
-			}
-			if (!value["lastServiceID"].isNull() && value["lastServiceID"].isString())
-			{
-				lastServiceID = value["lastServiceID"].asString();
-			}
-			if (!value["priority"].isNull() && value["priority"].isString())
-			{
-				priority = value["priority"].asString();
-			}
-			if (!value["queuePriority"].isNull() && value["queuePriority"].isUInt())
-			{
-				queuePriority = value["queuePriority"].asUInt();
-			}
-			if (!value["channel"].isNull() && value["channel"].isString())
-			{
-				channel = value["channel"].asString();
-			}
-
-			//LogDebug("construct userInfo: %s", toString().c_str());
-	    }
-
-		void toJson(Json::Value &value) const
-    	{
-	        value["userID"] = userID;
-			value["chatProxyIp"]   = cpIP;
-			value["chatProxyPort"] = cpPort;
-	        value["tag"]    = tag;
-			value["status"]  = status;
-			value["activeTime"]  = atime;
-	        value["qtime"]  = qtime;
-	        value["sessionID"] = sessionID;
-	        value["lastServiceID"] = lastServiceID;
-	        value["priority"] = priority;
-			//value["userInfo"] = userInfo;
-			value["queuePriority"] = queuePriority;
-			value["channel"]   = channel;
-
-			#if 0
-			Json::Reader reader;
-			Json::Value  obj_extends;
-			if (!reader.parse(extends, obj_extends))
-			{
-				value["extends"] = Json::objectValue;				
-			}
-			else
-			{
-				value["extends"] = obj_extends;
-			}
-			#endif
-		}
+	    UserInfo();
+		~UserInfo();
+	    UserInfo(const string& strUserInfo);
 		
-	    string toString() const
-	    {
-	        Json::Value value;
-			toJson(value);
-	        return value.toStyledString();
-	    }
+		void toJson(Json::Value &value) const;
+	    string toString() const;
 		
 	    string userID;
 		string cpIP;
@@ -304,31 +74,8 @@ namespace statsvr
 
 	struct ServiceInfo
 	{
-	    ServiceInfo()
-	    {
-	    	serviceID.clear();
-			status = "offline";
-			atime = 0;
-			cpIP.clear();
-			cpPort = 0;
-			tags.clear();
-			userList.clear();
-			serviceName.clear();
-			serviceAvatar.clear();
-			//whereFrom.clear();
-		}
-
-		~ServiceInfo()
-		{
-	    	serviceID.clear();
-			status.clear();
-			cpIP.clear();
-			tags.clear();
-			userList.clear();
-			serviceName.clear();
-			serviceAvatar.clear();
-			//whereFrom.clear();
-		}
+	    ServiceInfo();
+		~ServiceInfo();
 	
 	    ServiceInfo(const string& strServiceInfo)
 	    {
@@ -445,7 +192,7 @@ namespace statsvr
 		string   cpIP;
 	    unsigned cpPort;
 	    set<string> tags;
-	    set<string> userList; ///
+	    set<string> userList;
 		string   serviceName;
 		string   serviceAvatar;
 		//string	 whereFrom;

@@ -109,5 +109,34 @@
 #define QUEUE_PREFIX ("QUEUE_")
 #define HIGHQ_PREFIX ("HIGHQ_")
 
+/* user status */
+#define IN_YIBOT ("inYiBot")
+#define IN_SERVICE ("inService")
+
+/* service status */
+#define ONLINE ("online")
+#define OFFLINE ("offline")
+
+/* session fields */
+#define USER_ID ("userID")
+#define SERV_ID ("serviceID")
+#define SESSION_ID ("sessionID")
+#define ACTIVE_TIME ("activeTime")
+#define BUILD_TIME ("buildTime")
+#define CP_IP ("chatProxyIp")
+#define CP_PORT ("chatProxyPort")
+#define STATUS ("status")
+#define QUEUE_RANK ("queueRank")
+
+/* user fields */
+#define USER_TAG ("tag")
+#define QTIME ("qtime")
+#define LAST_SERV_ID ("lastServiceID")
+#define PRIO ("priority")
+#define QUEUE_PRIO ("queuePriority")
+#define CHANNEL ("channel")
+
+/* service fields */
+
 #endif
 
