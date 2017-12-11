@@ -35,22 +35,22 @@
 #define MINOR_VERSION  "0"
 
 #define ON_ERROR_PARSE_PACKET() do{\
-		LogError("Error parse http data");\
+		LogError("Error parse http data!");\
 		on_error_parse_packet("Error unknown packet");\
 	}while(0)
 
 #define ON_ERROR_PARSE_DATA(data_name) do{\
-		LogError("[%s] Error parse %s\n", m_search_no.c_str(), data_name);\
+		LogError("[%s] Error parse %s!\n", m_search_no.c_str(), data_name);\
 		on_error_parse_data(data_name);\
 	}while(0)
 
 #define ON_ERROR_GET_DATA(data_name) do{\
-		LogError("[%s] Error get %s\n", m_search_no.c_str(), data_name);\
+		LogError("[%s] Error get %s!", m_search_no.c_str(), data_name);\
 		on_error_get_data(data_name);\
 	}while(0)
 
 #define ON_ERROR_SET_DATA(data_name) do{\
-			LogError("[%s] Error set %s\n", m_search_no.c_str(), data_name);\
+			LogError("[%s] Error set %s!", m_search_no.c_str(), data_name);\
 			on_error_set_data(data_name);\
 		}while(0)
 
@@ -58,7 +58,7 @@
 #define DO_FAIL(expr) do{\
 			if (SS_OK != expr)\
 			{\
-				LogError("[ERROR] Failed to call %s", #expr);\
+				LogError("[ERROR] Failed to call %s!", #expr);\
 				return SS_ERROR;\
 			}\
 		}while(0)
@@ -66,7 +66,7 @@
 #define GET_FAIL(expr, data_name) do{\
 			if (SS_OK != expr)\
 			{\
-				LogError("[ERROR] Failed to call %s", #expr);\
+				LogError("[ERROR] Failed to call %s!", #expr);\
 				ON_ERROR_GET_DATA(data_name);\
 				return SS_ERROR;\
 			}\
@@ -75,7 +75,7 @@
 #define SET_FAIL(expr, data_name) do{\
 			if (SS_OK != expr)\
 			{\
-				LogError("[ERROR] Failed to call %s", #expr);\
+				LogError("[ERROR] Failed to call %s!", #expr);\
 				ON_ERROR_SET_DATA(data_name);\
 				return SS_ERROR;\
 			}\
@@ -108,6 +108,9 @@
 #define SERVLIST_KEY ("SERVLIST")
 #define QUEUE_PREFIX ("QUEUE_")
 #define HIGHQ_PREFIX ("HIGHQ_")
+
+#define PROJECT_NAME ("StatSvr")
+#define MODULE_NAME  ("StatSvr")
 
 /* user status */
 #define IN_YIBOT ("inYiBot")

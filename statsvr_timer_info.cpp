@@ -234,8 +234,8 @@ int CTimerInfo::on_error()
 		timeval nowTime;
 		gettimeofday(&nowTime, NULL);
 
-		post_err["project"] = "StatSvr";
-		post_err["module"]  = "statsvr";
+		post_err["project"] = PROJECT_NAME;
+		post_err["module"]  = MODULE_NAME;
 		post_err["code"]    = m_errno;
 		post_err["desc"]    = m_data;
 		post_err["env"]     = m_proc->m_cfg._env;

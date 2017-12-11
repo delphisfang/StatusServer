@@ -1,3 +1,9 @@
+/* OS headers */
+#include <sys/file.h>
+#include <fstream>
+#include <netdb.h>
+
+/* TFC headers */
 #include "tfc_object.h"
 #include "tfc_base_fast_timer.h"
 #include "tfc_cache_proc.h"
@@ -5,10 +11,8 @@
 #include "tfc_net_ccd_define.h"
 #include "tfc_net_dcc_define.h"
 #include "tfc_debug_log.h"
-#include <sys/file.h>
-#include <fstream>
-#include <netdb.h>
 
+/* module headers */
 #include "debug.h"
 #include "statsvr_mcd_proc.h"
 #include "statsvr_error.h"
@@ -29,12 +33,13 @@ using namespace statsvr;
 #define HTTP_PACKET_MAX_LEN (20480)
 
 #define BUFF_SIZE (2 * 1024 * 1024)
+
 #define ARG_CNT_MAX	(32)
 
 static char r_code_200[]   = "200";
 static char r_reason_200[] = "OK";
 
-char BUF[BUFF_SIZE] = {0};
+//char BUF[BUFF_SIZE] = {0};
 
 extern "C"
 {
@@ -78,7 +83,7 @@ void CMCDProc::run(const std::string& conf_file)
         return;
     }
 
-	LogDebug("statsvr server started.....\n");
+	LogDebug("[%s] server started.....\n", MODULE_NAME);
 
 	int isPingSent = 0;
     while (!obj_checkflag.IsStop())
@@ -103,58 +108,58 @@ void CMCDProc::run(const std::string& conf_file)
 		}
     }
 
-    LogDebug("statsvr server stopped.....\n");
+    LogDebug("[%s] server stopped.....\n", MODULE_NAME);
 }
 
 int32_t CMCDProc::Init(const std::string& conf_file)
 {
     if (m_cfg.LoadCfg(conf_file) < 0)
     {
-        LogError("[CMCDProc] LoadCfg fail!");
+        LogError("Failed to LoadCfg()!");
         goto err_out;
     }
 
     if (InitBuffer() < 0)
     {
-        LogError("[CMCDProc] InitBuffer fail!");
+        LogError("Failed to InitBuffer()!");
         goto err_out;
     }
 
 	#if 1
     if (InitLog() < 0)
     {
-        LogError("[CMCDProc] InitLog fail!");
+        LogError("Failed to InitLog()!");
         goto err_out;
     }
 	#endif
 	
     if (InitStat() < 0)
     {
-        LogError("[CMCDProc] InitStat fail!");
+        LogError("Failed to InitStat()!");
         goto err_out;
     }
     
     if (InitIpc() < 0)
     {
-        LogError("[CMCDProc] InitIpc fail!");
+        LogError("Failed to InitIpc()!");
         goto err_out;
     }
 
 	if (InitTemplate())
 	{
-		LogError("Build http response template fail!");
+		LogError("Failed to build http response template!");
 		goto err_out;
 	}
 
     if (InitCmdMap())
     {
-        LogError("InitCmdMap fail!");
+        LogError("Failed to InitCmdMap()!");
 		goto err_out;
     }
 
     if (InitKVServer())
     {
-        LogError("InitKVServer fail!");
+        LogError("Failed to InitKVServer()!");
 		goto err_out;
     }
 	
@@ -174,19 +179,19 @@ int32_t CMCDProc::ReloadCfg()
 {
     if (m_cfg.Reload() < 0)
     {
-        LogError("[CMCDProc] ReloadCfg fail\n");
+        LogError("Failed to ReloadCfg::Reload()!");
         goto err_out;
     }
 
     if (InitLog())
     {
-        LogError("[CMCDProc] ReloadCfg InitLog fail\n");
+        LogError("Failed to ReloadCfg::InitLog()!");
         goto err_out;
     }   
 
     if (InitStat())
     {
-        LogError("[CMCDProc] ReloadCfg InitStat fail\n");
+        LogError("Failed to ReloadCfg::InitStat()!");
         goto err_out;
     }
 
@@ -201,7 +206,7 @@ int32_t CMCDProc::InitBuffer()
     if (NULL == m_recv_buf)
     {
         m_recv_buf = new char[BUFF_SIZE];
-        if (m_recv_buf == NULL)
+        if (NULL == m_recv_buf)
         {
             return -1;
         }
@@ -210,7 +215,7 @@ int32_t CMCDProc::InitBuffer()
     if (NULL == m_send_buf)
     {
         m_send_buf = new char[BUFF_SIZE];
-        if (m_send_buf == NULL)
+        if (NULL == m_send_buf)
         {
             return -1;
         }
@@ -492,7 +497,7 @@ int32_t CMCDProc::HttpParseCmd(char* data, unsigned data_len, string& outdata, u
     int ret = http_parse.Init((void*)((const void*)data), data_len);
     if (ret)
     {
-    	LogError("http data parse fail: %s", data);
+    	LogError("Failed to parse http data: %s!", data);
         return -1;
     }
 
@@ -528,7 +533,7 @@ int32_t CMCDProc::HttpParseCmd(char* data, unsigned data_len, string& outdata, u
 		//LogDebug("==>parse root");
 		if (!reader.parse(req_params, root))
 		{
-			LogError("[parse_param] Get params from request body by json failed!data:%s\n", req_params.c_str());
+			LogError("Failed to parse params: %s!", req_params.c_str());
 			return -1;
 		}
        
@@ -602,9 +607,9 @@ int32_t CMCDProc::HttpParseCmd(char* data, unsigned data_len, string& outdata, u
     {
         return 0;
     }
-    else if (m_workMode == statsvr::WORKMODE_READY)
+    else if (statsvr::WORKMODE_READY == m_workMode)
     {
-        LogTrace("======> [StatusServer] has not been working yet, m_workMode :%d", m_workMode);
+        LogError("====> [%s] has not been working yet, m_workMode :%d", MODULE_NAME, m_workMode);
         return -2;
     }
 	else
@@ -619,7 +624,6 @@ int32_t CMCDProc::HandleRequest(char* data, unsigned data_len,
 								unsigned long long flow, uint32_t client_ip, timeval& ccd_time)
 {	
     string str_client_ip = INET_ntoa(client_ip);
-		
 	unsigned msg_seq = GetMsgSeq();
 
     string outdata;
@@ -693,7 +697,7 @@ int32_t CMCDProc::HandleRequest(char* data, unsigned data_len,
 			break;
 			
         default:
-            LogError( "Can't handle data from:%s ret:%d\n", str_client_ip.c_str(), ret);
+            LogError( "Can't handle data from IP:%s, ret:%d!", str_client_ip.c_str(), ret);
             Json::Value resp;
             resp["method"] = "-reply";
             if (cmd == -2)
@@ -1132,7 +1136,7 @@ int32_t CMCDProc::EnququeErrHttp2DCC(char* data, unsigned data_len)
 
     if (data_len + msg_len > data_max)
     {
-        LogError("[EnququeErrHttp2DCC] data_len+msg_len > data_max (%u+%d > %u)\n", data_len, msg_len, data_max);
+        LogError("data_len+msg_len > data_max (%u+%d > %u)!", data_len, msg_len, data_max);
         return -1;
     }
 
@@ -1148,7 +1152,7 @@ int32_t CMCDProc::EnququeErrHttp2DCC(char* data, unsigned data_len)
 	int totallen = DCC_HEADER_LEN + msg_len;
     if (m_mq_mcd_2_dcc->enqueue(header, totallen, flow))
     {
-        LogError("[EnququeErrHttp2DCC] enqueue to DCC fail\n");
+        LogError("Failed to enqueue to DCC!");
         timeval nowTime;
 	    gettimeofday(&nowTime, NULL);
         CWaterLog::Instance()->WriteLog(nowTime, 1, (char *)m_cfg._err_push_ip.c_str(), m_cfg._err_push_port, -1, data);
@@ -1156,7 +1160,7 @@ int32_t CMCDProc::EnququeErrHttp2DCC(char* data, unsigned data_len)
     }
     else
     {
-        /*LogDebug("[EnququeErrHttp2DCC] enqueue to DCC success, total_len:%d, ccd_header:%d\n"
+        /*LogDebug("Success to enqueue to DCC, total_len:%d, ccd_header:%d."
 			   , totallen, CCD_HEADER_LEN);*/
         timeval nowTime;
 	    gettimeofday(&nowTime, NULL);
