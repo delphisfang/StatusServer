@@ -102,16 +102,6 @@ namespace statsvr
 
             uint32_t GetMsgSeq() { return m_msg_seq; }
 
-			long long GetCurTimeStamp()
-            {
-				long long ret;
-				timeval nowTime;
-				gettimeofday(&nowTime, NULL);
-
-				ret = (nowTime.tv_sec*1000 + nowTime.tv_usec / 1000);
-				return ret;
-			}
-			
             uint64_t GetTimeGap()
             {
                 struct timeval end;

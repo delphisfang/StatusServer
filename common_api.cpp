@@ -15,7 +15,8 @@
 #include "tfc_debug_log.h"
 #include "common/crypto/symmetric/aes.h"
 #include <iconv.h>
-
+#include <time.h>
+#include <sys/time.h>
 
 /*
  * return value -1 -- fail, 0 -- asn,  1 -- longconn
@@ -1042,5 +1043,12 @@ unsigned long long get_value_uint64(Json::Value &jv, const string &key, const un
 	{
 		return def_val;
 	}
+}
+
+long long GetCurTimeStamp()
+{
+	timeval nowTime;
+	gettimeofday(&nowTime, NULL);
+	return (nowTime.tv_sec*1000 + nowTime.tv_usec / 1000);
 }
 

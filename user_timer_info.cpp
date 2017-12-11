@@ -92,8 +92,7 @@ int GetUserInfoTimer::on_get_userinfo()
 	Json::Value userInfoList;
 	userInfoList.resize(0);
 	Json::Value userJson;
-	int i = 0;
-
+	
     TagUserQueue* pTagQueues = NULL;
 	UserInfo user;
     SessionQueue*  pSessQueue = NULL;
@@ -101,6 +100,7 @@ int GetUserInfoTimer::on_get_userinfo()
 	int queueRank = 0;
 
 	LogDebug("userID count: %u", m_userID_list.size());
+	int i = 0;
 	for (set<string>::iterator it = m_userID_list.begin(); it != m_userID_list.end(); it++)
 	{
 		m_userID   = (*it);
@@ -199,9 +199,7 @@ int UserOnlineTimer::on_user_online()
 	UserInfo user;
 	Json::Value data;
 	Session sess;
-
-	LogDebug("==>IN");
-
+	
 	if (SS_OK == CAppConfig::Instance()->GetUser(m_userID, user))
 	{
 		if (m_cpIP == user.cpIP && m_cpPort == user.cpPort)
@@ -210,39 +208,44 @@ int UserOnlineTimer::on_user_online()
 			LogDebug("user[%s] online in the same CP, update user info.", m_userID.c_str());
 			set_user_fields(user);
 			DO_FAIL(UpdateUser(m_userID, user));
+			//send reply
 			DO_FAIL(reply_user_json_A(m_appID, m_userID, user));
 			return SS_OK;
 		}
 		else
 		{
+			//send kickout msg, if wx, not kick
 			LogDebug("user[%s] online in another CP, kick out.", m_userID.c_str());
-			//send kickout msg
-			//if wx, not kick
 			set_user_data(data);
 			DO_FAIL(on_send_request("kickOut", user.cpIP, user.cpPort, data, false));
-			
+			//update user			
 			LogDebug("update user[%s]'s info.", m_userID.c_str());
 			set_user_fields(user);
 			user.cpIP   = m_cpIP;
 			user.cpPort = m_cpPort;
 			DO_FAIL(UpdateUser(m_userID, user));
-			
+			//update session
 			LogDebug("update user[%s]'s session.", m_userID.c_str());
 			GET_SESS(get_user_session(m_appID, m_userID, &sess));
 			sess.cpIP   = m_cpIP;
 			sess.cpPort = m_cpPort;
 			DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess, MAX_INT, MAX_INT));//超时时间设为无限大
+			//send reply
+			DO_FAIL(reply_user_json_B(user, sess));
+			return SS_OK;
 		}
 	}
 	else //user first online, create and add a new user
 	{
-		user = UserInfo(m_data);
+		//create user
 		LogDebug("Add new user: %s", m_userID.c_str());
-		user.status = "inYiBot";
-		user.sessionID = sess.sessionID = gen_sessionID(m_userID);
+		user = UserInfo(m_data);
+		user.status    = "inYiBot";
+		user.sessionID = gen_sessionID(m_userID);
 		DO_FAIL(AddUser(m_userID, user));
-
+		//create session
 		LogDebug("Add session for user: %s", m_userID.c_str());
+		sess.sessionID = user.sessionID;
 		sess.userID    = m_raw_userID;
 		sess.cpIP      = m_cpIP;
 		sess.cpPort    = m_cpPort;
@@ -250,11 +253,10 @@ int UserOnlineTimer::on_user_online()
 		sess.btime     = GetCurTimeStamp();		
 		sess.serviceID = "";/// no service yet
 		DO_FAIL(CreateUserSession(m_appID, m_userID, &sess, MAX_INT, MAX_INT));
+		//send reply
+		DO_FAIL(reply_user_json_B(user, sess));
+		return SS_OK;
 	}
-
-	DO_FAIL(reply_user_json_B(user, sess));
-	LogDebug("==>OUT");
-	return SS_OK;
 }
 
 UserOnlineTimer::~UserOnlineTimer()

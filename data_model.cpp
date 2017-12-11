@@ -107,10 +107,10 @@ UserInfo::UserInfo()
 	sessionID.clear();
 	lastServiceID.clear();
 	priority.clear();
-	//userInfo.clear();
 	queuePriority = 0;
 	channel.clear();
 	extends.clear();
+	//userInfo.clear();
 }
 
 UserInfo::~UserInfo()
@@ -125,10 +125,10 @@ UserInfo::~UserInfo()
 	sessionID.clear();
 	lastServiceID.clear();
 	priority.clear();
-	//userInfo.clear();
 	queuePriority = 0;
 	channel.clear();
 	extends.clear();
+	//userInfo.clear();
 }
 
 UserInfo::UserInfo(const string& strUserInfo)
@@ -149,15 +149,15 @@ UserInfo::UserInfo(const string& strUserInfo)
 	cpIP   = get_value_str(value, CP_IP);
 	cpPort = get_value_uint(value, CP_PORT);
 	tag    = get_value_str(value, USER_TAG);
-	status = get_value_str(value, STATUS);
+	status = get_value_str(value, STATUS, IN_YIBOT);
 	
 	/*if (!value["activeTime"].isNull() && value["activeTime"].isInt64())
 	{
 		atime = value["activeTime"].asInt64();
-	}*/
-	gettimeofday(&nowTime, NULL);
-	atime = (nowTime.tv_sec*1000 + nowTime.tv_usec / 1000);
+	}
+	*/
 
+	atime         = GetCurTimeStamp();
 	qtime		  = get_value_uint64(value, QTIME);
 	sessionID	  = get_value_str(value, SESSION_ID);
 	lastServiceID = get_value_str(value, LAST_SERV_ID);
@@ -180,9 +180,9 @@ void UserInfo::toJson(Json::Value &value) const
 	value[SESSION_ID]	= sessionID;
 	value[LAST_SERV_ID] = lastServiceID;
 	value[PRIO] 		= priority;
-	//value["userInfo"] = userInfo;
 	value[QUEUE_PRIO]	= queuePriority;
 	value[CHANNEL]		= channel;
+	//value["userInfo"] = userInfo;
 
 	#if 0
 	Json::Reader reader;
@@ -223,8 +223,10 @@ ServiceInfo::ServiceInfo()
 ServiceInfo::~ServiceInfo()
 {
 	serviceID.clear();
-	status.clear();
+	status = OFFLINE;
+	atime = 0;
 	cpIP.clear();
+	cpPort = 0;
 	tags.clear();
 	userList.clear();
 	serviceName.clear();
