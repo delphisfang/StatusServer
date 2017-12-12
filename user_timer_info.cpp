@@ -509,8 +509,8 @@ int ConnectServiceTimer::on_queue()
 		return on_no_service();
 	}
 
-    if (CAppConfig::Instance()->GetTagHighPriQueue(m_appID, pTagQueues) ||
-    	CAppConfig::Instance()->GetTagQueue(m_appID, pHighPriTagQueues))
+    if (CAppConfig::Instance()->GetTagHighPriQueue(m_appID, pHighPriTagQueues) ||
+    	CAppConfig::Instance()->GetTagQueue(m_appID, pTagQueues))
     {
 		ON_ERROR_GET_DATA("tag user queues");
 	    return SS_ERROR;

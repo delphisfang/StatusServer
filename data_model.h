@@ -300,7 +300,10 @@ namespace statsvr
 				{
 					return pos;
 				}
-				pos++;
+				else
+				{
+					pos++;
+				}
 			}
 			
 			return -1;
