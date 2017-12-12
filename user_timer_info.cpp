@@ -579,13 +579,13 @@ int ConnectServiceTimer::on_queue()
 	
     if (m_queuePriority != 0)
     {
-		LogTrace("==========>add user on HighPri Queue.");
+		LogTrace("====>add user on HighPri Queue.");
 		DO_FAIL(pHighPriTagQueues->add_user(m_raw_tag, m_userID, expire_time));
 		DO_FAIL(KV_set_queue(m_appID, m_raw_tag, true));
     }
     else
     {
-		LogTrace("==========>add user on Normal Queue.");
+		LogTrace("====>add user on Normal Queue.");
 		DO_FAIL(pTagQueues->add_user(m_raw_tag, m_userID, expire_time));
 		DO_FAIL(KV_set_queue(m_appID, m_raw_tag, false));
     }
@@ -672,8 +672,6 @@ int CancelQueueTimer::on_cancel_queue()
     TagUserQueue* pTagQueues = NULL;
 	UserInfo user;
 	int queueRank = -1;
-
-	//on_resp_cp();
 
 	LogDebug("==>IN");	
 	
@@ -790,12 +788,12 @@ int CloseSessionTimer::on_close_session()
 	m_lastServiceID     = m_serviceID;
 	
 	//delete old session, create new session
-	LogTrace("======>Delete old session: %s", m_session.toString().c_str());
+	LogTrace("====>Delete old session: %s", m_session.toString().c_str());
 	m_session.serviceID = "";
 	oldSessionID    = m_session.sessionID;
 	user.sessionID  = m_session.sessionID = gen_sessionID(m_userID);
 	m_session.atime = m_session.btime = GetCurTimeStamp();
-	LogTrace("======>Create new session: %s", m_session.toString().c_str());
+	LogTrace("====>Create new session: %s", m_session.toString().c_str());
 	DO_FAIL(DeleteUserSession(m_appID, m_userID));
 	DO_FAIL(CreateUserSession(m_appID, m_userID, &m_session, MAX_INT, MAX_INT));
 

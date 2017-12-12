@@ -350,3 +350,94 @@ unsigned ServiceInfo::user_count() const
 }
 
 
+ServiceHeap::ServiceHeap()
+{
+	_servlist.clear();
+}
+
+ServiceHeap::~ServiceHeap()
+{
+	_servlist.clear();
+}
+
+ServiceHeap::ServiceHeap(const string& strServiceHeap)
+{
+	Json::Reader reader;
+	Json::Value value;
+	
+	if (!reader.parse(strServiceHeap, value))
+	{
+		return;
+	}
+	
+	int serviceLength = value["tagServiceList"].size();
+	for (int i = 0; i < serviceLength; i++)
+	{
+		_servlist.insert(value["tagServiceList"][i].asString());
+	}
+}
+
+string ServiceHeap::toString() const
+{
+	Json::Value value;
+	Json::Value arrayObj;
+	
+	for (set<string>::iterator it = _servlist.begin(); it != _servlist.end(); it++)
+	{
+		arrayObj.append(*it);
+	}
+	value["tagServiceList"] = arrayObj;
+	
+	return value.toStyledString();
+}
+
+unsigned ServiceHeap::size()
+{
+	return _servlist.size();
+}
+
+int ServiceHeap::find_service(const string &app_serviceID)
+{
+	if (_servlist.end() != _servlist.find(app_serviceID))
+	{
+		return 0;
+	}
+	else
+	{
+		return -1;
+	}
+}
+
+int ServiceHeap::add_service(const string &app_serviceID)
+{
+	pair<set<string>::iterator, bool> ret;
+	
+	ret = _servlist.insert(app_serviceID);
+	if (true == ret.second)
+	{
+		return 0;
+	}
+	else
+	{
+		LogError("Failed to add new service[%s]!", app_serviceID.c_str());
+		return -1;
+	}
+}
+
+int ServiceHeap::del_service(const string &app_serviceID)
+{
+	unsigned int ret;
+	
+	ret = _servlist.erase(app_serviceID);
+	if (ret > 0)
+	{
+		return 0;
+	}
+	else
+	{
+		LogError("Failed to delete service[%s]!", app_serviceID.c_str());
+		return -1;
+	}
+}
+
+

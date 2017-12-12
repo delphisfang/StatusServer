@@ -157,7 +157,7 @@ string GetFormatTime(const timeval& tvl)
 	return string(gs_szTime);
 }
 
-int MySplitTag(char* pContentLine, char* pSplitTag, vector<string>& vecContent)
+int MySplitTag(char* pContentLine, const char* pSplitTag, vector<string>& vecContent)
 {
 	char *pStartPtr = pContentLine;
 	int iTagLen = strlen(pSplitTag);

@@ -43,7 +43,7 @@ string  bin2str(const char *sBinData,int iLen);
 string GetTime2(const int iType);
 
 string GetFormatTime(const timeval& tvl);
-int MySplitTag(char* pContentLine, char* pSplitTag, vector<string>& vecContent);
+int MySplitTag(char* pContentLine, const char* pSplitTag, vector<string>& vecContent);
 int Split2Set(char* pContentLine, char* pSplitTag, set<string>& setContent);
 
 

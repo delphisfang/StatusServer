@@ -102,69 +102,16 @@ namespace statsvr
 	//仅存储serviceID
 	struct ServiceHeap
 	{
-	    ServiceHeap()
-	    {
-			_servlist.clear();
-		}
+	    ServiceHeap();
+		~ServiceHeap();
+	    ServiceHeap(const string& strServiceHeap);
 
-		~ServiceHeap()
-	    {
-			_servlist.clear();
-		}
+	    string toString() const;
 
-	    ServiceHeap(const string& strServiceHeap)
-	    {
-	        Json::Reader reader;
-	        Json::Value value;
-	        if(!reader.parse(strServiceHeap, value))
-			{
-				return;
-			}
-	        int serviceLength = value["tagServiceList"].size();
-	        for(int i = 0; i < serviceLength; i++)
-	        {
-	            _servlist.insert(value["tagServiceList"][i].asString());
-	        }
-	    }
-		
-	    string toString() const
-	    {
-	        Json::Value value;
-	        Json::Value arrayObj;
-	        for(set<string>::iterator it = _servlist.begin(); it != _servlist.end(); it++)
-	        {
-	            arrayObj.append(*it);
-	        }
-	        value["tagServiceList"] = arrayObj;
-	        return value.toStyledString();
-	    }
-
-		unsigned size()
-	    {
-			return _servlist.size();
-		}
-
-		int find_service(const string &app_serviceID)
-		{
-			if (_servlist.end() != _servlist.find(app_serviceID))
-			{
-				return 0;
-			}
-			else
-			{
-				return -1;
-			}
-		}
-
-		int add_service(const string &app_serviceID)
-		{
-			_servlist.insert(app_serviceID);
-		}
-		
-		int del_service(const string &app_serviceID)
-		{
-			_servlist.erase(app_serviceID);
-		}
+		unsigned size();
+		int find_service(const string &app_serviceID);
+		int add_service(const string &app_serviceID);
+		int del_service(const string &app_serviceID);
 
 		//按tag对service进行分组，方便转人工时根据user的tag找到service
 	    set<string> _servlist;
