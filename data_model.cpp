@@ -214,7 +214,7 @@ string UserInfo::toString() const
 ServiceInfo::ServiceInfo()
 {
 	serviceID.clear();
-	status = OFFLINE;
+	status = DEF_SERV_STATUS;
 	atime = 0;
 	cpIP.clear();
 	cpPort = 0;
@@ -228,7 +228,7 @@ ServiceInfo::ServiceInfo()
 ServiceInfo::~ServiceInfo()
 {
 	serviceID.clear();
-	status = OFFLINE;
+	status = DEF_SERV_STATUS;
 	atime = 0;
 	cpIP.clear();
 	cpPort = 0;
@@ -238,4 +238,115 @@ ServiceInfo::~ServiceInfo()
 	serviceAvatar.clear();
 	//whereFrom.clear();
 }
+
+ServiceInfo::ServiceInfo(const string& strServiceInfo)
+{
+	Json::Reader reader;
+	Json::Value value;
+	
+	if (!reader.parse(strServiceInfo, value))
+	{
+		return;
+	}
+
+	/*atime 	= value["activeTime"].asInt64();*/
+	/*
+	timeval nowTime;
+	gettimeofday(&nowTime, NULL);
+	atime = (nowTime.tv_sec*1000 + nowTime.tv_usec / 1000);
+	*/
+	serviceID 		 = get_value_str(value, SERV_ID);
+	status	  		 = DEF_SERV_STATUS;
+	atime			 = GetCurTimeStamp();
+	cpIP			 = get_value_str(value, CP_IP);
+	cpPort			 = get_value_uint(value, CP_PORT);
+	serviceName 	 = get_value_str(value, SERV_NAME);
+	serviceAvatar    = get_value_str(value, SERV_AVATAR);
+	//whereFrom 	 = value["whereFrom"].asString();
+
+	unsigned tagsLen = value["tags"].size();
+	for (unsigned i = 0; i < tagsLen; i++)
+	{
+		tags.insert(value["tags"][i].asString());
+	}
+
+	unsigned userLen = value["userList"].size();
+	for (unsigned i = 0; i < userLen; i++)
+	{
+		userList.insert(value["userList"][i].asString());
+	}
+}
+
+void ServiceInfo::toJson(Json::Value &value) const
+{
+	value[SERV_ID]	   = serviceID;
+	value[STATUS] 	   = status;
+	value[ACTIVE_TIME] = atime;
+	value[CP_IP]       = cpIP;
+	value[CP_PORT]     = cpPort;
+	value[SERV_NAME]   = serviceName;
+	value[SERV_AVATAR] = serviceAvatar;
+	//value["whereFrom"] = whereFrom;
+
+	Json::Value arrayTags;
+	arrayTags.resize(0);
+	for (set<string>::iterator it = tags.begin(); it != tags.end(); it++)
+	{
+		arrayTags.append(*it);
+	}
+	value["tags"] = arrayTags;
+
+	Json::Value arrayUserList;
+	arrayUserList.resize(0);
+	for (set<string>::iterator it = userList.begin(); it != userList.end(); it++)
+	{
+		arrayUserList.append(*it);
+	}
+	value["userList"] = arrayUserList;
+}
+
+string ServiceInfo::toString() const
+{
+	Json::Value value;
+	toJson(value);
+	return value.toStyledString();
+}
+
+int ServiceInfo::delete_user(const string &raw_userID)
+{
+	set<string>::iterator it = userList.find(raw_userID);
+	if (it != userList.end())
+	{
+		userList.erase(it);
+		return 0;
+	}
+	else
+	{
+		return -1;
+	}
+}
+
+int ServiceInfo::find_user(const string &raw_userID)
+{
+	if (userList.end() != find(userList.begin(), userList.end(), raw_userID))
+	{
+		return 0;
+	}
+	else
+	{
+		return -1;
+	}
+}
+
+int ServiceInfo::add_user(const string &raw_userID)
+{
+	userList.insert(raw_userID);
+	return 0;
+}
+
+unsigned ServiceInfo::user_count() const
+{
+	return userList.size();
+}
+
 

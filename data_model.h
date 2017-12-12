@@ -77,115 +77,15 @@ namespace statsvr
 	{
 	    ServiceInfo();
 		~ServiceInfo();
-	
-	    ServiceInfo(const string& strServiceInfo)
-	    {
-	        Json::Reader reader;
-	        Json::Value value;
-			timeval nowTime;
-			
-	        if (!reader.parse(strServiceInfo, value))
-			{
-				return;
-			}
+	    ServiceInfo(const string& strServiceInfo);
 
-			serviceID = value["serviceID"].asString();
-			status    = "offline";
+		void toJson(Json::Value &value) const;
+	    string toString() const;
 
-			/*atime     = value["activeTime"].asInt64();*/
-			gettimeofday(&nowTime, NULL);
-			atime = (nowTime.tv_sec*1000 + nowTime.tv_usec / 1000);
-			
-	        cpIP      = value["chatProxyIp"].asString();
-	        cpPort    = value["chatProxyPort"].asUInt();
-			serviceName   = value["serviceName"].asString();
-			serviceAvatar = value["serviceAvatar"].asString();
-			//whereFrom     = value["whereFrom"].asString();
-	        unsigned tagsLen = value["tags"].size();
-
-			for (unsigned i = 0; i < tagsLen; i++)
-	        {
-	            tags.insert(value["tags"][i].asString());
-	        }
-
-			unsigned userLen = value["userList"].size();
-	        for (unsigned i = 0; i < userLen; i++)
-	        {
-	            userList.insert(value["userList"][i].asString());
-	        }
-	    }
-
-		void toJson(Json::Value &value) const
-	    {
-	        Json::Value arrayTags;
-	        Json::Value arrayUserList;
-
-			value["serviceID"]     = serviceID;
-			value["status"]        = status;
-			value["activeTime"]    = atime;
-			value["chatProxyIp"]   = cpIP;
-	        value["chatProxyPort"] = cpPort;
-			value["serviceName"]   = serviceName;
-			value["serviceAvatar"] = serviceAvatar;
-			//value["whereFrom"]     = whereFrom;
-	       
-	        for (set<string>::iterator it = tags.begin(); it != tags.end(); it++)
-	        {
-	            arrayTags.append(*it);
-	        }
-	        value["tags"] = arrayTags;
-
-			arrayUserList.resize(0);
-	        for (set<string>::iterator it = userList.begin(); it != userList.end(); it++)
-	        {
-	            arrayUserList.append(*it);
-	        }
-	        value["userList"] = arrayUserList;
-		}
-		
-	    string toString() const
-	    {
-			Json::Value value;
-			toJson(value);
-	        return value.toStyledString();
-	    }
-
-		int delete_user(const string &userID)
-	    {
-			set<string>::iterator it = userList.find(userID);
-			if (it != userList.end())
-			{
-				userList.erase(it);
-				return 0;
-			}
-			else
-			{
-				return -1;
-			}
-		}
-
-		int find_user(string userID)
-		{
-			if (userList.end() != find(userList.begin(), userList.end(), userID))
-			{
-				return 0;
-			}
-			else
-			{
-				return -1;
-			}
-		}
-		
-		int add_user(const string &userID)
-		{
-			userList.insert(userID);
-			return 0;
-		}
-
-		unsigned user_count() const
-		{
-			return userList.size();
-		}
+		int delete_user(const string &raw_userID);
+		int find_user(const string &raw_userID);
+		int add_user(const string &raw_userID);
+		unsigned user_count() const;
 		
 		string serviceID;
 		string status;
@@ -226,6 +126,7 @@ namespace statsvr
 	            _servlist.insert(value["tagServiceList"][i].asString());
 	        }
 	    }
+		
 	    string toString() const
 	    {
 	        Json::Value value;
@@ -243,19 +144,26 @@ namespace statsvr
 			return _servlist.size();
 		}
 
-		int find(const string &serviceID)
+		int find_service(const string &app_serviceID)
 		{
-			return (_servlist.end() != _servlist.find(serviceID));
+			if (_servlist.end() != _servlist.find(app_serviceID))
+			{
+				return 0;
+			}
+			else
+			{
+				return -1;
+			}
 		}
 
-		int add_service(const string &serviceID)
+		int add_service(const string &app_serviceID)
 		{
-			_servlist.insert(serviceID);
+			_servlist.insert(app_serviceID);
 		}
 		
-		int del_service(const string &serviceID)
+		int del_service(const string &app_serviceID)
 		{
-			_servlist.erase(serviceID);
+			_servlist.erase(app_serviceID);
 		}
 
 		//按tag对service进行分组，方便转人工时根据user的tag找到service

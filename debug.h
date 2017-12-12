@@ -119,6 +119,7 @@
 /* service status */
 #define ONLINE ("online")
 #define OFFLINE ("offline")
+#define DEF_SERV_STATUS (OFFLINE)
 
 /* session fields */
 #define USER_ID ("userID")
@@ -141,6 +142,8 @@
 #define CHANNEL ("channel")
 
 /* service fields */
+#define SERV_NAME ("serviceName")
+#define SERV_AVATAR ("serviceAvatar")
 
 #endif
 

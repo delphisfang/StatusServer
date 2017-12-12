@@ -425,7 +425,7 @@ int UserServiceTimer::on_user_tag()
     }
 
 	//如果有熟客，依然分配熟客
-    if (servHeap.find(m_lastServiceID) && SS_OK == on_user_lastService())
+    if (0 == servHeap.find_service(m_lastServiceID) && SS_OK == on_user_lastService())
     {
         return SS_OK;
     }
