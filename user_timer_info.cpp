@@ -198,9 +198,7 @@ int UserOnlineTimer::update_session_notified(Session &sess)
 	if (0 == sess.notified)
 	{
 		sess.notified = 1;
-		long long gap_warn   = ("" != sess.serviceID) ? (DEF_SESS_TIMEWARN) : (MAX_INT);
-		long long gap_expire = ("" != sess.serviceID) ? (DEF_SESS_TIMEOUT) : (MAX_INT);
-		DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess, gap_warn, gap_expire));
+		DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess));
 	}
 	return 0;
 }
@@ -249,9 +247,7 @@ int UserOnlineTimer::on_user_online()
 			GET_SESS(get_user_session(m_appID, m_userID, &sess));
 			sess.cpIP   = m_cpIP;
 			sess.cpPort = m_cpPort;
-			long long gap_warn	 = ("" != sess.serviceID) ? (DEF_SESS_TIMEWARN) : (MAX_INT);
-			long long gap_expire = ("" != sess.serviceID) ? (DEF_SESS_TIMEOUT) : (MAX_INT);
-			DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess, gap_warn, gap_expire));
+			DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess));
 
 			//send reply
 			DO_FAIL(reply_user_json_B(user, sess));
@@ -461,7 +457,7 @@ int ConnectServiceTimer::on_appoint_service()
 	GET_SESS(get_user_session(m_appID, m_userID, &sess));
 	sess.serviceID = m_raw_appointServiceID;
 	sess.atime 	   = GetCurTimeStamp();
-	DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT));
+	DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess));
 	
 	//更新user
 	UserInfo user;

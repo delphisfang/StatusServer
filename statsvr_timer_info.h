@@ -174,7 +174,7 @@ namespace statsvr
 			int AddService(string appID, string app_servID, ServiceInfo &serv);
 			int UpdateService(string app_servID, const ServiceInfo &serv);
 			int DeleteService(string app_servID);
-			int UpdateUserSession(string appID, string app_userID, Session *sess, long long gap_warn, long long gap_expire);
+			int UpdateUserSession(string appID, string app_userID, Session *sess);
 			int DeleteUserSession(string appID, string app_userID);
 			int CreateUserSession(string appID, string app_userID, Session *sess, long long gap_warn, long long gap_expire);
 			int AddTagOnlineServNum(string appID, const ServiceInfo &serv);

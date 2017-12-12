@@ -395,7 +395,7 @@ int UserServiceTimer::on_create_session()
 	//确定session的serviceID
 	m_session.serviceID = m_raw_serviceID;
 	m_session.atime 	= GetCurTimeStamp();
-	DO_FAIL(UpdateUserSession(m_appID, m_userID, &m_session, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT));
+	DO_FAIL(UpdateUserSession(m_appID, m_userID, &m_session));
 	
 	//更新user状态
 	UserInfo user;
@@ -796,14 +796,7 @@ int RefreshSessionTimer::on_refresh_session()
 
 	//update session.activeTime
 	sess.atime = GetCurTimeStamp();
-	if ("" == sess.serviceID)
-	{
-		DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess, MAX_INT, MAX_INT));
-	}
-	else
-	{
-		DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT));
-	}
+	DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess));
 
 	//send reply
 	Json::Value data = Json::objectValue;

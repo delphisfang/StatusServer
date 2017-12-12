@@ -866,8 +866,16 @@ int CTimerInfo::DeleteService(string app_servID)
 	return SS_OK;
 }
 
-int CTimerInfo::UpdateUserSession(string appID, string app_userID, Session *sess, long long gap_warn, long long gap_expire)
+int CTimerInfo::UpdateUserSession(string appID, string app_userID, Session *sess)
 {
+	if (NULL == sess)
+	{
+		return SS_ERROR;
+	}
+	
+	long long gap_warn	 = ("" != sess->serviceID) ? (DEF_SESS_TIMEWARN) : (MAX_INT);
+	long long gap_expire = ("" != sess->serviceID) ? (DEF_SESS_TIMEOUT) : (MAX_INT);
+	
 	SET_SESS(update_user_session(appID, app_userID, sess, gap_warn, gap_expire));
 	DO_FAIL(KV_set_session(app_userID, *sess, gap_warn, gap_expire));
 	return SS_OK;
