@@ -1229,7 +1229,7 @@ void CMCDProc::DispatchServiceTimeout()
     timeval ntv;
 	gettimeofday(&ntv, NULL);
 
-	//check every 30 seconds
+	//check every 15 seconds
 	if (ntv.tv_sec - last_check_time.tv_sec < 15)
 	{
 		return;
@@ -1371,6 +1371,7 @@ void CMCDProc::DispatchSessionTimer()
         string appID = appList["appIDList"][i].asString();
         DispatchCheckQueue(appID);
         DispatchCheckSession(appID);
+		DispatchCheckYiBot(appID);
     }
     return;
 }
@@ -1401,7 +1402,7 @@ void CMCDProc::CheckTimeoutQueue(const string &appID, TagUserQueue *pTagQueues, 
 			data["tag"]           = it->first;
 			data["queuePriority"] = queuePriority;
 			req_data = data.toStyledString();
-			LogTrace("======> [timeoutDequeue] req_data: %s", req_data.c_str());
+			LogTrace("====> [timeoutDequeue] req_data: %s", req_data.c_str());
 			if (ti->do_next_step(req_data) == 0)
 			{
 				m_timer_queue.set(ti->GetMsgSeq(), ti, ti->GetTimeGap());
@@ -1420,21 +1421,22 @@ void CMCDProc::DispatchCheckQueue(string appID)
 	
 	if (0 == CAppConfig::Instance()->GetTagHighPriQueue(appID, pTagQueues) && pTagQueues->total_queue_count() > 0)
 	{
-		//LogTrace("====> Choose HighPriQueue to timeoutDequeue.");
+		//LogTrace("====> Check HighPriQueue.");
 		CheckTimeoutQueue(appID, pTagQueues, 1);
 	}
 
 	if (0 == CAppConfig::Instance()->GetTagQueue(appID, pTagQueues) && pTagQueues->total_queue_count() > 0)
 	{
-		//LogTrace("====> Choose NormalQueue to timeoutDequeue.");
+		//LogTrace("====> Check NormalQueue.");
 		CheckTimeoutQueue(appID, pTagQueues, 0);
 	}
 }
 
 
-#if 0
-void CMCDProc::DispatchCheckYibot(string appID)
+void CMCDProc::DispatchCheckYiBot(string appID)
 {
+	#ifndef DISABLE_YIBOT_SESSION_CHECK
+	
     SessionQueue* pSessQueue = NULL;
     if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue) 
 		|| pSessQueue->size() <= 0)
@@ -1443,29 +1445,40 @@ void CMCDProc::DispatchCheckYibot(string appID)
     }
 
 	vector<string> app_userID_list;
-	int count = pSessQueue->check_expire_yibot(xxx, app_userID_list);
+	pSessQueue->check_expire_yibot(m_cfg._yibot_time_gap, app_userID_list);
+	int count = app_userID_list.size();
+	if (count <= 0)
+	{
+		return;
+	}
+	LogDebug("Num of timeout YiBot session: %d", count);
+	
+	Json::Value js_userID_list;
+	js_userID_list.resize(0);
 	for (int i = 0; i < count; ++i)
 	{
-		timeval ntv;
-		gettimeofday(&ntv, NULL);
-		CTimerInfo* ti = new YiBotOutTimer(this, GetMsgSeq(), ntv, "", 0, m_cfg._time_out);
-		
-		string req_data;
-		Json::Value data;
-		data["appID"]  = appID;
-		data["userID"] = delappID(app_userID_list[i]);
-		req_data = data.toStyledString();
-		if (ti->do_next_step(req_data) == 0)
-		{
-			m_timer_queue.set(ti->GetMsgSeq(), ti, ti->GetTimeGap());
-		}
-		else
-		{
-			delete ti;
-		}
+		js_userID_list.append(app_userID_list[i]);
 	}
+	
+	timeval ntv;
+	gettimeofday(&ntv, NULL);
+	CTimerInfo* ti = new YiBotOutTimer(this, GetMsgSeq(), ntv, "", 0, m_cfg._time_out);
+
+	Json::Value data;
+	data["userID"]  = js_userID_list;
+	string req_data = data.toStyledString();
+	//LogTrace("req_data: %s", req_data.c_str());
+	if (ti->do_next_step(req_data) == 0)
+	{
+		m_timer_queue.set(ti->GetMsgSeq(), ti, ti->GetTimeGap());
+	}
+	else
+	{
+		delete ti;
+	}
+	
+	#endif
 }
-#endif
 
 void CMCDProc::DispatchCheckSession(string appID)
 {

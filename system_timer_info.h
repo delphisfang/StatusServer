@@ -14,7 +14,7 @@ using namespace tfc::cache;
 
 namespace statsvr
 {
-	#if 0
+	#ifndef DISABLE_YIBOT_SESSION_CHECK
 	class YiBotOutTimer:public CTimerInfo
 	{
 		public:
@@ -31,7 +31,7 @@ namespace statsvr
 		int  on_yibot_timeout();
 	};
 	#endif
-	
+
     class ServiceOutTimer:public CTimerInfo
     {
         public:

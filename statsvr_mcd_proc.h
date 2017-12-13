@@ -143,6 +143,7 @@ namespace statsvr
 			void DispatchSessionTimer();
 			void CheckTimeoutQueue(const string &appID, TagUserQueue *pTagQueues, unsigned queuePriority);
 			void DispatchCheckQueue(string appID);
+			void DispatchCheckYiBot(string appID);
 			void DispatchCheckSession(string appID);
 
             void AddStat(int retcode, const char* entry, struct timeval* begin, struct timeval* end, int cnt = 1)

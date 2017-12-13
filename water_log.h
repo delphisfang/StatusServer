@@ -16,17 +16,16 @@ class CWaterLog
 {
 public:
 	static CWaterLog* Instance();
-	static void Destance ();
-	int  Init (const string &path, const string &file_prex, unsigned max_size, unsigned max_num);
+	static void Destance();
+	int  Init(const string &path, const string &file_prex, unsigned max_size, unsigned max_num);
 	void WriteLog(timeval& op_time, int op, char* ip, unsigned port, int ret, char* data);
 
 private:
-	CWaterLog ();
-	~CWaterLog ();
+	CWaterLog();
+	~CWaterLog();
 
 private:
 	static CWaterLog* m_instance;
-
   	TFCDebugLog m_log;
 };
 

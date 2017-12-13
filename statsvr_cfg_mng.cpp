@@ -94,12 +94,10 @@ int CStatSvrCfgMng::loadConfig()
     }
     else
     {
-		LogTrace("Success to gethostbyname().");
         _config_ip.assign(inet_ntoa(*((struct in_addr *)hptr->h_addr)));
     }
     _config_port = GetDefault(page, "root\\config_port", 80);
-	LogTrace("====> config_domain: %s, config_ip: %s, config_port: %u", 
-				_config_domin.c_str(), _config_ip.c_str(), _config_port);
+	LogTrace("config_domain: %s, config_ip: %s, config_port: %u", _config_domin.c_str(), _config_ip.c_str(), _config_port);
 
     _err_push_ip = GetDefault(page, "root\\err_push_ip", "127.0.0.1");
     if (_err_push_ip == "127.0.0.1")
@@ -116,9 +114,10 @@ int CStatSvrCfgMng::loadConfig()
 	_local_port	   = GetDefault(page, "root\\local_port", 80);
 
     _service_time_gap = GetDefault(page, "root\\service_time_gap", 1800); //30min
+    _yibot_time_gap   = GetDefault(page, "root\\yibot_time_gap", 1000000);
     _queue_rate       = GetDefault(page, "root\\operation\\queue_rate", 10000);
     _yibot_time       = GetDefault(page, "root\\operation\\yibot_time", 480); //min
-	LogTrace("====> service_time_gap: %d, queue_rate: %d", _service_time_gap, _queue_rate);
+	LogTrace("yibot_time_gap: %d, service_time_gap: %d, queue_rate: %d", _yibot_time_gap, _service_time_gap, _queue_rate);
 
     LoadCacheConfig(page);
     return 0;

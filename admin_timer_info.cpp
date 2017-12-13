@@ -441,7 +441,6 @@ int AdminConfigTimer::get_id_list(string value, string idListName, vector<string
 	LogTrace("idNum: %d", idNum);
 	for (int i = 0; i < idNum; i++)
 	{
-		//idList.insert(obj[idListName][i].asString());
 		idList.push_back(obj[idListName][i].asString());
 	}
 

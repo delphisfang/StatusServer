@@ -74,7 +74,8 @@ public:
     unsigned  _queue_rate;
     unsigned  _yibot_time;
     time_t    _service_time_gap;
-
+	time_t    _yibot_time_gap;
+	
 	string    _handler_so_path;
 
 	// add end

@@ -468,7 +468,7 @@ int CAppConfig::UserListToString(string& strUserIDList)
  	for (it = _userlist.begin(); it != _userlist.end(); it++)
 	{
 		userID = it->first;
-		LogDebug("userID: %s", userID.c_str());
+		//LogDebug("userID: %s", userID.c_str());
 		userIDList.append(userID);
 	}
 

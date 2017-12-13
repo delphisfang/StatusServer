@@ -6,15 +6,16 @@
 
 using namespace std;
 
-const unsigned max_buf_length = 2048;
+/*const unsigned max_buf_length = 2048;
 char g_wr_buf[max_buf_length] = {0};
+*/
 
 CWaterLog* CWaterLog::m_instance = NULL;
 
 
 CWaterLog* CWaterLog::Instance()
 {
-	if (NULL ==  m_instance)
+	if (NULL == m_instance)
 	{
 		m_instance = new CWaterLog();
 	}
@@ -23,19 +24,18 @@ CWaterLog* CWaterLog::Instance()
 
 void CWaterLog::Destance()
 {
-	if (NULL !=  m_instance)
+	if (NULL != m_instance)
 	{
 		delete m_instance;
 	}
 	m_instance = NULL;
 }
 
-CWaterLog::CWaterLog ()
+CWaterLog::CWaterLog()
 {
 }
 
-
-CWaterLog::~CWaterLog ()
+CWaterLog::~CWaterLog()
 {
 }
 
@@ -63,8 +63,7 @@ void CWaterLog::WriteLog(timeval& op_time, int op, char* ip, unsigned port, int 
 	#endif
 }
 
-
-int CWaterLog::Init (const string &path, const string &file_prex, unsigned max_size, unsigned max_num)
+int CWaterLog::Init(const string &path, const string &file_prex, unsigned max_size, unsigned max_num)
 {
 	int log_level = 0;
 	int log_type = LOG_TYPE_DAILY;

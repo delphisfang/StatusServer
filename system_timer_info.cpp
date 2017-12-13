@@ -5,11 +5,31 @@
 
 using namespace statsvr;
 
-#if 0
+#ifndef DISABLE_YIBOT_SESSION_CHECK
+
 int YiBotOutTimer::do_next_step(string& req_data)
 {
-	m_userID_list = req_data;
+	Json::Reader reader;
+	Json::Value data;
 
+	//LogDebug("req_data: %s", req_data.c_str());
+	if (!reader.parse(req_data, data))
+	{
+		LogError("Failed to parse req_data!");
+		return -1;
+	}
+
+	if (data["userID"].isNull() || !data["userID"].isArray())
+	{
+		return -1;
+	}
+
+	Json::Value js_userID_list = data["userID"];
+	for(int i = 0; i < js_userID_list.size(); i++)
+	{
+		m_userID_list.insert(js_userID_list[i].asString());
+	}
+	
 	if (on_yibot_timeout())
 	{
 		return -1;
@@ -20,30 +40,39 @@ int YiBotOutTimer::do_next_step(string& req_data)
 	}
 }
 
+/*
+input: m_appID, m_userID_list
+*/
 int YiBotOutTimer::on_yibot_timeout()
 {
-    SessionQueue* pSessQueue = NULL;
-	Session sess;
-	
 	for (set<string>::iterator it = m_userID_list.begin(); it != m_userID_list.end(); it++)
 	{
 		m_userID = (*it);
 		m_appID  = getappID(m_userID);
+		LogTrace("====> appID: %s, userID: %s", m_appID.c_str(), m_userID.c_str());
+
+		SessionQueue* pSessQueue = NULL;
+		DO_FAIL(CAppConfig::Instance()->GetSessionQueue(m_appID, pSessQueue));
 		
 		//get session
-		DO_FAIL(CAppConfig::Instance()->GetSessionQueue(m_appID, pSessQueue));
+		Session sess;
 		DO_FAIL(pSessQueue->get(m_userID, sess));
 		//only update yibot session
 		if ("" != sess.serviceID)
 		{
 			continue;
 		}
-		//delete old session
+		//delete old, create new session
 		DO_FAIL(DeleteUserSession(m_appID, m_userID));
-		//create new session
 		sess.atime = sess.btime = GetCurTimeStamp();
 		sess.sessionID = gen_sessionID(m_userID);
 		DO_FAIL(CreateUserSession(m_appID, m_userID, &sess, MAX_INT, MAX_INT));
+		//update user
+		UserInfo user;
+		DO_FAIL(CAppConfig::Instance()->GetUser(m_userID, user));
+		user.sessionID = sess.sessionID;
+		user.atime     = sess.atime;
+		DO_FAIL(UpdateUser(m_userID, user));
 	}
 	
 	return SS_OK;
@@ -53,7 +82,6 @@ YiBotOutTimer::~YiBotOutTimer()
 {
 }
 #endif
-
 
 int ServiceOutTimer::do_next_step(string& req_data)
 {
