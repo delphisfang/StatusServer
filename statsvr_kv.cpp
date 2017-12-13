@@ -8,11 +8,11 @@
 #include "tfc_debug_log.h"
 #include "kv_define.h"
 #include "kv_errno.h"
-#include "kv_proto.h"
-#include "water_log.h"
-#include "feedback_log.h"
-#include "longconn_utils.h"
-#include "md5.hpp"
+//#include "kv_proto.h"
+//#include "water_log.h"
+//#include "feedback_log.h"
+//#include "longconn_utils.h"
+//#include "md5.hpp"
 
 /* module headers */
 #include "statsvr_mcd_proc.h"
@@ -21,9 +21,8 @@
 using namespace std;
 using namespace ad::kv_server;
 
-#define BUFF_SIZE       10 * 1024 * 1024
-
-static char kv_server_buffer[BUFF_SIZE];
+#define KV_BUFF_SIZE (10 * 1024 * 1024)
+static char kv_server_buffer[KV_BUFF_SIZE];
 
 int KVGetKeyValue(KvCacheCtrl &ckv_cache, const string &key, string &value)
 {

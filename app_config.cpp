@@ -658,7 +658,7 @@ int CAppConfig::DelServiceFromTags(const string &appID, ServiceInfo &serv)
 			continue;
 		}
 
-		servHeap.del_service(app_serviceID);
+		servHeap.delete_service(app_serviceID);
 
 		if (CAppConfig::Instance()->UpdateTagServiceHeap(app_tag, servHeap))
 		{

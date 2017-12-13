@@ -119,6 +119,7 @@
 /* service status */
 #define ONLINE ("online")
 #define OFFLINE ("offline")
+#define BUSY ("busy")
 #define DEF_SERV_STATUS (OFFLINE)
 
 /* session fields */

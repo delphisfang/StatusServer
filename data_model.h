@@ -111,13 +111,13 @@ namespace statsvr
 		unsigned size();
 		int find_service(const string &app_serviceID);
 		int add_service(const string &app_serviceID);
-		int del_service(const string &app_serviceID);
+		int delete_service(const string &app_serviceID);
 
 		//按tag对service进行分组，方便转人工时根据user的tag找到service
 	    set<string> _servlist;
 	};
 
-	//带计时的用户信息
+	//带超时时间的用户信息
 	struct UserTimer
 	{
 		string userID;
@@ -134,7 +134,7 @@ namespace statsvr
 			_user_list.clear();
 		}
 		
-		virtual ~UserQueue()
+		~UserQueue()
 		{
 			_user_list.clear();
 		}
@@ -147,7 +147,7 @@ namespace statsvr
 			UserTimer ut;
 
 			queueList.resize(0);
-	        for (list<UserTimer>::iterator it = _user_list.begin(); it != _user_list.end(); it++)
+	        for (list<UserTimer>::iterator it = _user_list.begin(); it != _user_list.end(); ++it)
 	        {
 				ut = (*it);
 	            obj["userID"]      = ut.userID;
@@ -156,8 +156,9 @@ namespace statsvr
 				queueList.append(obj);
 	        }
 			arr["queueList"] = queueList;
-			
-	        return arr.toStyledString();
+
+			Json::FastWriter writer;
+	        return writer.write(arr);
 		}
 		
 		int set(string userID, long long expire_time/* seconds */)
@@ -185,7 +186,7 @@ namespace statsvr
 			return -1;
 		}
 
-		// get first user
+		// get first user on queue
 		int get_first(string& userID, long long &expire_time)
 		{
 			list<UserTimer>::iterator it = _user_list.begin();
@@ -201,7 +202,7 @@ namespace statsvr
 			return -1;
 		}
 
-		// get last user
+		// get last user on queue
 		int get_last(string& userID, long long &expire_time)
 		{
 			list<UserTimer>::reverse_iterator it = _user_list.rbegin();
@@ -216,24 +217,6 @@ namespace statsvr
 			LogError("Failed to get last user from queue, size <= 0!");
 			return -1;
 		}
-
-		#if 0
-		// return user info according to key <userID>
-		int get(string userID, UserInfo& ui)
-		{
-			list<UserTimer>::iterator it = _user_list.begin();
-			
-			for (it = _user_list.begin(); it != _user_list.end(); it++)
-			{
-				if (it->userID == userID)
-				{
-					ui = it->userInfo;
-					return 0;
-				}
-			}
-			return -1;
-		}
-		#endif
 		
 		// return number before user
 		int find(string userID)
@@ -256,7 +239,6 @@ namespace statsvr
 			return -1;
 		}
 
-		// delete user
 		int delete_user(string userID)
 		{
 			list<UserTimer>::iterator it;
@@ -298,8 +280,6 @@ namespace statsvr
 		{
 			return _user_list.size();
 		}
-		
-		
 	};
 
 	class TagUserQueue
@@ -374,28 +354,6 @@ namespace statsvr
 			return uq->set(userID, expire_time);
 		}
 
-		#if 0
-		// return user rank in tag queue
-		int get_user(string userID, UserInfo &user)
-		{
-			map<string, UserQueue*>::iterator it;
-			UserQueue *uq = NULL;
-			int pos = -1;
-			
-			for (it = _tag_queue.begin(); it != _tag_queue.end(); it++)
-			{
-				uq = it->second;
-				if (0 == uq->get(userID, user))
-				{
-					pos = uq->find(userID);
-					return pos;
-				}
-			}
-
-			return -1;
-		}
-		#endif
-		
 		int find_user(string userID)
 		{
 			map<string, UserQueue*>::iterator it;
@@ -451,7 +409,7 @@ namespace statsvr
 			long long temp_expire;
 			long long expire;
 
-			LogTrace("==========>direct = %d", direct);
+			LogTrace("====>direct = %d", direct);
 			
 			map<string, UserQueue*>::iterator it;
 			for (it = _tag_queue.begin(); it != _tag_queue.end(); it++)
@@ -492,12 +450,12 @@ namespace statsvr
 
 			if (true == found)
 			{
-				LogTrace("=====> pull out user[%s], expire_time[%ld]", userID.c_str(), expire);
+				LogTrace("====> pull out user[%s], expire_time[%ld]", userID.c_str(), expire);
 				return 0;
 			}
 			else
 			{
-				LogError("=====> not matched user!");
+				LogError("====> not matched user!");
 				return -1;
 			}
 		}
@@ -574,7 +532,7 @@ namespace statsvr
 			_sess_list.clear();	
 		};
 		
-		virtual ~SessionQueue()
+		~SessionQueue()
 		{
 			_sess_list.clear();
 		};

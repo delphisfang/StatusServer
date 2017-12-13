@@ -28,7 +28,6 @@ int CTimerInfo::init(string req_data, int datalen)
 	{
 		m_cmd = get_value_str(js_req_root, "cmd");
 	}
-	//LogDebug("m_cmd: %s", m_cmd.c_str());
 
 	if ((m_cmd != "getUserInfo" && m_cmd != "getServiceInfo"))
 	{
@@ -54,12 +53,6 @@ int CTimerInfo::init(string req_data, int datalen)
 	js_req_data = js_req_root["data"];
 	m_data = js_req_data.toStyledString();
 
-	/*if (!js_req_data["userInfo"].isNull() && js_req_data["userInfo"].isObject())
-	{
-		m_userInfo = js_req_data["userInfo"].toStyledString();
-	}
-	*/
-
 	if (!js_req_data["appID"].isNull() && js_req_data["appID"].isString())
 	{
 		m_appID = js_req_data["appID"].asString();
@@ -69,13 +62,12 @@ int CTimerInfo::init(string req_data, int datalen)
 		m_appID = ui2str(js_req_data["appID"].asUInt());
 	}
 
-	if (m_cmd != "pingConf" && m_cmd != "updateConf" && m_cmd != "getConf"
-		&& m_cmd != "getTodayStatus"
+	if (m_cmd != "pingConf" && m_cmd != "updateConf" && m_cmd != "getConf" && m_cmd != "getTodayStatus"
 		&& CAppConfig::Instance()->checkAppIDExist(m_appID))
 	{
 		LogError("Unknown appID[%s]!", m_appID.c_str());
 		return -1;
-	}	
+	}
 	
 	m_identity = get_value_str(js_req_data, "identity");
 
@@ -464,13 +456,13 @@ int CTimerInfo::on_send_error_reply(ERROR_TYPE code, string msg, const Json::Val
 
 int CTimerInfo::get_user_session(string appID, string app_userID, Session *sess)
 {
-	SessionQueue*  pSessQueue = NULL;
+	SessionQueue* pSessQueue = NULL;
 	Session temp;
 	
 	if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue)
 		|| pSessQueue->get(app_userID, temp))
 	{
-		LogError("Failed to get session of user[%s]", app_userID.c_str());
+		LogError("Failed to get session of user[%s]!", app_userID.c_str());
 		return SS_ERROR;
 	}
 
@@ -578,12 +570,12 @@ int CTimerInfo::get_service_json(string appID, const ServiceInfo &serv, Json::Va
 
 int CTimerInfo::update_user_session(string appID, string app_userID, Session *sess, long long gap_warn, long long gap_expire)
 {
-	SessionQueue*  pSessQueue = NULL;
+	SessionQueue* pSessQueue = NULL;
 	
 	if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue)
 		|| pSessQueue->set(app_userID, sess, gap_warn, gap_expire))
 	{
-		LogError("Failed to set session of user[%s]!", app_userID.c_str());
+		LogError("Failed to update session of user[%s]!", app_userID.c_str());
 		return SS_ERROR;
 	}
 
@@ -592,7 +584,7 @@ int CTimerInfo::update_user_session(string appID, string app_userID, Session *se
 
 int CTimerInfo::delete_user_session(string appID, string app_userID)
 {
-	SessionQueue*  pSessQueue = NULL;
+	SessionQueue* pSessQueue = NULL;
 	
 	if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue)
 		|| pSessQueue->delete_session(app_userID))
@@ -606,7 +598,7 @@ int CTimerInfo::delete_user_session(string appID, string app_userID)
 
 int CTimerInfo::create_user_session(string appID, string app_userID, Session *sess, long long gap_warn, long long gap_expire)
 {
-	SessionQueue*  pSessQueue = NULL;
+	SessionQueue* pSessQueue = NULL;
 	
 	if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue)
 		|| pSessQueue->insert(app_userID, sess, gap_warn, gap_expire))
@@ -628,7 +620,7 @@ int CTimerInfo::update_session_notified(string appID, string app_userID)
 		sess.notified = 1;
 		DO_FAIL(UpdateUserSession(appID, app_userID, &sess));
 	}
-	return 0;
+	return SS_OK;
 }
 
 string CTimerInfo::gen_sessionID(string app_userID)

@@ -430,7 +430,7 @@ int ServiceHeap::add_service(const string &app_serviceID)
 	}
 }
 
-int ServiceHeap::del_service(const string &app_serviceID)
+int ServiceHeap::delete_service(const string &app_serviceID)
 {
 	unsigned int ret;
 	
