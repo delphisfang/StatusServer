@@ -750,6 +750,24 @@ namespace statsvr
 			return expireNum;
 		}
 
+		int check_expire_yibot(long long gap_expire, vector<string> &app_userID_list)
+		{
+			long long nowTime = (long long)time(NULL);
+
+			app_userID_list.clear();
+
+			list<SessionTimer>::iterator it;
+			for (it = _sess_list.begin(); it != _sess_list.end(); ++it)
+			{
+				if (nowTime >= (it->session.atime + gap_expire))
+				{
+					app_userID_list.push_back(it->userID);
+				}
+			}
+
+			return app_userID_list.size();
+		}
+		
 		unsigned size()
 		{ 
 			return _sess_list.size();

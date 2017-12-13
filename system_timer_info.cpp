@@ -5,6 +5,55 @@
 
 using namespace statsvr;
 
+#if 0
+int YiBotOutTimer::do_next_step(string& req_data)
+{
+	m_userID_list = req_data;
+
+	if (on_yibot_timeout())
+	{
+		return -1;
+	}
+	else
+	{
+		return 1;///important
+	}
+}
+
+int YiBotOutTimer::on_yibot_timeout()
+{
+    SessionQueue* pSessQueue = NULL;
+	Session sess;
+	
+	for (set<string>::iterator it = m_userID_list.begin(); it != m_userID_list.end(); it++)
+	{
+		m_userID = (*it);
+		m_appID  = getappID(m_userID);
+		
+		//get session
+		DO_FAIL(CAppConfig::Instance()->GetSessionQueue(m_appID, pSessQueue));
+		DO_FAIL(pSessQueue->get(m_userID, sess));
+		//only update yibot session
+		if ("" != sess.serviceID)
+		{
+			continue;
+		}
+		//delete old session
+		DO_FAIL(DeleteUserSession(m_appID, m_userID));
+		//create new session
+		sess.atime = sess.btime = GetCurTimeStamp();
+		sess.sessionID = gen_sessionID(m_userID);
+		DO_FAIL(CreateUserSession(m_appID, m_userID, &sess, MAX_INT, MAX_INT));
+	}
+	
+	return SS_OK;
+}
+
+YiBotOutTimer::~YiBotOutTimer()
+{
+}
+#endif
+
 
 int ServiceOutTimer::do_next_step(string& req_data)
 {

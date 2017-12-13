@@ -54,8 +54,13 @@ void CWaterLog::WriteLog(timeval& op_time, int op, char* ip, unsigned port, int 
 	{
 		opString = string("What");
 	}
+	
+	#if 0
 	m_log.log_p(0,	"[%s] | OP:%s | IP:%s | Port:%u | ret:%d | data:%s\n"
 			  , GetFormatTime(op_time).c_str(), opString.c_str(), ip, port, ret, data);
+	#else
+	m_log.log_p(0,	"%s | %s | %u | %d | %s", opString.c_str(), ip, port, ret, data);
+	#endif
 }
 
 

@@ -150,6 +150,13 @@ int GetUserInfoTimer::on_get_userinfo()
 		}
 		
 		userInfoList[i] = userJson;
+
+		//update session["notified"]
+		if (1 == m_notify)
+		{
+			DO_FAIL(update_session_notified(m_appID, m_userID));
+		}
+		
 		++i;
 	}
 
@@ -192,17 +199,6 @@ void UserOnlineTimer::set_user_fields(UserInfo &user)
 	}
 }
 
-int UserOnlineTimer::update_session_notified(Session &sess)
-{
-	GET_SESS(get_user_session(m_appID, m_userID, &sess));
-	if (0 == sess.notified)
-	{
-		sess.notified = 1;
-		DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess));
-	}
-	return 0;
-}
-
 /* 
 input: m_userID 
 */
@@ -224,8 +220,7 @@ int UserOnlineTimer::on_user_online()
 			DO_FAIL(reply_user_json_A(m_appID, m_userID, user));
 
 			//update session["notified"]
-			GET_SESS(get_user_session(m_appID, m_userID, &sess));
-			DO_FAIL(update_session_notified(sess));
+			DO_FAIL(update_session_notified(m_appID, m_userID));
 			
 			return SS_OK;
 		}
@@ -253,7 +248,7 @@ int UserOnlineTimer::on_user_online()
 			DO_FAIL(reply_user_json_B(user, sess));
 
 			//update session["notified"]
-			DO_FAIL(update_session_notified(sess));
+			DO_FAIL(update_session_notified(m_appID, m_userID));
 
 			return SS_OK;
 		}
@@ -282,7 +277,7 @@ int UserOnlineTimer::on_user_online()
 		DO_FAIL(reply_user_json_B(user, sess));
 
 		//update session["notified"]
-		DO_FAIL(update_session_notified(sess));
+		DO_FAIL(update_session_notified(m_appID, m_userID));
 		
 		return SS_OK;
 	}

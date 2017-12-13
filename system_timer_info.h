@@ -14,6 +14,24 @@ using namespace tfc::cache;
 
 namespace statsvr
 {
+	#if 0
+	class YiBotOutTimer:public CTimerInfo
+	{
+		public:
+		YiBotOutTimer(CMCDProc* const proc
+					  , unsigned msg_seq
+					  , const timeval& ccd_time
+					  , string ccd_client_ip
+					  , uint64_t ret_flow
+					  , uint64_t max_time_gap) 
+					  : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
+		{}
+		~YiBotOutTimer();
+		int  do_next_step(string& req_data);
+		int  on_yibot_timeout();
+	};
+	#endif
+	
     class ServiceOutTimer:public CTimerInfo
     {
         public:

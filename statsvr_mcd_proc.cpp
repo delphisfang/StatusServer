@@ -632,8 +632,6 @@ int32_t CMCDProc::HandleRequest(char* data, unsigned data_len,
     CTimerInfo* ti = NULL;
     int cmd;
 
-	//LogDebug("==>IN: HandleRequest()");
-	
     int ret = HttpParseCmd(data, data_len, outdata, out_len);
     CWaterLog::Instance()->WriteLog(ccd_time, 0, (char *)str_client_ip.c_str(), 0, ret, (char *)outdata.c_str());
 
@@ -715,8 +713,10 @@ int32_t CMCDProc::HandleRequest(char* data, unsigned data_len,
                 resp["code"] = -61003;
                 resp["msg"] = "Unknown http packet";
             }
-            string respString = resp.toStyledString();
-            EnququeHttp2CCD(flow, (char *)respString.c_str(), respString.size());
+
+			Json::FastWriter writer;
+            string strRsp = writer.write(resp);
+            EnququeHttp2CCD(flow, (char *)strRsp.c_str(), strRsp.size());
             return -1;
     }
 
@@ -948,8 +948,7 @@ int32_t CMCDProc::EnququeHttp2CCD(unsigned long long flow, char *data, unsigned 
     }
     else
     {
-        /*LogDebug("Success to enqueue to CCD, total_len:%d, ccd_header:%d\n"
-			   , totallen, CCD_HEADER_LEN);*/
+        /*LogDebug("Success to enqueue to CCD, total_len:%d, ccd_header:%d.", totallen, CCD_HEADER_LEN);*/
         timeval nowTime;
 	    gettimeofday(&nowTime, NULL);
         CWaterLog::Instance()->WriteLog(nowTime, 1, (char *)"", 0, 0, data);
@@ -1431,6 +1430,42 @@ void CMCDProc::DispatchCheckQueue(string appID)
 		CheckTimeoutQueue(appID, pTagQueues, 0);
 	}
 }
+
+
+#if 0
+void CMCDProc::DispatchCheckYibot(string appID)
+{
+    SessionQueue* pSessQueue = NULL;
+    if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue) 
+		|| pSessQueue->size() <= 0)
+    {
+        return;
+    }
+
+	vector<string> app_userID_list;
+	int count = pSessQueue->check_expire_yibot(xxx, app_userID_list);
+	for (int i = 0; i < count; ++i)
+	{
+		timeval ntv;
+		gettimeofday(&ntv, NULL);
+		CTimerInfo* ti = new YiBotOutTimer(this, GetMsgSeq(), ntv, "", 0, m_cfg._time_out);
+		
+		string req_data;
+		Json::Value data;
+		data["appID"]  = appID;
+		data["userID"] = delappID(app_userID_list[i]);
+		req_data = data.toStyledString();
+		if (ti->do_next_step(req_data) == 0)
+		{
+			m_timer_queue.set(ti->GetMsgSeq(), ti, ti->GetTimeGap());
+		}
+		else
+		{
+			delete ti;
+		}
+	}
+}
+#endif
 
 void CMCDProc::DispatchCheckSession(string appID)
 {

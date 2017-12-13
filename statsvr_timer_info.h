@@ -148,6 +148,7 @@ namespace statsvr
 			int update_user_session(string appID, string app_userID, Session *sess, long long gap_warn, long long gap_expire);
 			int delete_user_session(string appID, string app_userID);
 			int create_user_session(string appID, string app_userID, Session *sess, long long gap_warn, long long gap_expire);
+			int update_session_notified(string appID, string app_userID);
 			string gen_sessionID(string app_userID);
 			int get_normal_queue(string appID, string raw_tag, UserQueue **uq);
 			int get_highpri_queue(string appID, string raw_tag, UserQueue **uq);
@@ -236,6 +237,7 @@ namespace statsvr
             //string          m_userInfo;
             unsigned        m_queuePriority;
             unsigned        m_userCount;
+			unsigned		m_notify;
 
 			set<string> m_userID_list;
 			set<string> m_serviceID_list;

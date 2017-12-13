@@ -394,26 +394,26 @@ int CAppConfig::GetValue (string appID, const string &key, string &val)
 }
 
 
-int CAppConfig::GetUser(const string& key, UserInfo &ui)
+int CAppConfig::GetUser(const string& key, UserInfo &user)
 {
 	map<string, UserInfo>::iterator it;
 
 	it = _userlist.find(key);
 	if (it != _userlist.end())
 	{
-		ui = it->second;
+		user = it->second;
 		return 0;
 	}
 	return -1;
 }
 
-int CAppConfig::AddUser(const string& key, const UserInfo& ui)
+int CAppConfig::AddUser(const string& key, const UserInfo& user)
 {
 	pair<map<string, UserInfo>::iterator, bool> ret;
 
-	LogTrace("Add User[%s]:%s", key.c_str(), ui.toString().c_str());
+	LogTrace("Add User[%s]:%s", key.c_str(), user.toString().c_str());
 
-	ret = _userlist.insert(pair<string, UserInfo>(key, ui));
+	ret = _userlist.insert(pair<string, UserInfo>(key, user));
 	if (ret.second)
 	{
 		return 0;
@@ -424,20 +424,20 @@ int CAppConfig::AddUser(const string& key, const UserInfo& ui)
 	}
 }
 
-int CAppConfig::UpdateUser(const string& key, const UserInfo& ui)
+int CAppConfig::UpdateUser(const string& key, const UserInfo& user)
 {
-	LogTrace("Update User[%s]:%s", key.c_str(), ui.toString().c_str());
+	LogTrace("Update User[%s]:%s", key.c_str(), user.toString().c_str());
 
-	_userlist[key] = ui;
+	_userlist[key] = user;
 	return 0;
 }
 
 int CAppConfig::UpdateUser(const string& key, const string& value)
 {
-	UserInfo ui(value);
-	LogTrace("Update User[%s]:%s", key.c_str(), ui.toString().c_str());
+	UserInfo user(value);
+	LogTrace("Update User[%s]:%s", key.c_str(), user.toString().c_str());
 
-	_userlist[key] = ui;
+	_userlist[key] = user;
 	return 0;
 }
 

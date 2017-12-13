@@ -30,8 +30,7 @@ int CTimerInfo::init(string req_data, int datalen)
 	}
 	//LogDebug("m_cmd: %s", m_cmd.c_str());
 
-	if ((m_cmd != "getUserInfo" && m_cmd != "getServiceInfo")
-	/*	|| 0 == access("/home/fht/sskv_10302/debug_switch", F_OK)*/)
+	if ((m_cmd != "getUserInfo" && m_cmd != "getServiceInfo"))
 	{
 		LogDebug("req_data: %s", req_data.c_str());
 	}
@@ -200,16 +199,14 @@ int CTimerInfo::init(string req_data, int datalen)
 		}
 	}
 
+	m_notify = get_value_uint(js_req_data, "notify", 0);
+	
 	char id_buf[64];
     snprintf (id_buf, sizeof(id_buf), "%s:%s--%s:%d", m_appID.c_str(), m_serviceID.c_str(), m_userID.c_str(), m_msg_seq);
 	m_search_no = string(id_buf);
 
-	if ((m_cmd != "getUserInfo" && m_cmd != "getServiceInfo")
-	/*	|| 0 == access("/home/fht/sskv_10302/debug_switch", F_OK)*/)
-	{
-		LogDebug("Init request data OK! [id:%s,cmd:%s,userID:%s,servID:%s,msg_seq:%u]", 
-					m_identity.c_str(), m_cmd.c_str(), m_userID.c_str(), m_serviceID.c_str(), m_msg_seq);
-	}
+	LogDebug("Init request data OK! [id:%s,cmd:%s,userID:%s,servID:%s,msg_seq:%u]", 
+				m_identity.c_str(), m_cmd.c_str(), m_userID.c_str(), m_serviceID.c_str(), m_msg_seq);
 
 	return 0;
 }
@@ -221,7 +218,10 @@ int CTimerInfo::on_error()
 	error_rsp["innerSeq"] = m_seq;
 	error_rsp["code"]     = m_errno;
 	error_rsp["msg"]      = m_errmsg;
-	string rsp = error_rsp.toStyledString();  
+
+	Json::FastWriter writer;
+	string rsp = writer.write(error_rsp);
+	
 	m_proc->EnququeHttp2CCD(m_ret_flow, (char*)rsp.c_str(), rsp.size());
 
 	if (m_errno < 0)
@@ -298,7 +298,10 @@ void CTimerInfo::on_expire()
 	error_rsp["innerSeq"] = m_seq;
 	error_rsp["code"]     = ERROR_SYSTEM_WRONG;
 	error_rsp["msg"]      = "System handle timeout";
-	strRsp = error_rsp.toStyledString();  
+
+	Json::FastWriter writer;
+	strRsp = writer.write(error_rsp);
+	
 	m_proc->EnququeHttp2CCD(m_ret_flow, (char*)strRsp.c_str(), strRsp.size());
 	return;
 }
@@ -387,8 +390,11 @@ int CTimerInfo::on_send_request(string cmd, string ip, unsigned short port, cons
 	req["data"] 	= data;
 	if (with_code)
 		req["code"] = 0;
-	string strReq	= req.toStyledString();
+
+	Json::FastWriter writer;
+	string strReq = writer.write(req);
 	LogTrace("send request to <%s, %d>: %s", ip.c_str(), port, strReq.c_str());
+
 	if (m_proc->EnququeHttp2DCC((char *)strReq.c_str(), strReq.size(), ip, port))
 	{
 		LogError("[%s]: Error send request %s", m_appID.c_str(), cmd.c_str());
@@ -405,13 +411,11 @@ int CTimerInfo::on_send_reply(const Json::Value &data)
 	rsp["innerSeq"] = m_seq;
 	rsp["code"] 	= 0;
 	rsp["data"] 	= data;
-	string strRsp	= rsp.toStyledString();
+	
+	Json::FastWriter writer;
+	string strRsp = writer.write(rsp);
+	LogTrace("send response: %s", strRsp.c_str());
 
-	if ((m_cmd != "getUserInfo" && m_cmd != "getServiceInfo" && m_cmd != "refreshSession")
-	/*	|| 0 == access("/home/fht/sskv_10302/debug_switch", F_OK)*/)
-	{
-		LogTrace("send response: %s", strRsp.c_str());
-	}
 	if (m_proc->EnququeHttp2CCD(m_ret_flow, (char *)strRsp.c_str(), strRsp.size()))
 	{
 		LogError("searchid[%s]: Failed to SendReply <%s>", m_search_no.c_str(), m_cmd.c_str());
@@ -436,8 +440,11 @@ int CTimerInfo::on_send_error_reply(ERROR_TYPE code, string msg, const Json::Val
 	rsp["code"]      = code;
 	rsp["msg"]		 = msg;
 	rsp["data"] 	 = data;
-	string strRsp	 = rsp.toStyledString();
+
+	Json::FastWriter writer;
+	string strRsp = writer.write(rsp);
 	LogTrace("send ERROR response: %s", strRsp.c_str());
+	
 	if (m_proc->EnququeHttp2CCD(m_ret_flow, (char *)strRsp.c_str(), strRsp.size()))
 	{
 		LogError("searchid[%s]: Failed to SendErrorReply <%s>", m_search_no.c_str(), msg.c_str());
@@ -611,6 +618,19 @@ int CTimerInfo::create_user_session(string appID, string app_userID, Session *se
 	return SS_OK;
 }
 
+int CTimerInfo::update_session_notified(string appID, string app_userID)
+{
+	Session sess;
+	GET_SESS(get_user_session(appID, app_userID, &sess));
+
+	if (0 == sess.notified)
+	{
+		sess.notified = 1;
+		DO_FAIL(UpdateUserSession(appID, app_userID, &sess));
+	}
+	return 0;
+}
+
 string CTimerInfo::gen_sessionID(string app_userID)
 {
 	return app_userID + "_" + l2str(time(NULL));
@@ -654,7 +674,7 @@ int CTimerInfo::KV_set_user(string app_userID, const UserInfo &user)
 	string key, value;
 	key   = USER_PREFIX+app_userID;
 	value = user.toString();
-					
+
 	DO_FAIL(KVSetKeyValue(KV_CACHE, key, value));
 	DO_FAIL(KV_set_userIDList());
 	return SS_OK;

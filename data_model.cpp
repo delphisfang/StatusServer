@@ -95,7 +95,9 @@ string Session::toString() const
 {
 	Json::Value value;
 	toJson(value);
-	return value.toStyledString();
+
+	Json::FastWriter writer;
+	return writer.write(value);
 }
 
 
@@ -207,7 +209,9 @@ string UserInfo::toString() const
 {
 	Json::Value value;
 	toJson(value);
-	return value.toStyledString();
+
+	Json::FastWriter writer;
+	return writer.write(value);
 }
 
 
@@ -309,7 +313,9 @@ string ServiceInfo::toString() const
 {
 	Json::Value value;
 	toJson(value);
-	return value.toStyledString();
+
+	Json::FastWriter writer;
+	return writer.write(value);
 }
 
 int ServiceInfo::delete_user(const string &raw_userID)

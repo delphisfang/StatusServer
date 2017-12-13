@@ -326,6 +326,8 @@ int AdminConfigTimer::on_admin_getServiceStatus()
 	            servInfo["serviceStatus"] = "busy";
 	        }
 		}
+
+		servInfo["userNum"] = serv.user_count();
 		
 		servInfoList[i] = servInfo;
 		++i;
