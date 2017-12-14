@@ -92,7 +92,18 @@ namespace statsvr
 		int on_service_busy();
 		int on_session_wrong();
 		int on_service_offline();
+		int on_no_tag_service();
 		int on_change_service();
+		int on_change_service_by_serviceID();
+		int on_change_service_by_tag();
+		int on_change_session();
+		int on_send_change_success();
+		
+		int m_maxConvNum;
+		UserInfo m_userInfo;
+		ServiceInfo m_src_serviceInfo;
+		ServiceInfo m_dst_serviceInfo;
+		Session m_session;
     };
 
     class ServicePullNextTimer:public CTimerInfo

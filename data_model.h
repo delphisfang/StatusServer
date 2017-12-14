@@ -86,6 +86,7 @@ namespace statsvr
 		int find_user(const string &raw_userID);
 		int add_user(const string &raw_userID);
 		unsigned user_count() const;
+		bool is_available(int maxConvNum) const;
 		
 		string serviceID;
 		string status;

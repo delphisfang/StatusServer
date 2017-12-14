@@ -111,24 +111,24 @@ public:
 	int GetValue(string appID, const string &key, int &val); //for int value
 	int GetValue(string appID, const string &key, string &val); //for string value
 
-	int GetUser(const string& key, UserInfo &ui);
-	int AddUser(const string& key, const UserInfo& ui);
-	int UpdateUser(const string& key, const UserInfo& ui);
-	int UpdateUser(const string& key, const string& value);
-	int DelUser(const string& key);
+	int GetUser(const string& app_userID, UserInfo &user);
+	int AddUser(const string& app_userID, const UserInfo& user);
+	int UpdateUser(const string& app_userID, const UserInfo& user);
+	int UpdateUser(const string& app_userID, const string& value);
+	int DelUser(const string& app_userID);
 	int UserListToString(string& strUserIDList);
 
-	int AddService(const string &key, ServiceInfo &serv);
-	int GetService(const string& key, ServiceInfo &serv);
-	int UpdateService(const string& key, const ServiceInfo& serv);
-	int UpdateService(const string& key, const string& value);
-	int DelService(const string& key);
+	int AddService(const string &app_serviceID, ServiceInfo &serv);
+	int GetService(const string& app_serviceID, ServiceInfo &serv);
+	int UpdateService(const string& app_serviceID, const ServiceInfo& serv);
+	int UpdateService(const string& app_serviceID, const string& value);
+	int DelService(const string& app_serviceID);
 	int ServiceListToString(string& strServIDList);
 
-	int AddTagServiceHeap(const string& key);
-	int UpdateTagServiceHeap(const string& key, const string& value);
-	int UpdateTagServiceHeap(const string& key, const ServiceHeap& serviceHeap);
-	int GetTagServiceHeap(const string& key, ServiceHeap& serviceHeap);
+	int AddTagServiceHeap(const string& app_tag);
+	int UpdateTagServiceHeap(const string& app_tag, const string& value);
+	int UpdateTagServiceHeap(const string& app_tag, const ServiceHeap& serviceHeap);
+	int GetTagServiceHeap(const string& app_tag, ServiceHeap& serviceHeap);
 	int DelTagServiceHeap(const string& appID);
 	int AddService2Tags(const string& appID, ServiceInfo &serv);
 	int DelServiceFromTags(const string &appID, ServiceInfo &serv);

@@ -355,6 +355,19 @@ unsigned ServiceInfo::user_count() const
 	return userList.size();
 }
 
+bool ServiceInfo::is_available(int maxConvNum) const
+{
+	if ("offline" == status || user_count() >= maxConvNum)
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
+
+
 
 ServiceHeap::ServiceHeap()
 {

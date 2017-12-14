@@ -356,7 +356,6 @@ int CAppConfig::SetValue (string appID, const string &key, const string &val)
 	return 0;
 }
 
-
 int CAppConfig::GetValue (string appID, const string &key, int &val)
 {
 	map<string, int>::iterator it;
@@ -373,7 +372,6 @@ int CAppConfig::GetValue (string appID, const string &key, int &val)
 		return 0;
 	}
 }
-
 
 int CAppConfig::GetValue (string appID, const string &key, string &val)
 {
@@ -394,11 +392,11 @@ int CAppConfig::GetValue (string appID, const string &key, string &val)
 }
 
 
-int CAppConfig::GetUser(const string& key, UserInfo &user)
+int CAppConfig::GetUser(const string &app_userID, UserInfo &user)
 {
 	map<string, UserInfo>::iterator it;
 
-	it = _userlist.find(key);
+	it = _userlist.find(app_userID);
 	if (it != _userlist.end())
 	{
 		user = it->second;
@@ -407,13 +405,13 @@ int CAppConfig::GetUser(const string& key, UserInfo &user)
 	return -1;
 }
 
-int CAppConfig::AddUser(const string& key, const UserInfo& user)
+int CAppConfig::AddUser(const string &app_userID, const UserInfo &user)
 {
 	pair<map<string, UserInfo>::iterator, bool> ret;
 
-	LogTrace("Add User[%s]:%s", key.c_str(), user.toString().c_str());
+	LogTrace("Add User[%s]: %s", app_userID.c_str(), user.toString().c_str());
 
-	ret = _userlist.insert(pair<string, UserInfo>(key, user));
+	ret = _userlist.insert(pair<string, UserInfo>(app_userID, user));
 	if (ret.second)
 	{
 		return 0;
@@ -424,30 +422,30 @@ int CAppConfig::AddUser(const string& key, const UserInfo& user)
 	}
 }
 
-int CAppConfig::UpdateUser(const string& key, const UserInfo& user)
+int CAppConfig::UpdateUser(const string &app_userID, const UserInfo &user)
 {
-	LogTrace("Update User[%s]:%s", key.c_str(), user.toString().c_str());
+	LogTrace("Update User[%s]: %s", app_userID.c_str(), user.toString().c_str());
 
-	_userlist[key] = user;
+	_userlist[app_userID] = user;
 	return 0;
 }
 
-int CAppConfig::UpdateUser(const string& key, const string& value)
+int CAppConfig::UpdateUser(const string &app_userID, const string &value)
 {
 	UserInfo user(value);
-	LogTrace("Update User[%s]:%s", key.c_str(), user.toString().c_str());
+	LogTrace("Update User[%s]: %s", app_userID.c_str(), user.toString().c_str());
 
-	_userlist[key] = user;
+	_userlist[app_userID] = user;
 	return 0;
 }
 
-int CAppConfig::DelUser(const string& key)
+int CAppConfig::DelUser(const string &app_userID)
 {
 	map<string, UserInfo>::iterator it;
 
-	LogTrace("Delete User[%s]", key.c_str());
+	LogTrace("Delete User[%s]", app_userID.c_str());
 	
-	it = _userlist.find(key);
+	it = _userlist.find(app_userID);
 	if (it != _userlist.end())
 	{
 		//no need to delete it->second
@@ -457,7 +455,7 @@ int CAppConfig::DelUser(const string& key)
 	return -1;
 }
 
-int CAppConfig::UserListToString(string& strUserIDList)
+int CAppConfig::UserListToString(string &strUserIDList)
 {
 	map<string, UserInfo>::iterator it;
 	Json::Value arr;
@@ -477,13 +475,13 @@ int CAppConfig::UserListToString(string& strUserIDList)
 	return 0;
 }
 
-int CAppConfig::AddService(const string &key, ServiceInfo &serv)
+int CAppConfig::AddService(const string &app_serviceID, ServiceInfo &serv)
 {
 	pair<map<string, ServiceInfo>::iterator, bool> ret;
 
-	LogTrace("Add Service[%s]:%s", key.c_str(), serv.toString().c_str());
+	LogTrace("Add Service[%s]: %s", app_serviceID.c_str(), serv.toString().c_str());
 
-	ret = _servicelist.insert(pair<string, ServiceInfo>(key,serv));
+	ret = _servicelist.insert(pair<string, ServiceInfo>(app_serviceID, serv));
 	if (ret.second)
 	{
 		return 0;
@@ -494,11 +492,11 @@ int CAppConfig::AddService(const string &key, ServiceInfo &serv)
 	}
 }
 
-int CAppConfig::GetService(const string& key, ServiceInfo &serv)
+int CAppConfig::GetService(const string &app_serviceID, ServiceInfo &serv)
 {
 	map<string, ServiceInfo>::iterator it;
 	
-	it = _servicelist.find(key);
+	it = _servicelist.find(app_serviceID);
 	if (it != _servicelist.end())
 	{
 		serv = it->second;
@@ -507,37 +505,37 @@ int CAppConfig::GetService(const string& key, ServiceInfo &serv)
 	return -1;
 }
 
-int CAppConfig::UpdateService(const string& key, const ServiceInfo& serv)
+int CAppConfig::UpdateService(const string &app_serviceID, const ServiceInfo &serv)
 {
-	LogTrace("Update Service[%s]:%s", key.c_str(), serv.toString().c_str());
+	LogTrace("Update Service[%s]: %s", app_serviceID.c_str(), serv.toString().c_str());
 
-	_servicelist[key] = serv;
+	_servicelist[app_serviceID] = serv;
 	return 0;
 }
 
-int CAppConfig::UpdateService(const string& key, const string& value)
+int CAppConfig::UpdateService(const string &app_serviceID, const string &value)
 {
 	ServiceInfo serv(value);
-	LogTrace("Update Service[%s]:%s", key.c_str(), serv.toString().c_str());
+	LogTrace("Update Service[%s]: %s", app_serviceID.c_str(), serv.toString().c_str());
 
-	_servicelist[key] = serv;
+	_servicelist[app_serviceID] = serv;
 	return 0;
 }
 
-int CAppConfig::DelService(const string& key)
+int CAppConfig::DelService(const string &app_serviceID)
 {
 	map<string, ServiceInfo>::iterator it;
 	
-	it = _servicelist.find(key);
+	it = _servicelist.find(app_serviceID);
 	if (it != _servicelist.end())
 	{
-		LogTrace("Delete Service[%s]:%s", key.c_str(), it->second.toString().c_str());
+		LogTrace("Delete Service[%s]: %s", app_serviceID.c_str(), it->second.toString().c_str());
 		_servicelist.erase(it);
 	}
 	return 0;
 }
 
-int CAppConfig::ServiceListToString(string& strServIDList)
+int CAppConfig::ServiceListToString(string &strServIDList)
 {
 	map<string, ServiceInfo>::iterator it;
 	Json::Value arr;
@@ -557,39 +555,39 @@ int CAppConfig::ServiceListToString(string& strServIDList)
 }
 
 
-int CAppConfig::AddTagServiceHeap(const string& key)
+int CAppConfig::AddTagServiceHeap(const string& app_tag)
 {
 	map<string, ServiceHeap>::iterator it;
 	
-	it = tagServiceHeap.find(key);
+	it = tagServiceHeap.find(app_tag);
 	if (it == tagServiceHeap.end())
 	{
-		LogDebug("Add service heap for tag: %s", key.c_str());
+		LogDebug("Add service heap for tag: %s", app_tag.c_str());
 		ServiceHeap serviceHeap;
-		tagServiceHeap[key] = serviceHeap;
+		tagServiceHeap[app_tag] = serviceHeap;
 	}
 	return 0;
 }
 
-int CAppConfig::UpdateTagServiceHeap(const string& key, const string& value)
+int CAppConfig::UpdateTagServiceHeap(const string& app_tag, const string& value)
 {
 	ServiceHeap serviceHeap(value);
-	LogTrace("Update TagServiceHeap[%s]:%s", key.c_str(), serviceHeap.toString().c_str());
-	tagServiceHeap[key] = serviceHeap;
+	LogTrace("Update TagServiceHeap[%s]:%s", app_tag.c_str(), serviceHeap.toString().c_str());
+	tagServiceHeap[app_tag] = serviceHeap;
 	return 0;
 }
 
-int CAppConfig::UpdateTagServiceHeap(const string& key, const ServiceHeap& serviceHeap)
+int CAppConfig::UpdateTagServiceHeap(const string& app_tag, const ServiceHeap& serviceHeap)
 {
-	LogTrace("Update TagServiceHeap[%s]:%s",key.c_str(), serviceHeap.toString().c_str());
-	tagServiceHeap[key] = serviceHeap;
+	LogTrace("Update TagServiceHeap[%s]:%s", app_tag.c_str(), serviceHeap.toString().c_str());
+	tagServiceHeap[app_tag] = serviceHeap;
 	return 0;
 }
 
-int CAppConfig::GetTagServiceHeap(const string& key, ServiceHeap& serviceHeap)
+int CAppConfig::GetTagServiceHeap(const string& app_tag, ServiceHeap& serviceHeap)
 {
 	map<string, ServiceHeap>::iterator it;
-	it = tagServiceHeap.find(key);
+	it = tagServiceHeap.find(app_tag);
 	if (it != tagServiceHeap.end())
 	{
 		serviceHeap = it->second;
@@ -628,7 +626,7 @@ int CAppConfig::AddService2Tags(const string &appID, ServiceInfo &serv)
 		string app_tag = appID + "_" + (*it);
 		if (CAppConfig::Instance()->GetTagServiceHeap(app_tag, servHeap))
 		{
-			LogError("Fail to find service heap for tag: %s", app_tag.c_str());
+			LogError("Fail to find service heap for tag: %s!", app_tag.c_str());
 			continue;
 		}
 
@@ -636,7 +634,7 @@ int CAppConfig::AddService2Tags(const string &appID, ServiceInfo &serv)
 
 		if (CAppConfig::Instance()->UpdateTagServiceHeap(app_tag, servHeap))
 		{
-			LogError("Fail to update service heap for tag: %s", app_tag.c_str());
+			LogError("Fail to update service heap for tag: %s!", app_tag.c_str());
 			continue;
 		}
 	}

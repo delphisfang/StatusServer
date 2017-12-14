@@ -454,7 +454,7 @@ int CTimerInfo::on_send_error_reply(ERROR_TYPE code, string msg, const Json::Val
 
 /***************** never use m_xxx in methods below, keep them stateless **************/
 
-int CTimerInfo::get_user_session(string appID, string app_userID, Session *sess)
+int CTimerInfo::get_user_session(const string &appID, const string &app_userID, Session *sess)
 {
 	SessionQueue* pSessQueue = NULL;
 	Session temp;
@@ -470,7 +470,7 @@ int CTimerInfo::get_user_session(string appID, string app_userID, Session *sess)
 	return SS_OK;
 }
 
-void CTimerInfo::get_user_json(string appID, string app_userID, const UserInfo &user, Json::Value &userJson)
+void CTimerInfo::get_user_json(const string &appID, const string &app_userID, const UserInfo &user, Json::Value &userJson)
 {
 	Session sess;
 	Json::Value sessJson;
@@ -495,7 +495,7 @@ void CTimerInfo::construct_user_json(const UserInfo &user, const Session &sess, 
 	userJson["session"] = sessInfo;
 }
 
-int CTimerInfo::reply_user_json_A(string appID, string app_userID, const UserInfo &user)
+int CTimerInfo::reply_user_json_A(const string &appID, const string &app_userID, const UserInfo &user)
 {
 	Json::Value userJson;
 	get_user_json(appID, app_userID, user, userJson);
@@ -511,7 +511,7 @@ int CTimerInfo::reply_user_json_B(const UserInfo &user, const Session &sess)
 	return SS_OK;
 }
 
-int CTimerInfo::get_service_json(string appID, const ServiceInfo &serv, Json::Value &servJson)
+int CTimerInfo::get_service_json(const string &appID, const ServiceInfo &serv, Json::Value &servJson)
 {
 	Json::Value arrayUserList;
 	string userID;
@@ -568,7 +568,7 @@ int CTimerInfo::get_service_json(string appID, const ServiceInfo &serv, Json::Va
 	}
 }
 
-int CTimerInfo::update_user_session(string appID, string app_userID, Session *sess, long long gap_warn, long long gap_expire)
+int CTimerInfo::update_user_session(const string &appID, const string &app_userID, Session *sess, long long gap_warn, long long gap_expire)
 {
 	SessionQueue* pSessQueue = NULL;
 	
@@ -582,7 +582,7 @@ int CTimerInfo::update_user_session(string appID, string app_userID, Session *se
 	return SS_OK;
 }
 
-int CTimerInfo::delete_user_session(string appID, string app_userID)
+int CTimerInfo::delete_user_session(const string &appID, const string &app_userID)
 {
 	SessionQueue* pSessQueue = NULL;
 	
@@ -596,7 +596,7 @@ int CTimerInfo::delete_user_session(string appID, string app_userID)
 	return SS_OK;
 }
 
-int CTimerInfo::create_user_session(string appID, string app_userID, Session *sess, long long gap_warn, long long gap_expire)
+int CTimerInfo::create_user_session(const string &appID, const string &app_userID, Session *sess, long long gap_warn, long long gap_expire)
 {
 	SessionQueue* pSessQueue = NULL;
 	
@@ -610,7 +610,7 @@ int CTimerInfo::create_user_session(string appID, string app_userID, Session *se
 	return SS_OK;
 }
 
-int CTimerInfo::update_session_notified(string appID, string app_userID)
+int CTimerInfo::update_session_notified(const string &appID, const string &app_userID)
 {
 	Session sess;
 	GET_SESS(get_user_session(appID, app_userID, &sess));
@@ -623,12 +623,12 @@ int CTimerInfo::update_session_notified(string appID, string app_userID)
 	return SS_OK;
 }
 
-string CTimerInfo::gen_sessionID(string app_userID)
+string CTimerInfo::gen_sessionID(const string &app_userID)
 {
 	return app_userID + "_" + l2str(time(NULL));
 }
 
-int CTimerInfo::get_normal_queue(string appID, string raw_tag, UserQueue **uq)
+int CTimerInfo::get_normal_queue(const string &appID, const string &raw_tag, UserQueue **uq)
 {
 	TagUserQueue* pTagQueues = NULL;
 	GET_FAIL(CAppConfig::Instance()->GetTagQueue(appID, pTagQueues), "tag user queues");
@@ -636,7 +636,7 @@ int CTimerInfo::get_normal_queue(string appID, string raw_tag, UserQueue **uq)
 	return SS_OK;
 }
 
-int CTimerInfo::get_highpri_queue(string appID, string raw_tag, UserQueue **uq)
+int CTimerInfo::get_highpri_queue(const string &appID, const string &raw_tag, UserQueue **uq)
 {
 	TagUserQueue* pTagQueues = NULL;
 	GET_FAIL(CAppConfig::Instance()->GetTagHighPriQueue(appID, pTagQueues), "highpri tag user queues");
@@ -644,6 +644,65 @@ int CTimerInfo::get_highpri_queue(string appID, string raw_tag, UserQueue **uq)
 	return SS_OK;
 }
 
+int CTimerInfo::find_service_by_tag(const string &appID, const string &app_tag, const string &app_userID, 
+									const string &old_app_serviceID, ServiceInfo &target_serv)
+{
+    ServiceHeap servHeap;
+	if (CAppConfig::Instance()->GetTagServiceHeap(app_tag, servHeap))
+    {
+        LogError("Failed to get ServiceHeap of tag[%s]", app_tag.c_str());
+        return SS_ERROR;
+    }
+
+	int maxConvNum = CAppConfig::Instance()->getMaxConvNum(appID);
+	
+	//随机分配一个坐席
+    srand((unsigned)time(NULL));
+    int j = rand() % servHeap.size();
+
+	set<string>::iterator it;
+    it = servHeap._servlist.begin();
+    for (int k = 0; k < j; ++k)
+    {
+		++it;
+    }
+	
+    for (int i = j; ; )
+    {
+		//排除old_app_serviceID
+		//如果坐席的服务人数已满，就分配下一个坐席
+        if (old_app_serviceID == (*it) || CAppConfig::Instance()->GetService(*it, target_serv) || !target_serv.is_available(maxConvNum))
+        {
+			if (old_app_serviceID == (*it))
+			{
+				LogWarn("skip old_serviceID: %s", old_app_serviceID.c_str());
+			}
+			else
+			{
+				LogWarn("service[%s] user_count[%d], maxConvNum[%d]", target_serv.serviceID.c_str(), target_serv.user_count(), maxConvNum);
+			}
+
+			++it;
+			++i;
+            if (i == servHeap.size())
+            {
+                i = 0;
+            }
+			
+            if (i == j)
+            {
+                break;
+            }
+        }
+        else
+        {
+            LogTrace("[%s] userID:%s <-----> tag serviceID:%s", appID.c_str(), delappID(app_userID).c_str(), target_serv.serviceID.c_str());
+            return SS_OK;
+        }
+    }
+
+    return SS_ERROR;
+}
 
 /********************************* KV methods *************************************/
 

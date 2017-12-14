@@ -438,22 +438,10 @@ QueueOutTimer::~QueueOutTimer()
 
 int UserServiceTimer::do_next_step(string& req_data)
 {
+	m_tag     = req_data;
 	m_appID   = getappID(req_data);
 	m_raw_tag = delappID(req_data); 
 	//LogDebug("m_appID: %s, m_raw_tag: %s", m_appID.c_str(), m_raw_tag.c_str());
-	
-#if 0
-	ServiceHeap offlineHeap;
-	CAppConfig::Instance()->GetOfflineHeap(m_appID, offlineHeap);
-	
-	if (offlineHeap.size() == 0 
-		|| CAppConfig::Instance()->GetOfflineNeedDelServiceList(offlineHeap) == 0)
-	{
-		DEBUG_P(LOG_TRACE, "[%u]:Offline Heap have no service to delete:%s", m_appID, offlineHeap.toString().c_str());
-		m_cur_step = STATE_END;
-		return -1;
-	}
-#endif
 	
 	if (on_offer_service())
 	{
@@ -490,29 +478,31 @@ int UserServiceTimer::on_create_session()
 //随机分配tag内的一个坐席
 int UserServiceTimer::on_user_tag()
 {
-    ServiceHeap servHeap;
-	set<string>::iterator it;
-
 	LogDebug("==>IN");
-	
-	if (CAppConfig::Instance()->GetTagServiceHeap(m_userInfo.tag, servHeap))
+
+    ServiceHeap servHeap;
+	if (CAppConfig::Instance()->GetTagServiceHeap(m_tag, servHeap))
     {
-        LogError("Failed to  get ServiceHeap of tag[%s]", m_userInfo.tag.c_str());
+        LogError("Failed to get ServiceHeap of tag[%s]!", m_tag.c_str());
         return SS_ERROR;
     }
 
-	//如果有熟客，依然分配熟客
+	//如果该tag内有熟客，优先分配tag内熟客
     if (0 == servHeap.find_service(m_lastServiceID) && SS_OK == on_user_lastService())
     {
         return SS_OK;
     }
-
+	
 	//随机分配一个坐席
-    it = servHeap._servlist.begin();
     srand((unsigned)time(NULL));
     int j = rand() % servHeap.size();
-    for (int k = 0; k < j; k++)
-        it++;
+	
+	set<string>::iterator it;
+    it = servHeap._servlist.begin();
+    for (int k = 0; k < j; ++k)
+    {
+		++it;
+    }
 	
     for (int i = j; ; )
     {
@@ -523,7 +513,8 @@ int UserServiceTimer::on_user_tag()
         {
 			LogWarn("service[%s] user_count[%d], maxNum[%d]", serv.serviceID.c_str(), serv.user_count(), m_serverNum);
 
-            i++;
+			++it;
+            ++i;
             if (i == servHeap.size())
             {
                 i = 0;
@@ -748,7 +739,7 @@ int UserServiceTimer::on_offer_service()
             LogDebug("[%s]: 2 lastService is offline or busy, try <tagService>", m_appID.c_str());
             ServiceHeap serv_heap;
 			//2.给用户按分组分配
-            if (CAppConfig::Instance()->GetTagServiceHeap(m_userInfo.tag, serv_heap) 
+            if (CAppConfig::Instance()->GetTagServiceHeap(m_tag, serv_heap) 
             	|| CAppConfig::Instance()->CanOfferService(serv_heap, m_serverNum) 
             	|| on_user_tag())
             {
@@ -764,7 +755,7 @@ int UserServiceTimer::on_offer_service()
         ServiceHeap serv_heap;
 
 		//1.给用户按分组分配
-        if (CAppConfig::Instance()->GetTagServiceHeap(m_userInfo.tag, serv_heap) 
+        if (CAppConfig::Instance()->GetTagServiceHeap(m_tag, serv_heap) 
         	|| CAppConfig::Instance()->CanOfferService(serv_heap, m_serverNum)
         	|| on_user_tag())
         {

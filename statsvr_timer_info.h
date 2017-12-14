@@ -139,20 +139,23 @@ namespace statsvr
 
 			/***************** never use m_xxx in methods below, keep them stateless **************/
 			
-			int get_user_session(string appID, string app_userID, Session *sess);
-			void get_user_json(string appID, string app_userID, const UserInfo &user, Json::Value &userJson);
+			int get_user_session(const string &appID, const string &app_userID, Session *sess);
+			void get_user_json(const string &appID, const string &app_userID, const UserInfo &user, Json::Value &userJson);
 			void construct_user_json(const UserInfo &user, const Session &sess, Json::Value &userJson);
-			int reply_user_json_A(string appID, string app_userID, const UserInfo &user);
+			int reply_user_json_A(const string &appID, const string &app_userID, const UserInfo &user);
 			int reply_user_json_B(const UserInfo &user, const Session &sess);
-			int get_service_json(string appID, const ServiceInfo &serv, Json::Value &servJson);
-			int update_user_session(string appID, string app_userID, Session *sess, long long gap_warn, long long gap_expire);
-			int delete_user_session(string appID, string app_userID);
-			int create_user_session(string appID, string app_userID, Session *sess, long long gap_warn, long long gap_expire);
-			int update_session_notified(string appID, string app_userID);
-			string gen_sessionID(string app_userID);
-			int get_normal_queue(string appID, string raw_tag, UserQueue **uq);
-			int get_highpri_queue(string appID, string raw_tag, UserQueue **uq);
+			int get_service_json(const string &appID, const ServiceInfo &serv, Json::Value &servJson);
+			int update_user_session(const string &appID, const string &app_userID, Session *sess, long long gap_warn, long long gap_expire);
+			int delete_user_session(const string &appID, const string &app_userID);
+			int create_user_session(const string &appID, const string &app_userID, Session *sess, long long gap_warn, long long gap_expire);
+			int update_session_notified(const string &appID, const string &app_userID);
+			string gen_sessionID(const string &app_userID);
+			int get_normal_queue(const string &appID, const string &raw_tag, UserQueue **uq);
+			int get_highpri_queue(const string &appID, const string &raw_tag, UserQueue **uq);
 
+			int find_service_by_tag(const string &appID, const string &app_tag, const string &app_userID, 
+									const string &old_app_serviceID, ServiceInfo &target_serv);
+			
 			/********************************* KV methods *************************************/
 
 			int KV_set_userIDList();

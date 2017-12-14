@@ -298,6 +298,7 @@ void ChangeServiceTimer::set_change_service_data(Json::Value &data)
 	data["userID"]    = m_raw_userID;
 	data["serviceID"] = m_raw_serviceID;
 	data["changeServiceID"] = m_raw_changeServiceID;
+	data["tag"]       = m_raw_tag;
 }
 
 int ChangeServiceTimer::on_service_busy()
@@ -321,120 +322,158 @@ int ChangeServiceTimer::on_service_offline()
 	return on_send_error_reply(ERROR_SERVICE_OFFLINE, "Change Service offline", data);
 }
 
+int ChangeServiceTimer::on_no_tag_service()
+{
+	Json::Value data;
+	set_change_service_data(data);
+	data["status"] = "NoService";
+	return on_send_error_reply(ERROR_NO_SERVICE, "No Service Available", data);
+}
+
 /*
-m_userID, m_serviceID, m_changeServiceID
+input: m_userID, m_serviceID, m_changeServiceID, m_tag
 */
 int ChangeServiceTimer::on_change_service()
 {
-    int maxUsrNum = 0;
-	ServiceInfo src;
-	ServiceInfo dst;
-	SessionQueue *pSessionQueue = NULL;
-	Session sess;
-
-	LogDebug("==>IN");
-
-	//response to ChatProxy first
-	on_resp_cp();
-	
-	if (CAppConfig::Instance()->GetValue(m_appID, "max_conv_num", maxUsrNum) 
-		|| 0 == maxUsrNum)
-    {
-        maxUsrNum = 5;
-    }
-
-	if (CAppConfig::Instance()->GetService(m_changeServiceID, dst) 
-		|| dst.status == "offline")
+	//参数检查
+	if ("" == m_raw_changeServiceID && "" == m_raw_tag)
 	{
-		//目的坐席不存在或下线
-		return on_service_offline();
+		ON_ERROR_PARSE_PACKET();
+		return SS_ERROR;
 	}
-	else if (CAppConfig::Instance()->GetService(m_serviceID, src) 
-    		|| src.find_user(m_raw_userID))
+
+	//先回复CP
+	on_resp_cp();
+
+	//用户不在源坐席上
+	if (CAppConfig::Instance()->GetService(m_serviceID, m_src_serviceInfo) 
+    	|| m_src_serviceInfo.find_user(m_raw_userID))
 	{
-		//用户当前不在源坐席上
 		return on_session_wrong();
     }
-	else if (dst.user_count() >= maxUsrNum)
+
+	m_maxConvNum = CAppConfig::Instance()->getMaxConvNum(m_appID);
+	
+	if ("" != m_raw_changeServiceID)
 	{
-		//目的坐席忙
-		return on_service_busy();
+		DO_FAIL(on_change_service_by_serviceID());
 	}
 	else
 	{
-        if (CAppConfig::Instance()->GetSessionQueue(m_appID, pSessionQueue) 
-			|| pSessionQueue->get(m_userID, sess))
-        {
-			ON_ERROR_GET_DATA("session");
-	    	return SS_ERROR;
-        }
-
-		//update session
-        sess.serviceID = m_raw_changeServiceID;
-        sess.atime     = GetCurTimeStamp();
-        m_sessionID    = sess.sessionID;
-        //m_channel      = sess.channel;
-		SET_SESS(pSessionQueue->set(m_userID, &sess, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT));
-		DO_FAIL(KV_set_session(m_userID, sess, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT));
-
-		//update user
-		UserInfo user;
-		GET_USER(CAppConfig::Instance()->GetUser(m_userID, user));
-		user.lastServiceID = m_raw_serviceID;
-		//user.sessionID保持不变
-		DO_FAIL(UpdateUser(m_userID, user));
-		
-		//update service1 service2
-		SET_SERV(src.delete_user(m_raw_userID));
-		DO_FAIL(UpdateService(m_serviceID, src));
-
-        SET_SERV(dst.add_user(m_raw_userID));
-		DO_FAIL(UpdateService(m_changeServiceID, dst));
-
-		#if 0
-        src.cpIP      = m_cpIP;
-        src.cpPort    = m_cpPort;
-        //src.whereFrom = m_whereFrom;
-		#endif
-		
-		//send <ChangeSuccess> to user and service
-		Json::Value sessData;
-		sessData["userID"]        = m_raw_userID;
-		sessData["serviceID"]     = m_raw_changeServiceID;
-		sessData["sessionID"]     = m_sessionID;
-		//sessData["channel"]       = m_channel;
-		sessData["serviceName"]   = dst.serviceName;
-		sessData["serviceAvatar"] = dst.serviceAvatar;
-
-		//解析extends
-		Json::Reader reader;
-		Json::Value json_extends;
-		if (!reader.parse(user.extends, json_extends))
-		{
-			sessData["extends"]   = Json::objectValue;
-		}
-		else
-		{
-			sessData["extends"]   = json_extends;
-		}
-
-		sessData["identity"]      = "user";
-		DO_FAIL(on_send_request("changeSuccess", sess.cpIP, sess.cpPort, sessData, true));
-		
-		#if 0
-		//if(m_whereFrom == "websocket")
-		if(m_session.whereFrom == "websocket" || m_session.whereFrom == "iOS" || m_session.whereFrom == "Android")
-		{
-			MsgRetransmit::Instance()->SetMsg(strServiceRsp, m_appID, m_seq, m_session.userChatproxyIP, m_session.userChatproxyPort, m_proc->m_cfg._re_msg_send_timeout);
-		}
-		#endif
-
-		sessData["identity"]      = "service";
-		DO_FAIL(on_send_request("changeSuccess", dst.cpIP, dst.cpPort, sessData, true));
+		DO_FAIL(on_change_service_by_tag());
 	}
 
-	LogDebug("==>OUT");
+	DO_FAIL(on_change_session());
+	DO_FAIL(on_send_change_success());
+}
+
+
+int ChangeServiceTimer::on_change_service_by_serviceID()
+{
+	//目标坐席下线
+	if (CAppConfig::Instance()->GetService(m_changeServiceID, m_dst_serviceInfo) 
+		|| "offline" == m_dst_serviceInfo.status)
+	{
+		on_service_offline();
+		return SS_ERROR;
+	}
+
+	//目标坐席忙
+	if (m_dst_serviceInfo.user_count() >= m_maxConvNum)
+	{
+		on_service_busy();
+		return SS_ERROR;
+	}
+
 	return SS_OK;
+}
+
+
+int ChangeServiceTimer::on_change_service_by_tag()
+{
+	//不能转给自己
+	if (find_service_by_tag(m_appID, m_tag, m_userID, m_serviceID, m_dst_serviceInfo))
+	{
+		//tag内未找到可用的目标坐席
+		on_no_tag_service();
+		return SS_ERROR;
+	}
+
+	m_raw_changeServiceID = m_dst_serviceInfo.serviceID;
+    m_changeServiceID     = m_appID + "_" + m_raw_changeServiceID;
+    LogTrace("[ChangeService] userID:%s <-----> tag serviceID:%s", m_userID.c_str(), m_changeServiceID.c_str());
+    return SS_OK;
+}
+
+
+int ChangeServiceTimer::on_change_session()
+{
+	SessionQueue *pSessionQueue = NULL;
+	if (CAppConfig::Instance()->GetSessionQueue(m_appID, pSessionQueue) 
+		|| pSessionQueue->get(m_userID, m_session))
+	{
+		ON_ERROR_GET_DATA("session");
+		return SS_ERROR;
+	}
+	
+	//update session
+	m_session.serviceID = m_raw_changeServiceID;
+	m_session.atime 	= GetCurTimeStamp();
+	m_sessionID 		= m_session.sessionID;
+	//m_channel 		= m_session.channel;
+	SET_SESS(pSessionQueue->set(m_userID, &m_session, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT));
+	DO_FAIL(KV_set_session(m_userID, m_session, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT));
+	
+	//update user
+	GET_USER(CAppConfig::Instance()->GetUser(m_userID, m_userInfo));
+	m_userInfo.lastServiceID = m_raw_serviceID;
+	DO_FAIL(UpdateUser(m_userID, m_userInfo));
+	
+	//update src_serv
+	SET_SERV(m_src_serviceInfo.delete_user(m_raw_userID));
+	DO_FAIL(UpdateService(m_serviceID, m_src_serviceInfo));
+	//update dst_serv
+	SET_SERV(m_dst_serviceInfo.add_user(m_raw_userID));
+	DO_FAIL(UpdateService(m_changeServiceID, m_dst_serviceInfo));
+
+	return SS_OK;
+}
+
+int ChangeServiceTimer::on_send_change_success()
+{
+	Json::Value sessData;
+	sessData["userID"]        = m_raw_userID;
+	sessData["serviceID"]     = m_raw_changeServiceID;
+	sessData["sessionID"]     = m_sessionID;
+	//sessData["channel"]       = m_channel;
+	sessData["serviceName"]   = m_dst_serviceInfo.serviceName;
+	sessData["serviceAvatar"] = m_dst_serviceInfo.serviceAvatar;
+
+	//解析extends
+	Json::Reader reader;
+	Json::Value json_extends;
+	if (!reader.parse(m_userInfo.extends, json_extends))
+	{
+		sessData["extends"] = Json::objectValue;
+	}
+	else
+	{
+		sessData["extends"] = json_extends;
+	}
+
+	sessData["identity"] = "user";
+	DO_FAIL(on_send_request("changeSuccess", m_session.cpIP, m_session.cpPort, sessData, true));
+	
+	#if 0
+	//if(m_whereFrom == "websocket")
+	if(m_session.whereFrom == "websocket" || m_session.whereFrom == "iOS" || m_session.whereFrom == "Android")
+	{
+		MsgRetransmit::Instance()->SetMsg(strServiceRsp, m_appID, m_seq, m_session.userChatproxyIP, m_session.userChatproxyPort, m_proc->m_cfg._re_msg_send_timeout);
+	}
+	#endif
+
+	sessData["identity"] = "service";
+	DO_FAIL(on_send_request("changeSuccess", m_dst_serviceInfo.cpIP, m_dst_serviceInfo.cpPort, sessData, true));	
 }
 
 ChangeServiceTimer::~ChangeServiceTimer()
