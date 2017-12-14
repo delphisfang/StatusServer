@@ -454,11 +454,11 @@ int UserServiceTimer::do_next_step(string& req_data)
 }
 
 
-//随机分配tag内的一个坐席
+//分配tag内的一个坐席
 int UserServiceTimer::on_user_tag()
 {
 	LogDebug("==>IN");
-
+	
     ServiceHeap servHeap;
 	if (CAppConfig::Instance()->GetTagServiceHeap(m_tag, servHeap))
     {
@@ -471,110 +471,48 @@ int UserServiceTimer::on_user_tag()
     {
         return SS_OK;
     }
-	
-	//随机分配一个坐席
-    srand((unsigned)time(NULL));
-    int j = rand() % servHeap.size();
-	
-	set<string>::iterator it;
-    it = servHeap._servlist.begin();
-    for (int k = 0; k < j; ++k)
-    {
-		++it;
-    }
-	
-    for (int i = j; ; )
-    {
-        ServiceInfo serv;
-		
-		//如果坐席的服务人数已满，就分配下一个坐席
-        if (CAppConfig::Instance()->GetService(*it, serv) || serv.user_count() >= m_serverNum)
-        {
-			LogWarn("service[%s] user_count[%d], maxNum[%d]", serv.serviceID.c_str(), serv.user_count(), m_serverNum);
 
-			++it;
-            ++i;
-            if (i == servHeap.size())
-            {
-                i = 0;
-            }
-			
-            if (i == j)
-            {
-                break;
-            }
-        }
-        else
-        {
-            m_serviceID     = *it;
-			m_raw_serviceID = delappID(m_serviceID);
-            LogTrace("Connect userID:%s <-----> tag serviceID:%s", m_userID.c_str(), m_serviceID.c_str());
+	//使用最小负载策略
+	if (find_least_service_by_tag(m_appID, m_tag, "", m_serviceInfo))
+	{
+		return SS_ERROR;
+	}
 
-			//将user添加到service.userList
-            m_serviceInfo = serv;
-			SET_SERV(serv.add_user(m_raw_userID));
-			DO_FAIL(UpdateService(m_serviceID, serv));
-			
-			//创建会话，发送ConnectSuccess消息
-			DO_FAIL(on_create_session());
-			DO_FAIL(on_send_connect_success());
-            return SS_OK;
-        }
-    }
-
-	LogDebug("==>OUT");
-	
-    return SS_ERROR;
+	m_raw_serviceID = m_serviceInfo.serviceID;
+    m_serviceID     = m_appID + "_" + m_raw_serviceID;
+    LogTrace("Connect userID:%s <-----> tag serviceID:%s", m_userID.c_str(), m_serviceID.c_str());
+    return SS_OK;
 }
 
 //给用户分配熟客
 int UserServiceTimer::on_user_lastService()
 {
-    ServiceInfo lastServ;
-
 	LogDebug("==>IN");
 
-    if (SS_OK != CAppConfig::Instance()->GetService(m_lastServiceID, lastServ)
-    	|| lastServ.status == "offline")
-    {
-        LogError("[%s]: Last service:%s is offline", m_appID.c_str(), m_lastServiceID.c_str());
-        return SS_ERROR;
-    }
+	DO_FAIL(CAppConfig::Instance()->GetService(m_lastServiceID, m_serviceInfo));
 
-    if (lastServ.user_count() > m_serverNum)
-    {
-		LogWarn("service[%s] user_count[%d], maxNum[%d]", lastServ.serviceID.c_str(), lastServ.user_count(), m_serverNum);
-        LogError("[%s]: Last service:%s is busy", m_appID.c_str(), m_lastServiceID.c_str());
-        return SS_ERROR;
-    }
-
+	if (false == m_serviceInfo.is_available(m_serverNum))
+	{
+        LogError("[%s]: Last service[%s] is offline/busy!", m_appID.c_str(), m_lastServiceID.c_str());
+		return SS_ERROR;
+	}
+	
     m_serviceID     = m_lastServiceID;
 	m_raw_serviceID = m_raw_lastServiceID;
-    LogTrace("Connect userID:%s <-----> lastServiceID:%s", m_userID.c_str(), m_serviceID.c_str());
-
-    m_serviceInfo = lastServ;
-	LogTrace("m_serviceInfo: %s", m_serviceInfo.toString().c_str());
-	SET_SERV(m_serviceInfo.add_user(m_raw_userID));
-	DO_FAIL(UpdateService(m_serviceID, m_serviceInfo));
-
-	DO_FAIL(on_create_session());
-	DO_FAIL(on_send_connect_success());
-
-	LogDebug("==>OUT");
-
+    LogTrace("Connect userID:%s <-----> lastServiceID:%s", m_userID.c_str(), m_lastServiceID.c_str());
     return SS_OK;
 }
 
 //随机分配一个坐席
 int UserServiceTimer::on_user_common()
 {
-    string strTags;
-    vector<string> tags;
-
 	LogDebug("==>IN");
 
+    string strTags;
 	CAppConfig::Instance()->GetValue(m_appID, "tags", strTags);
 	LogDebug("[%s]: strTags:%s", m_appID.c_str(), strTags.c_str());
+
+    vector<string> tags;
     MySplitTag((char *)strTags.c_str(), ";", tags);
 	
 	srand((unsigned)time(NULL));
@@ -586,33 +524,26 @@ int UserServiceTimer::on_user_common()
         ServiceHeap servHeap;
         if (CAppConfig::Instance()->GetTagServiceHeap(tags[i], servHeap))
         {
-			LogWarn("Failed to get service heap for tag: %s, find next service heap!", tags[i].c_str());
+			LogWarn("Failed to get ServiceHeap of tag: %s, find next ServiceHeap!", tags[i].c_str());
             continue;
         }
 		
         for (set<string>::iterator it = servHeap._servlist.begin(); it != servHeap._servlist.end(); it++)
         {
-            ServiceInfo serv;
+			if (CAppConfig::Instance()->GetService(*it, m_serviceInfo))
+			{
+				continue;
+			}
 
-			if (CAppConfig::Instance()->GetService(*it, serv) || serv.status == "offline" || serv.user_count() >= m_serverNum)
+			if (false == m_serviceInfo.is_available(m_serverNum))
             {
-				LogWarn("service[%s] user_count[%d], maxNum[%d]", serv.serviceID.c_str(), serv.user_count(), m_serverNum);
-				LogWarn("Service[%s] is offline or busy, find next service!", serv.serviceID.c_str());
+				LogWarn("Service[%s] is offline/busy, find next service!", (*it).c_str());
                 continue;
             }
 			
             m_serviceID     = *it;
 			m_raw_serviceID = delappID(m_serviceID);
-            LogTrace("Connect userID:%s <-----> random serviceID:%s", m_userID.c_str(), m_serviceID.c_str());
-
-			//将user添加到service.userList
-            m_serviceInfo = serv;
-			SET_SERV(serv.add_user(m_raw_userID));
-			DO_FAIL(UpdateService(m_serviceID, serv));
-
-			//创建会话，发送ConnectSuccess消息
-			DO_FAIL(on_create_session());
-			DO_FAIL(on_send_connect_success());
+            LogTrace("Connect userID:%s <-----> common serviceID:%s", m_userID.c_str(), m_serviceID.c_str());
             return SS_OK;
         }
 
@@ -635,8 +566,6 @@ int UserServiceTimer::on_user_common()
 
 int UserServiceTimer::on_dequeue_first_user()
 {
-	//LogDebug("==>IN");
-
 	long long expire_time;
 	UserQueue *uq = NULL;
 
@@ -646,21 +575,20 @@ int UserServiceTimer::on_dequeue_first_user()
 		&& 0 == CAppConfig::Instance()->GetUser(m_userID, m_userInfo))
     {
 		m_queuePriority = 1;
-        LogTrace("[%s]: Success to get user from highpri queue.", m_appID.c_str());
+        LogTrace("[%s]: Dequeue user[%s] from HighPriQueue.", m_appID.c_str(), m_userID.c_str());
     }
     else if (0 == get_normal_queue(m_appID, m_raw_tag, &uq)
 			&& 0 == uq->get_first(m_userID, expire_time)
 			&& 0 == CAppConfig::Instance()->GetUser(m_userID, m_userInfo))
     {
 		m_queuePriority = 0;
-        LogTrace("[%s]: Success to get user from normal queue.", m_appID.c_str());
+        LogTrace("[%s]: Dequeue user[%s] from NormalQueue.", m_appID.c_str(), m_userID.c_str());
     }
 	else
 	{
-        LogError("[%s]: Failed to get user from highpri and normal queue.", m_appID.c_str());
+        LogError("[%s]: Failed to dequeue user!", m_appID.c_str());
        	return SS_ERROR;
 	}
-	LogTrace("dequeue userID: %s", m_userID.c_str());
 
 	//获取user信息
 	m_raw_userID        = delappID(m_userID);
@@ -680,14 +608,11 @@ int UserServiceTimer::on_dequeue_first_user()
 	DO_FAIL(KV_set_queue(m_appID, m_raw_tag, m_queuePriority));
 	
 	//更新user
-	UserInfo user;
-	GET_USER(CAppConfig::Instance()->GetUser(m_userID, user));
-	user.status = "inYiBot";
-	user.qtime  = 0;
-	DO_FAIL(UpdateUser(m_userID, user));
+	m_userInfo.status = "inYiBot";
+	m_userInfo.qtime  = 0;
+	DO_FAIL(UpdateUser(m_userID, m_userInfo));
 
 	LogDebug("==>OUT");
-	
     return SS_OK;
 }
 
@@ -702,75 +627,64 @@ int UserServiceTimer::on_offer_service()
 
 	DO_FAIL(on_dequeue_first_user());
 
-    //LogDebug("[%s]: Try offer service", m_appID.c_str());
-	
-    if (m_userInfo.priority == "lastServiceID")
+    if ("lastServiceID" == m_userInfo.priority)
     {
         LogDebug("[%s]: 1 try <lastService>", m_appID.c_str());
-        ServiceInfo serv;
 
-		//1.给用户分配熟客
-        if (CAppConfig::Instance()->GetService(m_lastServiceID, serv)
-        	|| serv.status == "offline"
-        	|| serv.user_count() >= m_serverNum 
-        	|| on_user_lastService())
+		//1.分配熟客
+        if (on_user_lastService())
         {
-            LogDebug("[%s]: 2 lastService is offline or busy, try <tagService>", m_appID.c_str());
-            ServiceHeap serv_heap;
-			//2.给用户按分组分配
-            if (CAppConfig::Instance()->GetTagServiceHeap(m_tag, serv_heap) 
-            	|| CAppConfig::Instance()->CanOfferService(serv_heap, m_serverNum) 
-            	|| on_user_tag())
+            LogDebug("[%s]: 2 lastService is offline/busy, try <tagService>", m_appID.c_str());
+			//2.按tag分配
+            if (on_user_tag())
             {
-				//3.给用户随机分配
-                LogDebug("[%s]: 3 tagService is not available, try <randService>", m_appID.c_str());
-                return on_user_common();
+				//3.随机分配
+                LogDebug("[%s]: 3 tagService not available, try <randService>", m_appID.c_str());
+                if (on_user_common())
+					return SS_ERROR;
             }
         }
     }
     else
     {
         LogDebug("[%s]: 1 try <tagService>", m_appID.c_str());
-        ServiceHeap serv_heap;
-
-		//1.给用户按分组分配
-        if (CAppConfig::Instance()->GetTagServiceHeap(m_tag, serv_heap) 
-        	|| CAppConfig::Instance()->CanOfferService(serv_heap, m_serverNum)
-        	|| on_user_tag())
+		//1.按tag分配
+        if (on_user_tag())
         {
-            ServiceInfo serv;
-
-			//2.给用户按照熟客分配
-            LogDebug("[%s]: 2 tagService is not available, try <lastService>", m_appID.c_str());
-            if (CAppConfig::Instance()->GetService(m_lastServiceID, serv)
-            	|| serv.status == "offline"
-            	|| serv.user_count() >= m_serverNum 
-            	|| on_user_lastService())
+			//2.分配熟客
+            LogDebug("[%s]: 2 tagService not available, try <lastService>", m_appID.c_str());
+            if (on_user_lastService())
             {
-				//3.给用户随机分配
-                LogDebug("[%s]: 3 lastService is not available, try <randService>", m_appID.c_str());
-                return on_user_common();
+				//3.随机分配
+                LogDebug("[%s]: 3 lastService is offline/busy, try <randService>", m_appID.c_str());
+                if (on_user_common())
+					return SS_ERROR;
             }
         }
     }
 
+	//创建会话，发送ConnectSuccess消息
+	DO_FAIL(on_create_session());
+	DO_FAIL(on_send_connect_success());
     return SS_OK;
 }
 
 int UserServiceTimer::on_create_session()
 {
-	//确定session的serviceID
+	//更新service
+	SET_SERV(m_serviceInfo.add_user(m_raw_userID));
+	DO_FAIL(UpdateService(m_serviceID, m_serviceInfo));
+
+	//更新session
 	m_session.serviceID = m_raw_serviceID;
 	m_session.atime 	= GetCurTimeStamp();
 	DO_FAIL(UpdateUserSession(m_appID, m_userID, &m_session));
 	
-	//更新user状态
-	UserInfo user;
-	GET_USER(CAppConfig::Instance()->GetUser(m_userID, user));
-	user.status = "inService";
-	user.qtime  = 0;
-	user.atime  = GetCurTimeStamp();
-	DO_FAIL(UpdateUser(m_userID, user));
+	//更新user
+	m_userInfo.status = "inService";
+	m_userInfo.qtime  = 0;
+	m_userInfo.atime  = GetCurTimeStamp();
+	DO_FAIL(UpdateUser(m_userID, m_userInfo));
 	
 	LogTrace("Success to create new session: %s", m_session.toString().c_str());
 	return SS_OK;
@@ -778,11 +692,11 @@ int UserServiceTimer::on_create_session()
 
 int UserServiceTimer::on_send_connect_success()
 {
-	Json::Value sessData;
-
 	LogDebug("==>IN");
+
 	//connectSuccess消息的data字段包含的是service的信息
-    sessData["userID"]    = m_session.userID;
+	Json::Value sessData;
+	sessData["userID"]    = m_session.userID;
     sessData["serviceID"] = m_raw_serviceID;
     sessData["sessionID"] = m_sessionID;
     sessData["channel"]   = m_channel;
@@ -802,11 +716,6 @@ int UserServiceTimer::on_send_connect_success()
     sessData["serviceName"]   = m_serviceInfo.serviceName;
     sessData["serviceAvatar"] = m_serviceInfo.serviceAvatar;
 
-	/*Json::Value userInfo;
-    reader.parse(m_userInfo, userInfo);
-    serviceData["userInfo"] = userInfo;
-	*/
-	
 	//发送给user
     sessData["identity"] = "user";
 	DO_FAIL(on_send_request("connectSuccess", m_session.cpIP, m_session.cpPort, sessData, true));
