@@ -1382,13 +1382,27 @@ void CMCDProc::CheckTimeoutQueue(const string &appID, TagUserQueue *pTagQueues, 
 	int expire_count = 0;
 	string req_data;
 	timeval ntv;
+	string app_tag;
 	
 	//check every tag queue
 	map<string, UserQueue*>::iterator it;
 	for (it = pTagQueues->_tag_queue.begin(); it != pTagQueues->_tag_queue.end(); it++)
 	{
 		uq	= it->second;
-		expire_count = uq->check_expire();
+
+		app_tag = appID + "_" + (it->first);
+		if (CAppConfig::Instance()->CheckTagServiceHeapHasOnline(app_tag))
+		{
+			expire_count = uq->size();
+			if (expire_count > 0)
+			{
+				LogTrace("====> All services in ServiceHeap[%s] is offline, dequeue all users.", app_tag.c_str(), expire_count);
+			}
+		}
+		else
+		{
+			expire_count = uq->check_expire();
+		}
 
 		for (int i = 0; i < expire_count; ++i)
 		{

@@ -132,8 +132,9 @@ public:
 	int DelTagServiceHeap(const string& appID);
 	int AddService2Tags(const string& appID, ServiceInfo &serv);
 	int DelServiceFromTags(const string &appID, ServiceInfo &serv);
-	int CanOfferService(const ServiceHeap& servHeap, int serverNum);
+	int CanOfferService(const ServiceHeap& servHeap, int maxConvNum);
 	int CanAppOfferService(const string& appID);
+	int CheckTagServiceHeapHasOnline(string app_tag);
 
 	int AddTagQueue(string appID);
 	int DelTagQueue(string appID);

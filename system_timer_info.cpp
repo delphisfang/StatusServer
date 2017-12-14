@@ -449,29 +449,8 @@ int UserServiceTimer::do_next_step(string& req_data)
 	}
 	else
 	{
-		return 1; ///important
+		return 1;
 	}
-}
-
-int UserServiceTimer::on_create_session()
-{
-	LogDebug("==>IN");
-
-	//确定session的serviceID
-	m_session.serviceID = m_raw_serviceID;
-	m_session.atime 	= GetCurTimeStamp();
-	DO_FAIL(UpdateUserSession(m_appID, m_userID, &m_session));
-	
-	//更新user状态
-	UserInfo user;
-	GET_USER(CAppConfig::Instance()->GetUser(m_userID, user));
-	user.status = "inService";
-	user.qtime  = 0;
-	user.atime  = GetCurTimeStamp();
-	DO_FAIL(UpdateUser(m_userID, user));
-	
-	LogTrace("Success to create new session: %s", m_session.toString().c_str());
-	return SS_OK;
 }
 
 
@@ -538,7 +517,7 @@ int UserServiceTimer::on_user_tag()
 			
 			//创建会话，发送ConnectSuccess消息
 			DO_FAIL(on_create_session());
-			DO_FAIL(on_send_connect_success_msg());
+			DO_FAIL(on_send_connect_success());
             return SS_OK;
         }
     }
@@ -579,7 +558,7 @@ int UserServiceTimer::on_user_lastService()
 	DO_FAIL(UpdateService(m_serviceID, m_serviceInfo));
 
 	DO_FAIL(on_create_session());
-	DO_FAIL(on_send_connect_success_msg());
+	DO_FAIL(on_send_connect_success());
 
 	LogDebug("==>OUT");
 
@@ -633,7 +612,7 @@ int UserServiceTimer::on_user_common()
 
 			//创建会话，发送ConnectSuccess消息
 			DO_FAIL(on_create_session());
-			DO_FAIL(on_send_connect_success_msg());
+			DO_FAIL(on_send_connect_success());
             return SS_OK;
         }
 
@@ -778,7 +757,26 @@ int UserServiceTimer::on_offer_service()
     return SS_OK;
 }
 
-int UserServiceTimer::on_send_connect_success_msg()
+int UserServiceTimer::on_create_session()
+{
+	//确定session的serviceID
+	m_session.serviceID = m_raw_serviceID;
+	m_session.atime 	= GetCurTimeStamp();
+	DO_FAIL(UpdateUserSession(m_appID, m_userID, &m_session));
+	
+	//更新user状态
+	UserInfo user;
+	GET_USER(CAppConfig::Instance()->GetUser(m_userID, user));
+	user.status = "inService";
+	user.qtime  = 0;
+	user.atime  = GetCurTimeStamp();
+	DO_FAIL(UpdateUser(m_userID, user));
+	
+	LogTrace("Success to create new session: %s", m_session.toString().c_str());
+	return SS_OK;
+}
+
+int UserServiceTimer::on_send_connect_success()
 {
 	Json::Value sessData;
 

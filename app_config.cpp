@@ -668,7 +668,7 @@ int CAppConfig::DelServiceFromTags(const string &appID, ServiceInfo &serv)
 	return 0;
 }
 
-int CAppConfig::CanOfferService(const ServiceHeap& servHeap, int serverNum)
+int CAppConfig::CanOfferService(const ServiceHeap& servHeap, int maxConvNum)
 {
 	for (set<string>::iterator i = servHeap._servlist.begin(); i != servHeap._servlist.end(); i++)
 	{
@@ -678,7 +678,7 @@ int CAppConfig::CanOfferService(const ServiceHeap& servHeap, int serverNum)
 		{
 			continue;
 		}
-		else if (serv.user_count() < serverNum && "offline" != serv.status)
+		else if (serv.user_count() < maxConvNum && "offline" != serv.status)
 		{
 			return 0;
 		}
@@ -691,9 +691,9 @@ int CAppConfig::CanAppOfferService(const string& appID)
 {
     string strTags;
     vector<string> tags;
-	unsigned serverNum = 0;
+	int maxConvNum = 0;
 	
-	serverNum = CAppConfig::Instance()->getMaxConvNum(appID);
+	maxConvNum = CAppConfig::Instance()->getMaxConvNum(appID);
 	CAppConfig::Instance()->GetValue(appID, "tags", strTags);
 	//LogDebug("[%s]: strTags:%s", appID.c_str(), strTags.c_str());
     MySplitTag((char *)strTags.c_str(), ";", tags);
@@ -713,7 +713,7 @@ int CAppConfig::CanAppOfferService(const string& appID)
 		{
 			ServiceInfo serv;
 
-			if (CAppConfig::Instance()->GetService(*it, serv) || "offline" == serv.status || serv.user_count() >= serverNum)
+			if (CAppConfig::Instance()->GetService(*it, serv) || "offline" == serv.status || serv.user_count() >= maxConvNum)
 			{
 				continue;
 			}
@@ -726,6 +726,33 @@ int CAppConfig::CanAppOfferService(const string& appID)
 	
 	return -1;
 }
+
+
+int CAppConfig::CheckTagServiceHeapHasOnline(string app_tag)
+{
+	ServiceHeap servHeap;
+	if (CAppConfig::Instance()->GetTagServiceHeap(app_tag, servHeap))
+	{
+		LogError("Failed to get ServiceHeap of tag: %s!", app_tag.c_str());
+		return -1;
+	}
+	
+	for (set<string>::iterator it = servHeap._servlist.begin(); it != servHeap._servlist.end(); ++it)
+	{
+		string app_servID = (*it);
+		ServiceInfo serv;
+		if (SS_OK != GetService(app_servID, serv))
+		{
+			continue;
+		}
+		else if ("offline" != serv.status)
+		{
+			return 0;
+		}
+	}
+	return -1;
+}
+
 
 int CAppConfig::AddTagQueue(string appID)
 {
@@ -968,17 +995,6 @@ int CAppConfig::AddTagOnlineServiceNumber(string appID, string raw_tag)
 
 unsigned CAppConfig::GetTagOnlineServiceNumber(string appID, string raw_tag)
 {
-	#if 0
-	map<string, unsigned>::iterator it;
-	string app_tag = appID + "_" + raw_tag;
-	
-	it = mapOnlineServiceNumber.find(app_tag);
-	if (it == mapOnlineServiceNumber.end())
-	{
-		return 0;
-	}
-	return it->second;
-	#else
 	unsigned servNum = 0;
 
 	map<string, ServiceInfo>::iterator it;
@@ -1003,8 +1019,6 @@ unsigned CAppConfig::GetTagOnlineServiceNumber(string appID, string raw_tag)
 	}
 	
 	return servNum;
-
-	#endif
 }
 
 

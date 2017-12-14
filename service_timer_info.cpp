@@ -392,7 +392,7 @@ int ChangeServiceTimer::on_change_service_by_serviceID()
 int ChangeServiceTimer::on_change_service_by_tag()
 {
 	//不能转给自己
-	if (find_service_by_tag(m_appID, m_tag, m_userID, m_serviceID, m_dst_serviceInfo))
+	if (find_least_service_by_tag(m_appID, m_tag, m_serviceID, m_dst_serviceInfo))
 	{
 		//tag内未找到可用的目标坐席
 		on_no_tag_service();

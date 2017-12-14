@@ -121,13 +121,13 @@ namespace statsvr
 		{}
 		~UserServiceTimer();
 		int  do_next_step(string& req_data);
-		int  on_create_session();
 		int  on_user_tag();
 		int  on_user_lastService();
 		int  on_user_common();
 		int  on_dequeue_first_user();
 		int  on_offer_service();
-		int  on_send_connect_success_msg();
+		int  on_create_session();
+		int  on_send_connect_success();
 
 		UserInfo m_userInfo;
 		Session m_session;

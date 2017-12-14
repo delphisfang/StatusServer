@@ -644,7 +644,7 @@ int CTimerInfo::get_highpri_queue(const string &appID, const string &raw_tag, Us
 	return SS_OK;
 }
 
-int CTimerInfo::find_service_by_tag(const string &appID, const string &app_tag, const string &app_userID, 
+int CTimerInfo::find_random_service_by_tag(const string &appID, const string &app_tag, 
 									const string &old_app_serviceID, ServiceInfo &target_serv)
 {
     ServiceHeap servHeap;
@@ -679,7 +679,7 @@ int CTimerInfo::find_service_by_tag(const string &appID, const string &app_tag, 
 			}
 			else
 			{
-				LogWarn("service[%s] user_count[%d], maxConvNum[%d]", target_serv.serviceID.c_str(), target_serv.user_count(), maxConvNum);
+				LogWarn("service[%s]: user_count[%d], maxConvNum[%d]", target_serv.serviceID.c_str(), target_serv.user_count(), maxConvNum);
 			}
 
 			++it;
@@ -696,12 +696,69 @@ int CTimerInfo::find_service_by_tag(const string &appID, const string &app_tag, 
         }
         else
         {
-            LogTrace("[%s] userID:%s <-----> tag serviceID:%s", appID.c_str(), delappID(app_userID).c_str(), target_serv.serviceID.c_str());
+            LogTrace("[%s] find tag serviceID: %s", appID.c_str(), target_serv.serviceID.c_str());
             return SS_OK;
         }
     }
 
+	LogError("[%s] Failed to find tag service!", appID.c_str());
     return SS_ERROR;
+}
+
+int CTimerInfo::find_least_service_by_tag(const string &appID, const string &app_tag,
+										const string &old_app_serviceID, ServiceInfo &target_serv)
+{
+    ServiceHeap servHeap;
+	if (CAppConfig::Instance()->GetTagServiceHeap(app_tag, servHeap))
+    {
+        LogError("Failed to get ServiceHeap of tag[%s]", app_tag.c_str());
+        return SS_ERROR;
+    }
+
+	int maxConvNum = CAppConfig::Instance()->getMaxConvNum(appID);
+	double service_load = 0.0, min_load = 0.0;
+	set<string>::iterator target_it = servHeap._servlist.end();
+	
+	set<string>::iterator it;
+	ServiceInfo serv;
+	for (it = servHeap._servlist.begin(); it != servHeap._servlist.end(); ++it)
+    {
+		//排除old_app_serviceID
+        if (old_app_serviceID == (*it) || CAppConfig::Instance()->GetService(*it, serv) || !serv.is_available(maxConvNum))
+        {
+			if (old_app_serviceID == (*it))
+			{
+				LogWarn("skip old_serviceID: %s", old_app_serviceID.c_str());
+			}
+			else
+			{
+				LogWarn("service[%s]: user_count[%d], maxConvNum[%d]", serv.serviceID.c_str(), serv.user_count(), maxConvNum);
+			}
+			
+			continue;
+        }
+        else
+        {
+			service_load = (double)serv.user_count() / (double)maxConvNum;
+			if (service_load < min_load)
+			{
+				min_load    = service_load;
+				target_it   = it;
+				target_serv = serv;
+			}
+        }
+    }
+
+	if (target_it != servHeap._servlist.end())
+	{
+		LogTrace("[%s] find tag serviceID: %s", appID.c_str(), target_serv.serviceID.c_str());
+		return SS_OK;
+	}
+	else
+	{
+		LogError("[%s] Failed to find tag service!", appID.c_str());
+		return SS_ERROR;
+	}
 }
 
 /********************************* KV methods *************************************/

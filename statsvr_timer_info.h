@@ -153,8 +153,10 @@ namespace statsvr
 			int get_normal_queue(const string &appID, const string &raw_tag, UserQueue **uq);
 			int get_highpri_queue(const string &appID, const string &raw_tag, UserQueue **uq);
 
-			int find_service_by_tag(const string &appID, const string &app_tag, const string &app_userID, 
+			int find_random_service_by_tag(const string &appID, const string &app_tag,
 									const string &old_app_serviceID, ServiceInfo &target_serv);
+			int find_least_service_by_tag(const string &appID, const string &app_tag,
+										const string &old_app_serviceID, ServiceInfo &target_serv);
 			
 			/********************************* KV methods *************************************/
 
