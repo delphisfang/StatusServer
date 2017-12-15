@@ -81,7 +81,7 @@ int CTimerInfo::init(string req_data, int datalen)
 		m_tag = m_appID + "_" + m_raw_tag;
 
 		if (m_cmd != "pingConf" && m_cmd != "updateConf" && m_cmd != "getConf"
-			&& m_cmd != "getTodayStatus"
+			&& m_cmd != "getTodayStatus" && m_cmd != "changeService"
 			&& CAppConfig::Instance()->checkTagExist(m_appID, m_tag))
 		{
 			LogError("Unknown tag[%s]!", m_tag.c_str());
@@ -650,7 +650,7 @@ int CTimerInfo::find_random_service_by_tag(const string &appID, const string &ap
     ServiceHeap servHeap;
 	if (CAppConfig::Instance()->GetTagServiceHeap(app_tag, servHeap))
     {
-        LogError("Failed to get ServiceHeap of tag[%s]", app_tag.c_str());
+        LogError("Failed to get ServiceHeap of tag[%s]!", app_tag.c_str());
         return SS_ERROR;
     }
 
@@ -696,7 +696,7 @@ int CTimerInfo::find_random_service_by_tag(const string &appID, const string &ap
         }
         else
         {
-            LogTrace("[%s] find tag serviceID: %s", appID.c_str(), target_serv.serviceID.c_str());
+            LogTrace("[%s] Find tag serviceID: %s.", appID.c_str(), target_serv.serviceID.c_str());
             return SS_OK;
         }
     }
@@ -711,12 +711,12 @@ int CTimerInfo::find_least_service_by_tag(const string &appID, const string &app
     ServiceHeap servHeap;
 	if (CAppConfig::Instance()->GetTagServiceHeap(app_tag, servHeap))
     {
-        LogError("Failed to get ServiceHeap of tag[%s]", app_tag.c_str());
+        LogError("Failed to get ServiceHeap of tag[%s]!", app_tag.c_str());
         return SS_ERROR;
     }
 
 	int maxConvNum = CAppConfig::Instance()->getMaxConvNum(appID);
-	double service_load = 0.0, min_load = 0.0;
+	double service_load = 0.0, min_load = 1.0; //important
 	set<string>::iterator target_it = servHeap._servlist.end();
 	
 	set<string>::iterator it;
@@ -751,7 +751,7 @@ int CTimerInfo::find_least_service_by_tag(const string &appID, const string &app
 
 	if (target_it != servHeap._servlist.end())
 	{
-		LogTrace("[%s] find tag serviceID: %s", appID.c_str(), target_serv.serviceID.c_str());
+		LogTrace("[%s] Find tag serviceID: %s.", appID.c_str(), target_serv.serviceID.c_str());
 		return SS_OK;
 	}
 	else
@@ -1018,8 +1018,6 @@ int CTimerInfo::DeleteUserSession(string appID, string app_userID)
 
 int CTimerInfo::CreateUserSession(string appID, string app_userID, Session *sess, long long gap_warn, long long gap_expire)
 {
-	//新创建的session，未发送欢迎语
-	sess->notified = 0;
 	SET_SESS(create_user_session(appID, app_userID, sess, gap_warn, gap_expire));
 	DO_FAIL(KV_set_session(app_userID, *sess, gap_warn, gap_expire));
 	return SS_OK;

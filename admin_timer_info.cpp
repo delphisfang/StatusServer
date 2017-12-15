@@ -304,7 +304,6 @@ int AdminConfigTimer::on_admin_getServiceStatus()
 	Json::Value servInfo;
 	int i = 0;
 	
-	ServiceInfo serv;
 	string app_serviceID;
 	
     int maxConvNum = CAppConfig::Instance()->getMaxConvNum(m_appID);
@@ -313,9 +312,11 @@ int AdminConfigTimer::on_admin_getServiceStatus()
 		app_serviceID = (*it);
 		servInfo["serviceID"] = delappID(app_serviceID);
 
+		ServiceInfo serv;
 		if (CAppConfig::Instance()->GetService(app_serviceID, serv))
 		{
 			servInfo["serviceStatus"] = "offline";
+			servInfo["userNum"]       = 0;
 		}
 		else
 		{
@@ -325,9 +326,8 @@ int AdminConfigTimer::on_admin_getServiceStatus()
 	        {
 	            servInfo["serviceStatus"] = "busy";
 	        }
+			servInfo["userNum"] = serv.user_count();
 		}
-
-		servInfo["userNum"] = serv.user_count();
 		
 		servInfoList[i] = servInfo;
 		++i;

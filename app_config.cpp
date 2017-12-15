@@ -8,20 +8,9 @@
 using namespace std;
 using namespace statsvr;
 
-int statsvr_global;
-
 CAppConfig* CAppConfig::m_instance = NULL;
 
 /************************************************************************************************/
-int get_global()
-{
-	return statsvr_global;
-}
-
-void set_global(int glob)
-{
-	statsvr_global = glob;
-}
 
 int CAppConfig::UpdateappIDConf (const Json::Value &push_config_req)
 {
@@ -695,7 +684,6 @@ int CAppConfig::CanAppOfferService(const string& appID)
 	
 	maxConvNum = CAppConfig::Instance()->getMaxConvNum(appID);
 	CAppConfig::Instance()->GetValue(appID, "tags", strTags);
-	//LogDebug("[%s]: strTags:%s", appID.c_str(), strTags.c_str());
     MySplitTag((char *)strTags.c_str(), ";", tags);
 
 	for (int i = 0; i < tags.size(); ++i)

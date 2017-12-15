@@ -100,7 +100,17 @@ string Session::toString() const
 	return writer.write(value);
 }
 
-
+bool Session::has_refreshed() const
+{
+	if (atime != btime)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
 
 UserInfo::UserInfo()
 {

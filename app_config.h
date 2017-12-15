@@ -10,10 +10,6 @@
 using namespace std;
 using namespace statsvr;
 
-int get_global();
-
-void set_global(int glob);
-
 class CAppConfig
 {
 public:

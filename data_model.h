@@ -33,6 +33,7 @@ namespace statsvr
 		
 		void toJson(Json::Value &value) const;
 	    string toString() const;
+		bool has_refreshed() const;
 		
 		string    sessionID;
 		string    userID;

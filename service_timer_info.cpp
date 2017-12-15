@@ -342,14 +342,12 @@ int ChangeServiceTimer::on_change_service()
 		return SS_ERROR;
 	}
 
-	//先回复CP
-	on_resp_cp();
-
 	//用户不在源坐席上
 	if (CAppConfig::Instance()->GetService(m_serviceID, m_src_serviceInfo) 
     	|| m_src_serviceInfo.find_user(m_raw_userID))
 	{
-		return on_session_wrong();
+		on_session_wrong();
+		return SS_ERROR;
     }
 
 	m_maxConvNum = CAppConfig::Instance()->getMaxConvNum(m_appID);
@@ -362,6 +360,9 @@ int ChangeServiceTimer::on_change_service()
 	{
 		DO_FAIL(on_change_service_by_tag());
 	}
+
+	//回复给src_service
+	on_resp_cp();
 
 	DO_FAIL(on_change_session());
 	DO_FAIL(on_send_change_success());

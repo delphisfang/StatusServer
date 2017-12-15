@@ -64,6 +64,10 @@ int YiBotOutTimer::on_yibot_timeout()
 		}
 		//delete old, create new session
 		DO_FAIL(DeleteUserSession(m_appID, m_userID));
+		if (sess.has_refreshed())
+		{
+			sess.notified = 0;
+		}
 		sess.atime = sess.btime = GetCurTimeStamp();
 		sess.sessionID = gen_sessionID(m_userID);
 		DO_FAIL(CreateUserSession(m_appID, m_userID, &sess, MAX_INT, MAX_INT));
@@ -232,6 +236,10 @@ int SessionOutTimer::on_session_timeout()
     m_sessionID              = sess.sessionID;
 	m_userInfo.lastServiceID = sess.serviceID;
 	//3.删除旧session，创建新session
+	if (sess.has_refreshed())
+	{
+		sess.notified = 0;
+	}
 	new_sessionID  = gen_sessionID(m_userID);
 	sess.sessionID = new_sessionID;
 	sess.serviceID = "";
