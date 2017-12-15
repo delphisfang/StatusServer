@@ -573,13 +573,13 @@ int ConnectServiceTimer::on_queue()
 	
     if (m_queuePriority != 0)
     {
-		LogTrace("====>add user on HighPri Queue.");
+		LogTrace("====>add user on HighPriQueue.");
 		DO_FAIL(pHighPriTagQueues->add_user(m_raw_tag, m_userID, expire_time));
 		DO_FAIL(KV_set_queue(m_appID, m_raw_tag, true));
     }
     else
     {
-		LogTrace("====>add user on Normal Queue.");
+		LogTrace("====>add user on NormalQueue.");
 		DO_FAIL(pTagQueues->add_user(m_raw_tag, m_userID, expire_time));
 		DO_FAIL(KV_set_queue(m_appID, m_raw_tag, false));
     }

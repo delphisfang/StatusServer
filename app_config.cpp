@@ -64,82 +64,82 @@ int CAppConfig::UpdateappIDConf (const Json::Value &push_config_req)
 		if (!appID_conf["autoTransfer"].isNull() && appID_conf["autoTransfer"].isInt())
 		{
 			int autoTransfer = appID_conf["autoTransfer"].asInt();
-			SetValue (appID, "autoTransfer", autoTransfer);
+			SetValue(appID, "autoTransfer", autoTransfer);
 		}
 		if (!appID_conf["dynamicTransfer"].isNull() && appID_conf["dynamicTransfer"].isObject())
 		{
 			string dynamicTransfer = appID_conf["dynamicTransfer"].toStyledString();
-			SetValue (appID, "dynamicTransfer", dynamicTransfer);
+			SetValue(appID, "dynamicTransfer", dynamicTransfer);
 		}
 		if (!appID_conf["yibotTalk"].isNull() && appID_conf["yibotTalk"].isObject())
 		{
 			string yibotTalk = appID_conf["yibotTalk"].toStyledString();
-			SetValue (appID, "yibotTalk", yibotTalk);
+			SetValue(appID, "yibotTalk", yibotTalk);
 		}
 		if (!appID_conf["max_conv_num"].isNull() && appID_conf["max_conv_num"].isInt())
 		{
 			int max_conv_num = appID_conf["max_conv_num"].asInt();
-			SetValue (appID, "max_conv_num", max_conv_num);
+			SetValue(appID, "max_conv_num", max_conv_num);
 		}
 		if (!appID_conf["check_user_queue_dir"].isNull() && appID_conf["check_user_queue_dir"].isInt())
 		{
 			int check_user_queue_dir = appID_conf["check_user_queue_dir"].asInt();
-			SetValue (appID, "check_user_queue_dir", check_user_queue_dir);
+			SetValue(appID, "check_user_queue_dir", check_user_queue_dir);
 		}
 		if (!appID_conf["check_user_queue_num"].isNull() && appID_conf["check_user_queue_num"].isInt())
 		{
 			int check_user_queue_num = appID_conf["check_user_queue_num"].asInt();
-			SetValue (appID, "check_user_queue_num", check_user_queue_num);
+			SetValue(appID, "check_user_queue_num", check_user_queue_num);
 		}
 		if (!appID_conf["session_timeout"].isNull() && appID_conf["session_timeout"].isInt())
 		{
 			int session_timeout = appID_conf["session_timeout"].asInt();
-			SetValue (appID, "session_timeout", session_timeout);
+			SetValue(appID, "session_timeout", session_timeout);
 		}
 		if (!appID_conf["session_timewarn"].isNull() && appID_conf["session_timewarn"].isInt())
 		{
 			int session_timewarn = appID_conf["session_timewarn"].asInt();
-			SetValue (appID, "session_timewarn", session_timewarn);
+			SetValue(appID, "session_timewarn", session_timewarn);
 		}
 		if (!appID_conf["queue_timeout"].isNull() && appID_conf["queue_timeout"].isInt())
 		{
 			int queue_timeout = appID_conf["queue_timeout"].asInt();
-			SetValue (appID, "queue_timeout", queue_timeout);
+			SetValue(appID, "queue_timeout", queue_timeout);
 		}
 		if (!appID_conf["no_service_online_hint"].isNull() && appID_conf["no_service_online_hint"].isString())
 		{
 			string no_service_online_hint = appID_conf["no_service_online_hint"].asString();
-			SetValue (appID, "no_service_online_hint", no_service_online_hint);
+			SetValue(appID, "no_service_online_hint", no_service_online_hint);
 		}
 		if (!appID_conf["queue_timeout_hint"].isNull() && appID_conf["queue_timeout_hint"].isString())
 		{
 			string queue_timeout_hint = appID_conf["queue_timeout_hint"].asString();
-			SetValue (appID, "queue_timeout_hint", queue_timeout_hint);
+			SetValue(appID, "queue_timeout_hint", queue_timeout_hint);
 		}
 		if (!appID_conf["queue_upper_limit_hint"].isNull() && appID_conf["queue_upper_limit_hint"].isString())
 		{
 			string queue_upper_limit_hint = appID_conf["queue_upper_limit_hint"].asString();
-			SetValue (appID, "queue_upper_limit_hint", queue_upper_limit_hint);
+			SetValue(appID, "queue_upper_limit_hint", queue_upper_limit_hint);
 		}
 		if (!appID_conf["timeout_warn_hint"].isNull() && appID_conf["timeout_warn_hint"].isString())
 		{
 			string timeout_warn_hint = appID_conf["timeout_warn_hint"].asString();
-			SetValue (appID, "timeout_warn_hint", timeout_warn_hint);
+			SetValue(appID, "timeout_warn_hint", timeout_warn_hint);
 		}
 		if (!appID_conf["timeout_end_hint"].isNull() && appID_conf["timeout_end_hint"].isString())
 		{
 			string timeout_end_hint = appID_conf["timeout_end_hint"].asString();
-			SetValue (appID, "timeout_end_hint", timeout_end_hint);
+			SetValue(appID, "timeout_end_hint", timeout_end_hint);
 		}
 		if (!appID_conf["recommendPre"].isNull() && appID_conf["recommendPre"].isString())
 		{
 			string recommendPre = appID_conf["recommendPre"].asString();
-			SetValue (appID, "recommendPre", recommendPre);
+			SetValue(appID, "recommendPre", recommendPre);
 		}
 		if (!appID_conf["recommendEnd"].isNull() && appID_conf["recommendEnd"].isString())
 		{
 			string recommendEnd = appID_conf["recommendEnd"].asString();
-			SetValue (appID, "recommendEnd", recommendEnd);
+			SetValue(appID, "recommendEnd", recommendEnd);
 		}
 		
 		if (!appID_conf["tags"].isNull() && appID_conf["tags"].isArray())
@@ -701,7 +701,7 @@ int CAppConfig::CanAppOfferService(const string& appID)
 		{
 			ServiceInfo serv;
 
-			if (CAppConfig::Instance()->GetService(*it, serv) || "offline" == serv.status || serv.user_count() >= maxConvNum)
+			if (CAppConfig::Instance()->GetService(*it, serv) || false == serv.is_available(maxConvNum))
 			{
 				continue;
 			}
@@ -852,7 +852,6 @@ int CAppConfig::UpdateSessionQueue(string appID, string& value)
 	}
 
 	Session session(value);
-	// read <timewarn> and <timeout> from config
 	if (GetValue(appID, "session_timewarn", timeWarn) || timeWarn == 0)
 	{
 		timeWarn = 10 * 60;
@@ -1373,359 +1372,3 @@ void CAppConfig::getOnlineServiceNumJson(string appID, Json::Value &tags)
 	}
 }
 
-#if ((((((((0))))))))
-#endif
-/************************************************************************************************/
-
-#if 0
-int CAppConfig::GetVersion (unsigned appID)
-{
-	int version;
-	GetValue(appID, "version", version);
-	return version;
-}
-
-int CAppConfig::SetVersion (unsigned appID, uint32_t version)
-{
-	SetValue(appID, "version", (int)version);
-	DEBUG_P (LOG_DEBUG, "[SetVersion] appID:[%d], version:[%d]\n", appID ,version);
-	return 0;
-}
-
-int CAppConfig::DelVersion(unsigned appID)
-{
-	DelValue(appID, "version");
-	DEBUG_P (LOG_DEBUG, "[DelVersion] appID:[%d]\n", appID);
-	return 0;
-}
-
-int CAppConfig::SetConf(unsigned appID, const string& conf)
-{
-	SetValue(appID, "config", conf);
-	return 0;
-}
-
-int CAppConfig::DelConf(unsigned appID)
-{
-	DelValue(appID, "config");
-	return 0;
-}
-
-int CAppConfig::GetConf(unsigned appID, string& conf)
-{
-	GetValue(appID, "config", conf);
-	return 0;
-
-}
-
-
-
-
-
-
-
-int CAppConfig::GetHeapNumber(const ServiceHeap &serviceHeap)
-{
-	int number = 0;
-	for(set<string>::iterator i = serviceHeap.tagServiceList.begin(); i != serviceHeap.tagServiceList.end(); i++)
-	{
-		string tmpService = *i;
-		ServiceStatus serviceStatus;
-		if(GetServiceStatus(tmpService, serviceStatus))
-		{
-			continue;
-		}
-		number += serviceStatus.userList.size();
-	}
-	return number;
-}
-
-//只要没有userList的serviceStatus，都是need del的
-int CAppConfig::GetOfflineNeedDelServiceList(const ServiceHeap &serviceHeap)
-{
-	int number = 0;
-	for(set<string>::iterator i = serviceHeap.tagServiceList.begin(); i != serviceHeap.tagServiceList.end(); i++)
-	{
-		string tmpService = *i;
-		ServiceStatus serviceStatus;
-		if(GetServiceStatus(tmpService, serviceStatus))
-		{
-			continue;
-		}
-		if(serviceStatus.userList.size() == 0)
-		{
-			number++;
-		}	
-	}
-	return number;
-}
-
-
-int CAppConfig::UpdateKickServiceStatus(const string& key,const ServiceStatus& serviceStatus)
-{
-	//DEBUG_P(LOG_NORMAL, "Update KickServiceStatus[%s]:%s\n", key.c_str(), serviceStatus.toString().c_str());
-	
-	mapKickServiceStatus[key] = serviceStatus;
-	
-	return 0;
-}
-
-int CAppConfig::GetKickServiceStatus(const string& key, ServiceStatus &serviceStatus)
-{
-	map<string, ServiceStatus>::iterator it;
-	it = mapKickServiceStatus.find(key);
-	if(it != mapKickServiceStatus.end())
-	{
-		serviceStatus = it->second;
-		return 0;
-	}
-	return -1;
-}
-
-int CAppConfig::DelKickServiceStatus(const string& key)
-{
-	map<string, ServiceStatus>::iterator it;
-	it = mapKickServiceStatus.find(key);
-	if(it != mapKickServiceStatus.end())
-	{
-		DEBUG_P(LOG_NORMAL, "Del KickServiceStatus[%s]:%s\n", key.c_str(), it->second.toString().c_str());
-		mapKickServiceStatus.erase(it);
-	}
-	return 0;
-}
-
-
-int CAppConfig::AddOfflineHeap(unsigned appID)
-{
-	map<unsigned, ServiceHeap>::iterator it;
-	it = mapOfflineHeap.find(appID);
-	if(it == mapOfflineHeap.end())
-	{
-		ServiceHeap serviceHeap;
-		mapOfflineHeap[appID] = serviceHeap;
-	}
-	return 0;
-}
-
-int CAppConfig::UpdateOfflineHeap(unsigned appID, ServiceHeap& serviceHeap)
-{
-	DEBUG_P(LOG_NORMAL, "Update OfflineHeap[%s]:%s\n", i2str(appID).c_str(), serviceHeap.toString().c_str());
-	mapOfflineHeap[appID] = serviceHeap;
-	return 0;
-}
-
-int CAppConfig::UpdateOfflineHeap(unsigned appID, const string& value)
-{
-	DEBUG_P(LOG_NORMAL, "Update OfflineHeap[%s]:%s\n", i2str(appID).c_str(), value.c_str());
-	ServiceHeap serviceHeap(value);
-	mapOfflineHeap[appID] = serviceHeap;
-	return 0;
-}
-
-int CAppConfig::GetOfflineHeap(unsigned appID, ServiceHeap& value)
-{
-	map<unsigned, ServiceHeap>::iterator it;
-	it = mapOfflineHeap.find(appID);
-	if(it != mapOfflineHeap.end())
-	{
-		value = it->second;
-		return 0;
-	}
-	return -1;
-}
-
-int CAppConfig::DelOfflineHeap(unsigned appID)
-{
-	map<unsigned, ServiceHeap>::iterator it;
-	it = mapOfflineHeap.find(appID);
-	if(it != mapOfflineHeap.end())
-	{
-		mapOfflineHeap.erase(it);
-		return 0;
-	}
-	return -1;
-}
-
-int CAppConfig::UpdateOnlineService(const string& serviceID)
-{
-	mapServiceOnlineTime[serviceID] = time(NULL);
-}
-
-int CAppConfig::UpdateOnlineService(const string& serviceID, time_t checkTime)
-{
-	mapServiceOnlineTime[serviceID] = checkTime;
-}
-
-int CAppConfig::CheckOnlineService(time_t time_gap, set<string>& serviceList)
-{
-	time_t nowTime = time(NULL);
-	map<string, time_t>::iterator it;
-	for(it = mapServiceOnlineTime.begin(); it != mapServiceOnlineTime.end();)
-	{
-		if(nowTime >= it->second + time_gap)
-		{
-			serviceList.insert(it->first);
-			mapServiceOnlineTime.erase(it++);
-		}
-		else
-		{
-			it++;
-		}
-	}
-	return 0;
-}
-
-int CAppConfig::DelOnlineService(const string& serviceID)
-{
-	map<string, time_t>::iterator it;
-	it = mapServiceOnlineTime.find(serviceID);
-	if(it != mapServiceOnlineTime.end())
-	{
-		mapServiceOnlineTime.erase(it);
-		return 0;
-	}
-	return -1;
-}
-
-
-
-void CAppConfig::DelappID(unsigned appID)
-{
-	LogError("DelApp:appID:%u", appID);
-	DelVersion(appID);
-	DelConf(appID);
-	DelQueue(appID);
-	DelHighPriQueue(appID);
-	DelQueueString(appID);
-	DelOfflineHeap(appID);
-	DelSessionQueue(appID);
-
-	string key = i2str(appID) + "_";
-	DelTagHeap(key);
-}
-
-
-int CAppConfig::SetQueueString(unsigned appID, const string& queueString)
-{
-	mapappIDQueueString[appID] = queueString;
-	return 0;
-}
-
-
-int CAppConfig::GetQueueString(unsigned appID, string& queueString)
-{
-	map<unsigned,string>::iterator it;
-	it = mapappIDQueueString.find(appID);
-	if(it != mapappIDQueueString.end())
-	{
-		queueString = it->second;
-		return 0;
-	}
-	queueString = string();
-	return 0;
-}
-
-int CAppConfig::AddQueueString(unsigned appID, const string& queueString)
-{
-	map<unsigned,string>::iterator it;
-	it = mapappIDQueueString.find(appID);
-	if(it != mapappIDQueueString.end())
-	{
-		it->second += queueString + ";";
-		return 0;
-	}
-	return -1;
-}
-
-int CAppConfig::CancelQueueString(unsigned appID, string& userID)
-{
-	string queueString;
-	GetQueueString(appID, queueString);
-	if(string::npos == queueString.find(userID))
-	{
-		return 0;
-	}
-	int pos = queueString.find(userID);
-    int pos2 = queueString.find(";", pos);
-	if (string::npos == pos2)
-	{
-		pos2 = queueString.size();
-	}
-	string tmp = queueString.substr(0, pos + 1);
-	int pos1 = tmp.rfind(";");
-	if (string::npos == pos1)
-	{
-	    queueString.replace(0, pos2, "");
-	}
-    else
-    {
-	    queueString.replace(pos1, pos2 - pos1, "");
-    }
-	mapappIDQueueString[appID] = queueString;
-	return 0;
-}
-
-int CAppConfig::PopQueueString(unsigned appID)
-{
-	map<unsigned,string>::iterator it;
-	it = mapappIDQueueString.find(appID);
-	if(it != mapappIDQueueString.end())
-	{
-		int pos = (it->second).find(';');
-		(it->second).replace(0, pos + 1, "");
-		return 0;
-	}
-	return -1;
-}
-
-int CAppConfig::DelQueueString(unsigned appID)
-{
-	map<unsigned,string>::iterator it;
-	it = mapappIDQueueString.find(appID);
-	if(it != mapappIDQueueString.end())
-	{
-		mapappIDQueueString.erase(it);
-		return 0;
-	}
-	return -1;
-}
-
-
-
-int CAppConfig::AddConnectServiceWord(string &word)
-{
-	list<string>::iterator it;
-
-	for(it = needConnectServiceWord.begin(); it != needConnectServiceWord.end(); it++)
-	{
-		if(*it == word)
-		{
-			return -1;
-		}
-	}
-
-	needConnectServiceWord.push_back(word);
-	return 0;
-}
-
-int CAppConfig::FindConnectServiceWord(string &msg)
-{
-	list<string>::iterator it;
-
-	for(it = needConnectServiceWord.begin(); it != needConnectServiceWord.end(); it++)
-	{
-		if(string::npos != msg.find(*it))
-		{
-			return 0;
-		}
-	}
-
-	return -1;
-}
-
-int CAppConfig::GetConnectServiceWord(list<string> &words)
-{
-	words = needConnectServiceWord;
-	return 0;
-}
-#endif
