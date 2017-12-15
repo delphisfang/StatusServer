@@ -104,8 +104,8 @@ public:
 	int DelValue(string appID, const string &key);
 	int SetValue(string appID, const string &key, int val);
 	int SetValue(string appID, const string &key, const string &val);
-	int GetValue(string appID, const string &key, int &val); //for int value
-	int GetValue(string appID, const string &key, string &val); //for string value
+	int GetValue(string appID, const string &key, int &val);
+	int GetValue(string appID, const string &key, string &val);
 
 	int GetUser(const string& app_userID, UserInfo &user);
 	int AddUser(const string& app_userID, const UserInfo& user);

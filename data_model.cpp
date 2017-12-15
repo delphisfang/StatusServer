@@ -367,7 +367,7 @@ unsigned ServiceInfo::user_count() const
 
 bool ServiceInfo::is_available(int maxConvNum) const
 {
-	if ("offline" == status || user_count() >= maxConvNum)
+	if (OFFLINE == status || user_count() >= maxConvNum)
 	{
 		return false;
 	}

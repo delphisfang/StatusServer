@@ -165,7 +165,6 @@ int32_t CMCDProc::Init(const std::string& conf_file)
 	
 	srand((int)time(0));
 	m_msg_seq = rand();
-	//LogDebug("%s, msg_seq begin:%u", m_cfg.ToString().c_str(), m_msg_seq);
 
     signal(SIGUSR1, sigusr1_handle);
     signal(SIGUSR2, sigusr2_handle);
@@ -343,46 +342,22 @@ int CMCDProc::InitTemplate()
 
 int32_t CMCDProc::InitCmdMap()
 {
-    /*m_userMap["getUserInfo"] = GET_USER_INFO;
-    m_userMap["userOnline"] = USER_ONLINE;
-    m_userMap["cancelQueue"] = CANCEL_QUEUE;
-    m_userMap["closeSession"] = CLOSE_SESSION;
-    m_userMap["connectService"] = CONNECT_SERVICE;
+	m_cmdMap["echo"]                = ECHO;
+	m_cmdMap["getUserInfo"]         = GET_USER_INFO;
+    m_cmdMap["userOnline"]          = USER_ONLINE;
+    m_cmdMap["cancelQueue"]         = CANCEL_QUEUE;
+    m_cmdMap["closeSession"]        = CLOSE_SESSION;
+    m_cmdMap["connectService"]      = CONNECT_SERVICE;
 	
-    m_serviceMap["getServiceInfo"] = GET_SERVICE_INFO;
-    m_serviceMap["serviceLogin"] = SERVICE_LOGIN;
-    m_serviceMap["serviceChangeStatus"] = SERVICE_CHANGESTATUS;
-    m_serviceMap["changeService"] = CHANGE_SERVICE;
-	
-	m_replyMap["echo"] = ECHO;
-	*/
-	m_cmdMap["echo"] = ECHO;
-	m_cmdMap["getUserInfo"] = GET_USER_INFO;
-    m_cmdMap["userOnline"] = USER_ONLINE;
-    m_cmdMap["cancelQueue"] = CANCEL_QUEUE;
-    m_cmdMap["closeSession"] = CLOSE_SESSION;
-    m_cmdMap["connectService"] = CONNECT_SERVICE;
-	
-    m_cmdMap["getServiceInfo"] = GET_SERVICE_INFO;
-    m_cmdMap["serviceLogin"] = SERVICE_LOGIN;
+    m_cmdMap["getServiceInfo"]      = GET_SERVICE_INFO;
+    m_cmdMap["serviceLogin"]        = SERVICE_LOGIN;
     m_cmdMap["serviceChangeStatus"] = SERVICE_CHANGESTATUS;
-    m_cmdMap["changeService"] = CHANGE_SERVICE;
-	m_cmdMap["overload"]      = SERVICE_PULLNEXT;
-	m_cmdMap["refreshSession"] = REFRESH_SESSION;
+    m_cmdMap["changeService"]       = CHANGE_SERVICE;
+	m_cmdMap["overload"]            = SERVICE_PULLNEXT;
+	m_cmdMap["refreshSession"]      = REFRESH_SESSION;
 
 	m_cmdMap["getChatProxyAddress"] = GET_CP_ADDR;
 	
-	/*
-    m_replyMap["sendMsg-reply"] = 31;
-    m_replyMap["connectSuccess-reply"] = 32;
-    m_replyMap["closeSession-reply"] = 33;
-    m_replyMap["changeSuccess-reply"] = 34;
-    m_replyMap["timeoutWarn-reply"] = 35;
-    m_replyMap["timeoutEnd-reply"] = 36;
-    m_replyMap["timeoutDequeue-reply"] = 37;
-    m_replyMap["kickService-reply"] = 38;
-	*/
-
 	return 0;
 }
 
@@ -397,13 +372,13 @@ int32_t CMCDProc::InitKVServer()
 
     if (ret)
     {
-	    LogError("[CMCDProc] Failed to init shared memory, size:[%d], key[%d]!", 
+	    LogError("Failed to init shared memory, size:[%d], key[%d]!", 
 					m_cfg.m_conf_cache_size,  m_cfg.m_conf_shmkey);
 		return ret;
     }
 	else
 	{
-	    LogTrace("[CMCDProc] Success to init shared memory, size:[%d], key[%d].", 
+	    LogTrace("Success to init shared memory, size:[%d], key[%d].", 
 					m_cfg.m_conf_cache_size,  m_cfg.m_conf_shmkey);
 		return SS_OK;
 	}
@@ -623,19 +598,17 @@ int32_t CMCDProc::HttpParseCmd(char* data, unsigned data_len, string& outdata, u
 int32_t CMCDProc::HandleRequest(char* data, unsigned data_len, 
 								unsigned long long flow, uint32_t client_ip, timeval& ccd_time)
 {	
-    string str_client_ip = INET_ntoa(client_ip);
-	unsigned msg_seq = GetMsgSeq();
-
+    string str_client_ip;
+    int cmd;
     string outdata;
     unsigned out_len = 0;
 
+	str_client_ip = INET_ntoa(client_ip);
+	cmd = HttpParseCmd(data, data_len, outdata, out_len);
+    CWaterLog::Instance()->WriteLog(ccd_time, 0, (char *)str_client_ip.c_str(), 0, cmd, (char *)outdata.c_str());
+
     CTimerInfo* ti = NULL;
-    int cmd;
-
-    int ret = HttpParseCmd(data, data_len, outdata, out_len);
-    CWaterLog::Instance()->WriteLog(ccd_time, 0, (char *)str_client_ip.c_str(), 0, ret, (char *)outdata.c_str());
-
-	cmd = ret;
+	unsigned msg_seq = GetMsgSeq();
     switch (cmd)
     {
 		case ECHO:
@@ -695,23 +668,18 @@ int32_t CMCDProc::HandleRequest(char* data, unsigned data_len,
 			break;
 			
         default:
-            LogError( "Can't handle data from IP:%s, ret:%d!", str_client_ip.c_str(), ret);
+            LogError( "Unknown cmd[%d] from IP[%s]!", cmd, str_client_ip.c_str());
             Json::Value resp;
             resp["method"] = "-reply";
             if (cmd == -2)
             {
                 resp["code"] = -61001;
-                resp["msg"] = "System not ready";
-            }
-            else if(cmd == -3)
-            {
-                resp["code"] = -61009;
-                resp["msg"] = "Admin conf is not valid";
+                resp["msg"]  = "System not ready";
             }
             else
             {
                 resp["code"] = -61003;
-                resp["msg"] = "Unknown http packet";
+                resp["msg"]  = "Unknown command";
             }
 
 			Json::FastWriter writer;

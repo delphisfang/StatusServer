@@ -55,8 +55,16 @@
 		}while(0)
 
 
+#define ENSURE_RET(expr) do{\
+			if (!(expr))\
+			{\
+				LogError("[ERROR] Ensure %s failed!", #expr);\
+				return SS_ERROR;\
+			}\
+		}while(0)
+
 #define DO_FAIL(expr) do{\
-			if (SS_OK != expr)\
+			if (SS_OK != (expr))\
 			{\
 				LogError("[ERROR] Failed to call %s!", #expr);\
 				return SS_ERROR;\
@@ -64,7 +72,7 @@
 		}while(0)
 
 #define GET_FAIL(expr, data_name) do{\
-			if (SS_OK != expr)\
+			if (SS_OK != (expr))\
 			{\
 				LogError("[ERROR] Failed to call %s!", #expr);\
 				ON_ERROR_GET_DATA(data_name);\
@@ -73,7 +81,7 @@
 		}while(0)
 
 #define SET_FAIL(expr, data_name) do{\
-			if (SS_OK != expr)\
+			if (SS_OK != (expr))\
 			{\
 				LogError("[ERROR] Failed to call %s!", #expr);\
 				ON_ERROR_SET_DATA(data_name);\

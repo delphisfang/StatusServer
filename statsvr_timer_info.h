@@ -21,7 +21,7 @@ using namespace tfc::base;
 
 namespace statsvr
 {
-        const unsigned DATA_BUF_SIZE = 1024 * 1024 * 32;
+        //const unsigned DATA_BUF_SIZE = 1024 * 1024 * 32;
 
         class CMCDProc;
 
@@ -101,29 +101,7 @@ namespace statsvr
             virtual bool on_expire_delete(){ return true; }           
 
             uint32_t GetMsgSeq() { return m_msg_seq; }
-
-            uint64_t GetTimeGap()
-            {
-                struct timeval end;
-                gettimeofday(&end, NULL);
-
-                uint64_t timecost = CalcTimeCost_MS(m_start_time, end);
-				LogDebug("##### Timer GetTimeGap() max_time_gap[%u], timecost[%u]\n"
-					            , m_max_time_gap, timecost);
-
-                if (timecost > m_max_time_gap)
-                {
-                    m_max_time_gap = 1;
-                }
-                else
-                {
-                    m_max_time_gap -= timecost;
-                }
-
-                // m_op_start = end;
-
-                return m_max_time_gap;
-            }
+            uint64_t GetTimeGap();
 
 			void on_error_parse_packet(string errmsg);
 			void on_error_get_data(string data_name);
@@ -131,7 +109,6 @@ namespace statsvr
 			void on_error_parse_data(string data_name);
 			void set_user_data(Json::Value &data);
 			void set_service_data(Json::Value & data);
-			void set_system_data(Json::Value &data);
 			int on_send_request(string cmd, string ip, unsigned short port, const Json::Value &data, bool with_code = false);
 			int on_send_reply(const Json::Value &data);
 			int on_send_error_reply(ERROR_TYPE code, string msg, const Json::Value &data);

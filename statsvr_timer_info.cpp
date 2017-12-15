@@ -324,6 +324,27 @@ void CTimerInfo::FinishStat(const char* itemName)
 	m_proc->AddStat(0, buff, &m_ccd_time, &m_end_time);
 }
 
+uint64_t CTimerInfo::GetTimeGap()
+{
+	struct timeval end;
+	gettimeofday(&end, NULL);
+
+	uint64_t timecost = CalcTimeCost_MS(m_start_time, end);
+	LogDebug("##### Timer GetTimeGap() max_time_gap[%u], timecost[%u].", m_max_time_gap, timecost);
+
+	if (timecost > m_max_time_gap)
+	{
+		m_max_time_gap = 1;
+	}
+	else
+	{
+		m_max_time_gap -= timecost;
+	}
+
+	// m_op_start = end;
+
+	return m_max_time_gap;
+}
 
 void CTimerInfo::on_error_parse_packet(string errmsg)
 {
@@ -365,14 +386,6 @@ void CTimerInfo::set_service_data(Json::Value & data)
 	data["serviceID"] = m_raw_serviceID;
 }
 
-void CTimerInfo::set_system_data(Json::Value &data)
-{
-	data["userID"]	  = m_raw_userID;
-	data["serviceID"] = m_raw_serviceID;
-	data["sessionID"] = m_sessionID;
-	data["identity"]  = "system";
-}
-
 int CTimerInfo::on_send_request(string cmd, string ip, unsigned short port, const Json::Value &data, bool with_code)
 {
 	Json::Value req;
@@ -389,7 +402,7 @@ int CTimerInfo::on_send_request(string cmd, string ip, unsigned short port, cons
 
 	if (m_proc->EnququeHttp2DCC((char *)strReq.c_str(), strReq.size(), ip, port))
 	{
-		LogError("[%s]: Error send request %s", m_appID.c_str(), cmd.c_str());
+		LogError("[%s]: Failed to send request <%s>!", m_appID.c_str(), cmd.c_str());
 		return -1;
 	}
 	return 0;
@@ -456,9 +469,10 @@ int CTimerInfo::on_send_error_reply(ERROR_TYPE code, string msg, const Json::Val
 
 int CTimerInfo::get_user_session(const string &appID, const string &app_userID, Session *sess)
 {
+	ENSURE_RET(sess);
+	
 	SessionQueue* pSessQueue = NULL;
 	Session temp;
-	
 	if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue)
 		|| pSessQueue->get(app_userID, temp))
 	{

@@ -18,8 +18,8 @@ namespace statsvr
     public:
 		enum STATE
 		{
-			STATE_INIT		= 0,
-			STATE_END		= 255,
+			STATE_INIT = 0,
+			STATE_END  = 255,
 		};
 		
         AdminConfigTimer(CMCDProc* const proc
