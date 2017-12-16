@@ -365,7 +365,7 @@ unsigned ServiceInfo::user_count() const
 	return userList.size();
 }
 
-bool ServiceInfo::is_available(int maxConvNum) const
+inline bool ServiceInfo::is_available(int maxConvNum) const
 {
 	if (OFFLINE == status || user_count() >= maxConvNum)
 	{
@@ -374,6 +374,18 @@ bool ServiceInfo::is_available(int maxConvNum) const
 	else
 	{
 		return true;
+	}
+}
+
+inline bool ServiceInfo::is_busy(int maxConvNum) const
+{
+	if (ONLINE == status && user_count() >= maxConvNum)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
 	}
 }
 

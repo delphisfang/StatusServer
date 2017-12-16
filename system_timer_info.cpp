@@ -103,7 +103,7 @@ int ServiceOutTimer::do_next_step(string& req_data)
 
 int ServiceOutTimer::on_service_timeout()
 {
-	CAppConfig::Instance()->CheckTimeoutServices(m_service_time_gap, m_serviceList);
+	CAppConfig::Instance()->GetTimeoutServices(m_service_time_gap, m_serviceList);
 	if (m_serviceList.size() == 0)
     {
 		LogTrace("no service timeout, do nothing!");

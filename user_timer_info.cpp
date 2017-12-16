@@ -492,7 +492,7 @@ int ConnectServiceTimer::on_queue()
 	}
 	
 	max_conv_num  = CAppConfig::Instance()->getMaxConvNum(m_appID);
-	serviceNum    = CAppConfig::Instance()->GetTagOnlineServiceNumber(m_appID, m_raw_tag);
+	serviceNum    = CAppConfig::Instance()->GetTagOnlineServiceNum(m_appID, m_raw_tag);
 	max_queue_num = serviceNum * max_conv_num * m_proc->m_cfg._queue_rate;
     LogTrace("[%s] serviceNum:%u, max_conv_num:%u, queue rate:%u, max_queue_num: %lu", 
     		m_appID.c_str(), serviceNum, max_conv_num, m_proc->m_cfg._queue_rate, max_queue_num);

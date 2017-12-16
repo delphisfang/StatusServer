@@ -141,19 +141,18 @@ public:
 	int GetTagHighPriQueue(string appID, TagUserQueue* &tuq);
 	
 	int AddSessionQueue(string appID);
-	int UpdateSessionQueue(string appID, string& value);
 	int GetSessionQueue(string appID, SessionQueue* &pSessionQueue);
 	int DelSessionQueue(string appID);
 
-	unsigned GetServiceNumber(string appID);
-	unsigned GetTagServiceNumber(string appID, string raw_tag);
+	unsigned GetServiceNum(string appID);
+	unsigned GetTagServiceNum(string appID, string raw_tag);
 	
-	unsigned GetTagOnlineServiceNumber(string appID, string raw_tag);
-	unsigned GetOnlineServiceNumber(string appID);
-	int AddTagOnlineServiceNumber(string appID, string raw_tag);
-	int DelTagOnlineServiceNumber(string appID, string raw_tag);
+	unsigned GetTagOnlineServiceNum(string appID, string raw_tag);
+	unsigned GetOnlineServiceNum(string appID);
+	int AddTagOnlineServiceNum(string appID, string raw_tag);
+	int DelTagOnlineServiceNum(string appID, string raw_tag);
 
-	int CheckTimeoutServices(long long time_gap, set<string>& serviceList);
+	int GetTimeoutServices(long long time_gap, set<string>& serviceList);
 
 	int checkAppIDExist(string appID);
 	int checkTagExist(string appID, string tag);
@@ -173,11 +172,11 @@ public:
 
 	void getUserListJson(string appID, Json::Value &userList);
 	void getServiceListJson(string appID, Json::Value &userList);
-	void getSessionQueueJson(string appID, Json::Value &sessQueue);
-	void getTagQueueJson(string appID, Json::Value &tags, bool isHighPri);
-	void getTagHighPriQueueJson(string appID, Json::Value &tags);
-	void getTagNormalQueueJson(string appID, Json::Value &tags);
-	void getOnlineServiceNumJson(string appID, Json::Value &tags);
+	void getSessionQueueJson(string appID, Json::Value &data);
+	void getTagQueueJson(string appID, Json::Value &data, bool isHighPri);
+	void getTagHighPriQueueJson(string appID, Json::Value &data);
+	void getTagNormalQueueJson(string appID, Json::Value &data);
+	void getOnlineServiceNumJson(string appID, Json::Value &data);
 	
 private:
 	static CAppConfig *m_instance;

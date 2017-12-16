@@ -88,6 +88,7 @@ namespace statsvr
 		int add_user(const string &raw_userID);
 		unsigned user_count() const;
 		bool is_available(int maxConvNum) const;
+		bool is_busy(int maxConvNum) const;
 		
 		string serviceID;
 		string status;

@@ -298,7 +298,7 @@ void CTimerInfo::on_expire()
 	return;
 }
 
-void CTimerInfo::OpStart()
+inline void CTimerInfo::OpStart()
 {
 	gettimeofday(&m_op_start, NULL);
 }
@@ -374,13 +374,13 @@ void CTimerInfo::on_error_parse_data(string data_name)
 	on_error();
 }
 
-void CTimerInfo::set_user_data(Json::Value &data)
+inline void CTimerInfo::set_user_data(Json::Value &data)
 {
 	data["identity"]  = "user";
 	data["userID"]	  = m_raw_userID;
 }
 
-void CTimerInfo::set_service_data(Json::Value & data)
+inline void CTimerInfo::set_service_data(Json::Value &data)
 {
 	data["identity"]  = "service";
 	data["serviceID"] = m_raw_serviceID;
@@ -425,7 +425,7 @@ int CTimerInfo::on_send_reply(const Json::Value &data)
 	{
 		LogError("searchid[%s]: Failed to SendReply <%s>", m_search_no.c_str(), m_cmd.c_str());
 		m_errno  = ERROR_SYSTEM_WRONG;
-		m_errmsg = "Error send to ChatProxy";
+		m_errmsg = "Error send reply";
 		on_error();
 		return -1;
 	}
@@ -454,7 +454,7 @@ int CTimerInfo::on_send_error_reply(ERROR_TYPE code, string msg, const Json::Val
 	{
 		LogError("searchid[%s]: Failed to SendErrorReply <%s>", m_search_no.c_str(), msg.c_str());
 		m_errno  = ERROR_SYSTEM_WRONG;
-		m_errmsg = "Error send to ChatProxy";
+		m_errmsg = "Error send error reply";
 		on_error();
 		return -1;
 	}
@@ -469,7 +469,8 @@ int CTimerInfo::on_send_error_reply(ERROR_TYPE code, string msg, const Json::Val
 
 int CTimerInfo::get_user_session(const string &appID, const string &app_userID, Session *sess)
 {
-	ENSURE_RET(sess);
+	if (NULL == sess)
+		return SS_ERROR;
 	
 	SessionQueue* pSessQueue = NULL;
 	Session temp;
@@ -574,9 +575,8 @@ int CTimerInfo::get_service_json(const string &appID, const ServiceInfo &serv, J
 	}
 	servJson["queueNumber"] = queueNum;
 	
-	//当前服务人数>=最大会话人数时，返回busy
 	int maxConvNum = CAppConfig::Instance()->getMaxConvNum(appID);
-	if ("online" == serv.status && serv.user_count() >= maxConvNum)
+	if (true == serv.is_busy(maxConvNum))
 	{
 		servJson["status"] = "busy";
 	}
@@ -1011,9 +1011,7 @@ int CTimerInfo::DeleteService(string app_servID)
 int CTimerInfo::UpdateUserSession(string appID, string app_userID, Session *sess)
 {
 	if (NULL == sess)
-	{
 		return SS_ERROR;
-	}
 	
 	long long gap_warn	 = ("" != sess->serviceID) ? (DEF_SESS_TIMEWARN) : (MAX_INT);
 	long long gap_expire = ("" != sess->serviceID) ? (DEF_SESS_TIMEOUT) : (MAX_INT);
@@ -1048,7 +1046,7 @@ int CTimerInfo::AddTagOnlineServNum(string appID, const ServiceInfo &serv)
 
 	for (set<string>::iterator it = serv.tags.begin(); it != serv.tags.end(); it++)
 	{
-		DO_FAIL(CAppConfig::Instance()->AddTagOnlineServiceNumber(appID, *it));
+		DO_FAIL(CAppConfig::Instance()->AddTagOnlineServiceNum(appID, *it));
 	}
 	return 0;
 }
@@ -1064,7 +1062,7 @@ int CTimerInfo::DelTagOnlineServNum(string appID, const ServiceInfo &serv)
 	
 	for (set<string>::iterator it = serv.tags.begin(); it != serv.tags.end(); it++)
 	{
-		DO_FAIL(CAppConfig::Instance()->DelTagOnlineServiceNumber(appID, *it));
+		DO_FAIL(CAppConfig::Instance()->DelTagOnlineServiceNum(appID, *it));
 	}
 	return 0;
 }

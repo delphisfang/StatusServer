@@ -370,7 +370,7 @@ int AdminConfigTimer::get_app_today_status(string appID, Json::Value &appList)
 	}
 
 	/* 在线客服人数 */
-	onlineServiceNumber = CAppConfig::Instance()->GetOnlineServiceNumber(appID);
+	onlineServiceNumber = CAppConfig::Instance()->GetOnlineServiceNum(appID);
 
 	Json::Value app_data;
 	app_data["appID"]         = atoi(appID.c_str());

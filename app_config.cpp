@@ -144,8 +144,6 @@ int CAppConfig::UpdateappIDConf (const Json::Value &push_config_req)
 		
 		if (!appID_conf["tags"].isNull() && appID_conf["tags"].isArray())
 		{
-			string tags = "";
-
 			TagUserQueue *pTagQueues = NULL;
 			TagUserQueue *pTagHighPriQueues = NULL;
 			
@@ -177,6 +175,7 @@ int CAppConfig::UpdateappIDConf (const Json::Value &push_config_req)
 			assert(pTagHighPriQueues != NULL);
 			
 			int tagsNum = appID_conf["tags"].size();
+			string tags = "";
 			for (int j = 0; j < tagsNum; j++)
 			{
 				string tag_key = appID + "_" + appID_conf["tags"][j].asString();
@@ -207,7 +206,7 @@ int CAppConfig::UpdateappIDConf (const Json::Value &push_config_req)
 	return 0;
 }
 
-int CAppConfig::SetNowappIDList (string& value)
+int CAppConfig::SetNowappIDList(string& value)
 {
 	SetValue("0", "appIDlist", value);
 	//LogDebug("SetNowappIDList(%s) finish", value.c_str());
@@ -222,7 +221,7 @@ int CAppConfig::GetNowappIDList(string& value)
 
 void CAppConfig::DelappID(string appID)
 {
-	LogDebug("Delete all data structures of appID: %s", appID.c_str());
+	LogDebug("Delete all Data Structs of appID: %s", appID.c_str());
 	DelVersion(appID);
 	DelConf(appID);
 	#if 0
@@ -275,21 +274,18 @@ int CAppConfig::GetVersion(string appID)
 {
 	int version;
 	GetValue(appID, "version", version);
-	//LogDebug("[GetVersion] appID:[%s], version:[%d]\n", appID.c_str() ,version);
 	return version;
 }
 
 int CAppConfig::SetVersion(string appID, uint32_t version)
 {
 	SetValue(appID, "version", (int)version);
-	//LogDebug("[SetVersion] appID:[%s], version:[%d]\n", appID.c_str() ,version);
 	return 0;
 }
 
 int CAppConfig::DelVersion(string appID)
 {
 	DelValue(appID, "version");
-	//LogDebug("[DelVersion] appID:[%s]\n", appID.c_str());
 	return 0;
 }
 
@@ -311,7 +307,7 @@ int CAppConfig::GetConf(string appID, string& conf)
 	return 0;
 }
 
-int CAppConfig::DelValue (string appID, const string &key)
+int CAppConfig::DelValue(string appID, const string &key)
 {
 	string relkey = appID + "_" + key;
 	map<string, string>::iterator it1;
@@ -330,7 +326,7 @@ int CAppConfig::DelValue (string appID, const string &key)
 }
 
 
-int CAppConfig::SetValue (string appID, const string &key, int val)
+int CAppConfig::SetValue(string appID, const string &key, int val)
 {
 	string relkey = appID + "_" + key;
 	mapConfigInt[relkey] = val;
@@ -338,14 +334,14 @@ int CAppConfig::SetValue (string appID, const string &key, int val)
 }
 
 
-int CAppConfig::SetValue (string appID, const string &key, const string &val)
+int CAppConfig::SetValue(string appID, const string &key, const string &val)
 {
 	string relkey = appID + "_" + key;
 	mapConfigString[relkey] = val;
 	return 0;
 }
 
-int CAppConfig::GetValue (string appID, const string &key, int &val)
+int CAppConfig::GetValue(string appID, const string &key, int &val)
 {
 	map<string, int>::iterator it;
 	string relkey = appID + "_" + key;
@@ -362,7 +358,7 @@ int CAppConfig::GetValue (string appID, const string &key, int &val)
 	}
 }
 
-int CAppConfig::GetValue (string appID, const string &key, string &val)
+int CAppConfig::GetValue(string appID, const string &key, string &val)
 {
 	map<string, string>::iterator it;
 	string relkey = appID + "_" + key;
@@ -551,7 +547,7 @@ int CAppConfig::AddTagServiceHeap(const string& app_tag)
 	it = tagServiceHeap.find(app_tag);
 	if (it == tagServiceHeap.end())
 	{
-		LogDebug("Add service heap for tag: %s", app_tag.c_str());
+		LogDebug("Add TagServiceHeap[%s]", app_tag.c_str());
 		ServiceHeap serviceHeap;
 		tagServiceHeap[app_tag] = serviceHeap;
 	}
@@ -561,14 +557,14 @@ int CAppConfig::AddTagServiceHeap(const string& app_tag)
 int CAppConfig::UpdateTagServiceHeap(const string& app_tag, const string& value)
 {
 	ServiceHeap serviceHeap(value);
-	LogTrace("Update TagServiceHeap[%s]:%s", app_tag.c_str(), serviceHeap.toString().c_str());
+	LogTrace("Update TagServiceHeap[%s]: %s", app_tag.c_str(), serviceHeap.toString().c_str());
 	tagServiceHeap[app_tag] = serviceHeap;
 	return 0;
 }
 
 int CAppConfig::UpdateTagServiceHeap(const string& app_tag, const ServiceHeap& serviceHeap)
 {
-	LogTrace("Update TagServiceHeap[%s]:%s", app_tag.c_str(), serviceHeap.toString().c_str());
+	LogTrace("Update TagServiceHeap[%s]: %s", app_tag.c_str(), serviceHeap.toString().c_str());
 	tagServiceHeap[app_tag] = serviceHeap;
 	return 0;
 }
@@ -615,7 +611,7 @@ int CAppConfig::AddService2Tags(const string &appID, ServiceInfo &serv)
 		string app_tag = appID + "_" + (*it);
 		if (CAppConfig::Instance()->GetTagServiceHeap(app_tag, servHeap))
 		{
-			LogError("Fail to find service heap for tag: %s!", app_tag.c_str());
+			LogError("Fail to get ServiceHeap of tag: %s!", app_tag.c_str());
 			continue;
 		}
 
@@ -623,7 +619,7 @@ int CAppConfig::AddService2Tags(const string &appID, ServiceInfo &serv)
 
 		if (CAppConfig::Instance()->UpdateTagServiceHeap(app_tag, servHeap))
 		{
-			LogError("Fail to update service heap for tag: %s!", app_tag.c_str());
+			LogError("Fail to update ServiceHeap of tag: %s!", app_tag.c_str());
 			continue;
 		}
 	}
@@ -641,7 +637,7 @@ int CAppConfig::DelServiceFromTags(const string &appID, ServiceInfo &serv)
 		string app_tag = appID + "_" + (*it);
 		if (CAppConfig::Instance()->GetTagServiceHeap(app_tag, servHeap))
 		{
-			LogError("Fail to find service heap for tag: %s", app_tag.c_str());
+			LogError("Fail to find ServiceHeap of tag: %s", app_tag.c_str());
 			continue;
 		}
 
@@ -649,7 +645,7 @@ int CAppConfig::DelServiceFromTags(const string &appID, ServiceInfo &serv)
 
 		if (CAppConfig::Instance()->UpdateTagServiceHeap(app_tag, servHeap))
 		{
-			LogError("Fail to update service heap for tag: %s", app_tag.c_str());
+			LogError("Fail to update ServiceHeap of tag: %s", app_tag.c_str());
 			continue;
 		}
 	}
@@ -667,7 +663,7 @@ int CAppConfig::CanOfferService(const ServiceHeap& servHeap, int maxConvNum)
 		{
 			continue;
 		}
-		else if (serv.user_count() < maxConvNum && "offline" != serv.status)
+		else if (true == serv.is_available(maxConvNum))
 		{
 			return 0;
 		}
@@ -688,12 +684,10 @@ int CAppConfig::CanAppOfferService(const string& appID)
 
 	for (int i = 0; i < tags.size(); ++i)
 	{
-		//LogTrace("====> tags[%d]: %s", i, tags[i].c_str());
-		
         ServiceHeap servHeap;
         if (CAppConfig::Instance()->GetTagServiceHeap(tags[i], servHeap))
         {
-			LogWarn("Failed to get service heap for tag: %s, find next service heap!", tags[i].c_str());
+			LogWarn("Failed to get ServiceHeap of tag: %s, find next ServiceHeap!", tags[i].c_str());
             continue;
         }
 
@@ -834,47 +828,6 @@ int CAppConfig::AddSessionQueue(string appID)
 	return 0;
 }
 
-int CAppConfig::UpdateSessionQueue(string appID, string& value)
-{
-	map<string, SessionQueue*>::iterator it;
-	SessionQueue* pSessionQueue = NULL;
-	int timeWarn  = 0;
-	int timeout = 0;
-	
-	it = appSessionQueue.find(appID);
-	if (it == appSessionQueue.end())
-	{
-		return -1;
-	}
-	else
-	{
-		pSessionQueue = it->second;
-	}
-
-	Session session(value);
-	if (GetValue(appID, "session_timewarn", timeWarn) || timeWarn == 0)
-	{
-		timeWarn = 10 * 60;
-	}
-	else
-	{
-		timeWarn *= 60;
-	}
-	
-	if (GetValue(appID, "session_timeout", timeout) || timeout == 0)
-	{
-		timeout = 15 * 60;
-	}
-	else
-	{
-		timeout *= 60;
-	}
-	
-	pSessionQueue->insert(session.userID, &session, timeWarn, timeout);
-	return 0;
-}
-
-
 int CAppConfig::GetSessionQueue(string appID, SessionQueue* &pSessionQueue)
 {
 	map<string, SessionQueue*>::iterator it;
@@ -901,37 +854,40 @@ int CAppConfig::DelSessionQueue(string appID)
 	return 0;
 }
 
-unsigned CAppConfig::GetTagServiceNumber(string appID, string raw_tag)
+unsigned CAppConfig::GetServiceNum(string appID)
 {
-	map<string, ServiceHeap>::iterator it;
-	ServiceHeap sh;
-	string key = appID + "_" + raw_tag;
+	return _servicelist.size();
+}
+
+
+//1个service可以属于多个tag，不要重复计算
+unsigned CAppConfig::GetTagServiceNum(string appID, string raw_tag)
+{
+	string app_tag = appID + "_" + raw_tag;
 	
-	it = tagServiceHeap.begin();
-	while (it != tagServiceHeap.end())
+	map<string, ServiceHeap>::iterator it;
+	for (it = tagServiceHeap.begin(); it != tagServiceHeap.end(); ++it)
 	{
-		if (key == it->first)
+		if (app_tag == it->first)
 		{
-			sh = it->second;
-			return sh.size();
+			return (it->second).size();
 		}
-		it++;
 	}
 	
 	return 0;
 }
 
-unsigned CAppConfig::GetServiceNumber(string appID)
+
+unsigned CAppConfig::GetOnlineServiceNum(string appID)
 {
-	map<string, ServiceInfo>::iterator it;
 	unsigned servNum = 0;
 
+	map<string, ServiceInfo>::iterator it;
 	for (it = _servicelist.begin(); it != _servicelist.end(); ++it)
 	{
 		if (appID == getappID(it->first))
 		{
-			ServiceInfo serv;
-			if (0 == GetService(it->first, serv))
+			if ("offline" != (it->second).status)
 			{
 				++servNum;
 			}
@@ -941,32 +897,11 @@ unsigned CAppConfig::GetServiceNumber(string appID)
 	return servNum;
 }
 
-//注意，1个service可以属于多个tag，不要重复计算
-unsigned CAppConfig::GetOnlineServiceNumber(string appID)
+int CAppConfig::AddTagOnlineServiceNum(string appID, string raw_tag)
 {
-	unsigned servNum = 0;
-
-	map<string, ServiceInfo>::iterator it;
-	for (it = _servicelist.begin(); it != _servicelist.end(); ++it)
-	{
-		if (appID == getappID(it->first))
-		{
-			ServiceInfo serv;
-			if (0 == GetService(it->first, serv) && "offline" != serv.status)
-			{
-				++servNum;
-			}
-		}
-	}
-	
-	return servNum;
-}
-
-int CAppConfig::AddTagOnlineServiceNumber(string appID, string raw_tag)
-{
-	map<string, unsigned>::iterator it;
 	string app_tag = appID + "_" + raw_tag;
-	
+
+	map<string, unsigned>::iterator it;
 	it = mapOnlineServiceNumber.find(app_tag);
 	if (it == mapOnlineServiceNumber.end())
 	{	
@@ -980,7 +915,7 @@ int CAppConfig::AddTagOnlineServiceNumber(string appID, string raw_tag)
 	return 0;
 }
 
-unsigned CAppConfig::GetTagOnlineServiceNumber(string appID, string raw_tag)
+unsigned CAppConfig::GetTagOnlineServiceNum(string appID, string raw_tag)
 {
 	unsigned servNum = 0;
 
@@ -1009,12 +944,11 @@ unsigned CAppConfig::GetTagOnlineServiceNumber(string appID, string raw_tag)
 }
 
 
-int CAppConfig::DelTagOnlineServiceNumber(string appID, string raw_tag)
+int CAppConfig::DelTagOnlineServiceNum(string appID, string raw_tag)
 {
-	map<string, unsigned>::iterator it;
 	string app_tag = appID + "_" + raw_tag;
-	
-	it = mapOnlineServiceNumber.find(app_tag);
+
+	map<string, unsigned>::iterator it = mapOnlineServiceNumber.find(app_tag);
 	if (it == mapOnlineServiceNumber.end())
 	{
 		mapOnlineServiceNumber[app_tag] = 0;
@@ -1028,16 +962,15 @@ int CAppConfig::DelTagOnlineServiceNumber(string appID, string raw_tag)
 }
 
 
-///TODO: 优化性能
-int CAppConfig::CheckTimeoutServices(long long time_gap, set<string>& serviceList)
+int CAppConfig::GetTimeoutServices(long long time_gap, set<string>& serviceList)
 {
 	long long nowTime = time(NULL);
-	map<string, ServiceInfo>::iterator it;
+	long long atime;
 	
+	map<string, ServiceInfo>::iterator it;
 	for (it = _servicelist.begin(); it != _servicelist.end(); ++it)
 	{
-		ServiceInfo serv = it->second;
-		long long atime  = (serv.atime / 1000);
+		atime = ((it->second).atime / 1000);
 		if (nowTime >= atime + time_gap)
 		{
 			serviceList.insert(it->first);
@@ -1045,8 +978,6 @@ int CAppConfig::CheckTimeoutServices(long long time_gap, set<string>& serviceLis
 	}
 	return 0;
 }
-
-
 
 
 int CAppConfig::checkAppIDExist(string appID)
@@ -1077,23 +1008,21 @@ int CAppConfig::checkAppIDExist(string appID)
 	return -1;
 }
 
-/* tag is with appID prefix */ 
-int CAppConfig::checkTagExist(string appID, string tag)
+
+int CAppConfig::checkTagExist(string appID, string app_tag)
 {
 	string strTags;
-	vector<string> tags;
-
 	if (GetValue(appID, "tags", strTags))
 	{
-		LogError("[%s]: get appID tags failed.", appID.c_str());
+		LogError("Failed to get tags of appID[%s]!", appID.c_str());
 		return -1;
 	}
 
+	vector<string> tags;
 	MySplitTag((char *)strTags.c_str(), ";", tags);
-	for (int i = 0; i < tags.size(); i++)
+	for (int i = 0; i < tags.size(); ++i)
 	{
-		//LogDebug("tag: %s, tags[i]: %s", tag.c_str(), tags[i].c_str());
-		if (tag == tags[i])
+		if (app_tag == tags[i])
 		{
 			return 0;
 		}
@@ -1101,12 +1030,13 @@ int CAppConfig::checkTagExist(string appID, string tag)
 	return -1;
 }
 
+
 long long CAppConfig::getDefaultSessionTimeWarn(string appID)
 {
 	int session_timewarn = 0;
 	
 	if (CAppConfig::Instance()->GetValue(appID, "session_timewarn", session_timewarn) 
-		|| session_timewarn == 0)
+		|| 0 == session_timewarn)
 	{
 		session_timewarn = 10 * 60;
 	}
@@ -1123,7 +1053,7 @@ long long CAppConfig::getDefaultSessionTimeOut(string appID)
 	int session_timeout = 0;
 	
 	if (CAppConfig::Instance()->GetValue(appID, "session_timeout", session_timeout) 
-		|| session_timeout == 0)
+		|| 0 == session_timeout)
 	{
 		session_timeout = 15 * 60;
 	}
@@ -1138,7 +1068,8 @@ long long CAppConfig::getDefaultQueueTimeout(string appID)
 {
 	int queue_timeout = 0;
 	
-    if (CAppConfig::Instance()->GetValue(appID, "queue_timeout", queue_timeout) || 0 == queue_timeout)
+    if (CAppConfig::Instance()->GetValue(appID, "queue_timeout", queue_timeout) 
+		|| 0 == queue_timeout)
     {
         queue_timeout = 30 * 60;
     }
@@ -1151,9 +1082,10 @@ long long CAppConfig::getDefaultQueueTimeout(string appID)
 
 int CAppConfig::getMaxConvNum(string appID)
 {
-	int max_conv_num        = 0;
+	int max_conv_num = 0;
 	
-	if (CAppConfig::Instance()->GetValue(appID, "max_conv_num", max_conv_num) || 0 == max_conv_num)
+	if (CAppConfig::Instance()->GetValue(appID, "max_conv_num", max_conv_num) 
+		|| 0 == max_conv_num)
     {
         max_conv_num = 5;
     }
@@ -1165,7 +1097,8 @@ int CAppConfig::getUserQueueNum(string appID)
 {
 	int user_queue_num = 1;
 
-    if (CAppConfig::Instance()->GetValue(appID, "check_user_queue_num", user_queue_num) || 0 == user_queue_num)
+    if (CAppConfig::Instance()->GetValue(appID, "check_user_queue_num", user_queue_num) 
+		|| 0 == user_queue_num)
     {
 		user_queue_num = 1;
     }
@@ -1261,14 +1194,14 @@ void CAppConfig::getServiceListJson(string appID, Json::Value &servList)
 	}
 }
 
-void CAppConfig::getSessionQueueJson(string appID, Json::Value &sessQueue)
+void CAppConfig::getSessionQueueJson(string appID, Json::Value &data)
 {
 	SessionQueue *pSessQueue = NULL;
 	SessionTimer sessTimer;
 	Session sess;
 	Json::Value sessJson;
 
-	sessQueue.resize(0);
+	data.resize(0);
 	
 	map<string, SessionQueue*>::iterator it;
 	list<SessionTimer>::iterator it2;
@@ -1286,23 +1219,16 @@ void CAppConfig::getSessionQueueJson(string appID, Json::Value &sessQueue)
 			sess = sessTimer.session;
 			sess.toJson(sessJson);
 
-			sessQueue.append(sessJson);
+			data.append(sessJson);
 		}
 	}
 }
 
-void CAppConfig::getTagQueueJson(string appID, Json::Value &tags, bool isHighPri)
+void CAppConfig::getTagQueueJson(string appID, Json::Value &data, bool isHighPri)
 {
-	TagUserQueue *pTags = NULL;
-	UserQueue *uq = NULL;
-	UserTimer ut;
+	data.resize(0);
 
-	tags.resize(0);
-	
 	map<string, TagUserQueue*>::iterator it;
-	map<string, UserQueue*>::iterator it2;
-	list<UserTimer>::iterator it3;
-
 	if (true == isHighPri)
 	{
 		it = appTagHighPriQueues.find(appID);
@@ -1319,10 +1245,16 @@ void CAppConfig::getTagQueueJson(string appID, Json::Value &tags, bool isHighPri
 			return;
 		}
 	}
-	
-	pTags = it->second;
 
-	for (it2 = pTags->_tag_queue.begin(); it2 != pTags->_tag_queue.end(); it2++)
+	TagUserQueue *pTags = it->second;
+	if (NULL == pTags)
+	{
+		return;
+	}
+	
+	map<string, UserQueue*>::iterator it2;
+	UserQueue *uq = NULL;
+	for (it2 = pTags->_tag_queue.begin(); it2 != pTags->_tag_queue.end(); ++it2)
 	{
 		Json::Value tagJson;
 		tagJson["tag"] = it2->first;
@@ -1331,43 +1263,43 @@ void CAppConfig::getTagQueueJson(string appID, Json::Value &tags, bool isHighPri
 		queueJson.resize(0);
 
 		uq = it2->second;
-		for (it3 = uq->_user_list.begin(); it3 != uq->_user_list.end(); it3++)
+		
+		for (list<UserTimer>::iterator it3 = uq->_user_list.begin(); it3 != uq->_user_list.end(); ++it3)
 		{
-			ut = (*it3);
 			Json::Value userJson;
-			userJson["expire_time"] = ut.expire_time;
-			userJson["userID"] = ut.userID;
+			userJson["expire_time"] = (*it3).expire_time;
+			userJson["userID"]      = (*it3).userID;
 
 			queueJson.append(userJson);
 		}
 		tagJson["userQueue"] = queueJson;
-		tags.append(tagJson);
+		data.append(tagJson);
 	}
 }
 
-void CAppConfig::getTagHighPriQueueJson(string appID, Json::Value &tags)
+void CAppConfig::getTagHighPriQueueJson(string appID, Json::Value &data)
 {
-	getTagQueueJson(appID, tags, true);
+	getTagQueueJson(appID, data, true);
 }
 
 
-void CAppConfig::getTagNormalQueueJson(string appID, Json::Value &tags)
+void CAppConfig::getTagNormalQueueJson(string appID, Json::Value &data)
 {
-	getTagQueueJson(appID, tags, false);
+	getTagQueueJson(appID, data, false);
 }
 
-void CAppConfig::getOnlineServiceNumJson(string appID, Json::Value &tags)
+void CAppConfig::getOnlineServiceNumJson(string appID, Json::Value &data)
 {
 	map<string, unsigned>::iterator it;
 
-	tags = Json::objectValue;
+	data = Json::objectValue;
 	for (it = mapOnlineServiceNumber.begin(); it != mapOnlineServiceNumber.end(); it++)
 	{
 		string app_tag = it->first;
 		if (appID == getappID(app_tag))
 		{
 			string raw_tag = delappID(app_tag);
-			tags[raw_tag]   = it->second;
+			data[raw_tag]   = it->second;
 		}
 	}
 }
