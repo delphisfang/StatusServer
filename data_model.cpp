@@ -236,6 +236,7 @@ ServiceInfo::ServiceInfo()
 	userList.clear();
 	serviceName.clear();
 	serviceAvatar.clear();
+	maxUserNum = DEF_USER_NUM;
 	//whereFrom.clear();
 }
 
@@ -250,6 +251,7 @@ ServiceInfo::~ServiceInfo()
 	userList.clear();
 	serviceName.clear();
 	serviceAvatar.clear();
+	maxUserNum = DEF_USER_NUM;
 	//whereFrom.clear();
 }
 
@@ -276,6 +278,7 @@ ServiceInfo::ServiceInfo(const string& strServiceInfo)
 	cpPort			 = get_value_uint(value, CP_PORT);
 	serviceName 	 = get_value_str(value, SERV_NAME);
 	serviceAvatar    = get_value_str(value, SERV_AVATAR);
+	maxUserNum       = DEF_USER_NUM;
 	//whereFrom 	 = value["whereFrom"].asString();
 
 	unsigned tagsLen = value["tags"].size();
@@ -300,6 +303,7 @@ void ServiceInfo::toJson(Json::Value &value) const
 	value[CP_PORT]     = cpPort;
 	value[SERV_NAME]   = serviceName;
 	value[SERV_AVATAR] = serviceAvatar;
+	value["maxUserNum"] = maxUserNum;
 	//value["whereFrom"] = whereFrom;
 
 	Json::Value arrayTags;
@@ -365,9 +369,9 @@ unsigned ServiceInfo::user_count() const
 	return userList.size();
 }
 
-inline bool ServiceInfo::is_available(int maxConvNum) const
+inline bool ServiceInfo::is_available() const
 {
-	if (OFFLINE == status || user_count() >= maxConvNum)
+	if (OFFLINE == status || user_count() >= maxUserNum)
 	{
 		return false;
 	}
@@ -377,9 +381,9 @@ inline bool ServiceInfo::is_available(int maxConvNum) const
 	}
 }
 
-inline bool ServiceInfo::is_busy(int maxConvNum) const
+inline bool ServiceInfo::is_busy() const
 {
-	if (ONLINE == status && user_count() >= maxConvNum)
+	if (ONLINE == status && user_count() >= maxUserNum)
 	{
 		return true;
 	}

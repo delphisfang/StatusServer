@@ -653,7 +653,7 @@ int CAppConfig::DelServiceFromTags(const string &appID, ServiceInfo &serv)
 	return 0;
 }
 
-int CAppConfig::CanOfferService(const ServiceHeap& servHeap, int maxConvNum)
+int CAppConfig::CanOfferService(const ServiceHeap& servHeap)
 {
 	for (set<string>::iterator i = servHeap._servlist.begin(); i != servHeap._servlist.end(); i++)
 	{
@@ -663,7 +663,7 @@ int CAppConfig::CanOfferService(const ServiceHeap& servHeap, int maxConvNum)
 		{
 			continue;
 		}
-		else if (true == serv.is_available(maxConvNum))
+		else if (true == serv.is_available())
 		{
 			return 0;
 		}
@@ -676,9 +676,7 @@ int CAppConfig::CanAppOfferService(const string& appID)
 {
     string strTags;
     vector<string> tags;
-	int maxConvNum = 0;
 	
-	maxConvNum = CAppConfig::Instance()->getMaxConvNum(appID);
 	CAppConfig::Instance()->GetValue(appID, "tags", strTags);
     MySplitTag((char *)strTags.c_str(), ";", tags);
 
@@ -695,7 +693,7 @@ int CAppConfig::CanAppOfferService(const string& appID)
 		{
 			ServiceInfo serv;
 
-			if (CAppConfig::Instance()->GetService(*it, serv) || false == serv.is_available(maxConvNum))
+			if (CAppConfig::Instance()->GetService(*it, serv) || false == serv.is_available())
 			{
 				continue;
 			}

@@ -499,7 +499,7 @@ int UserServiceTimer::on_user_lastService()
 
 	DO_FAIL(CAppConfig::Instance()->GetService(m_lastServiceID, m_serviceInfo));
 
-	if (false == m_serviceInfo.is_available(m_serverNum))
+	if (false == m_serviceInfo.is_available())
 	{
         LogError("[%s]: Last service[%s] is offline/busy!", m_appID.c_str(), m_lastServiceID.c_str());
 		return SS_ERROR;
@@ -543,7 +543,7 @@ int UserServiceTimer::on_user_common()
 				continue;
 			}
 
-			if (false == m_serviceInfo.is_available(m_serverNum))
+			if (false == m_serviceInfo.is_available())
             {
 				LogWarn("Service[%s] is offline/busy, find next service!", (*it).c_str());
                 continue;
@@ -608,8 +608,6 @@ int UserServiceTimer::on_dequeue_first_user()
 
 	//获取user的session，后续使用
 	GET_SESS(get_user_session(m_appID, m_userID, &m_session));
-	//获取最大会话数，后续使用
-	m_serverNum = CAppConfig::Instance()->getMaxConvNum(m_appID);
 
 	//排队队列删除user
 	SET_USER(uq->delete_user(m_userID));

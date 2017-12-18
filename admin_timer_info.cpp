@@ -306,7 +306,6 @@ int AdminConfigTimer::on_admin_getServiceStatus()
 	
 	string app_serviceID;
 	
-    int maxConvNum = CAppConfig::Instance()->getMaxConvNum(m_appID);
 	for (set<string>::iterator it = m_serviceID_list.begin(); it != m_serviceID_list.end(); it++)
 	{
 		app_serviceID = (*it);
@@ -322,7 +321,7 @@ int AdminConfigTimer::on_admin_getServiceStatus()
 		{
 			servInfo["serviceStatus"]    = serv.status;
 			//当前服务人数>=最大会话人数时，返回busy
-	        if (serv.status == "online" && serv.user_count() >= maxConvNum)
+	        if (true == serv.is_busy())
 	        {
 	            servInfo["serviceStatus"] = "busy";
 	        }

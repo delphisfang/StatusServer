@@ -350,8 +350,6 @@ int ChangeServiceTimer::on_change_service()
 		return SS_ERROR;
     }
 
-	m_maxConvNum = CAppConfig::Instance()->getMaxConvNum(m_appID);
-	
 	if ("" != m_raw_changeServiceID)
 	{
 		DO_FAIL(on_change_service_by_serviceID());
@@ -380,7 +378,7 @@ int ChangeServiceTimer::on_change_service_by_serviceID()
 	}
 
 	//目标坐席忙
-	if (m_dst_serviceInfo.user_count() >= m_maxConvNum)
+	if (true == m_dst_serviceInfo.is_busy())
 	{
 		on_service_busy();
 		return SS_ERROR;

@@ -472,7 +472,6 @@ int ConnectServiceTimer::on_appoint_service()
 
 int ConnectServiceTimer::on_queue()
 {
-	unsigned max_conv_num    = 0;
 	long long queue_timeout  = 0;
 	unsigned long max_queue_num   = 0;
 	bool serviceWithNoQueue  = false;
@@ -491,11 +490,10 @@ int ConnectServiceTimer::on_queue()
 		return on_appoint_service();
 	}
 	
-	max_conv_num  = CAppConfig::Instance()->getMaxConvNum(m_appID);
 	serviceNum    = CAppConfig::Instance()->GetTagOnlineServiceNum(m_appID, m_raw_tag);
-	max_queue_num = serviceNum * max_conv_num * m_proc->m_cfg._queue_rate;
+	max_queue_num = serviceNum * DEF_USER_NUM * m_proc->m_cfg._queue_rate;
     LogTrace("[%s] serviceNum:%u, max_conv_num:%u, queue rate:%u, max_queue_num: %lu", 
-    		m_appID.c_str(), serviceNum, max_conv_num, m_proc->m_cfg._queue_rate, max_queue_num);
+    		m_appID.c_str(), serviceNum, DEF_USER_NUM, m_proc->m_cfg._queue_rate, max_queue_num);
 
 	//无客服在线
 	if (serviceNum <= 0)

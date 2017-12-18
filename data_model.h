@@ -87,8 +87,8 @@ namespace statsvr
 		int find_user(const string &raw_userID);
 		int add_user(const string &raw_userID);
 		unsigned user_count() const;
-		bool is_available(int maxConvNum) const;
-		bool is_busy(int maxConvNum) const;
+		bool is_available() const;
+		bool is_busy() const;
 		
 		string serviceID;
 		string status;
@@ -99,7 +99,7 @@ namespace statsvr
 	    set<string> userList;
 		string   serviceName;
 		string   serviceAvatar;
-		unsigned maxConvNum;
+		unsigned maxUserNum;
 		//string	 whereFrom;
 	};
 

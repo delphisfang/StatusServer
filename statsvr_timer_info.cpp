@@ -631,8 +631,7 @@ int CTimerInfo::get_service_json(const string &appID, const ServiceInfo &serv, J
 	//获取排队人数
 	servJson["queueNumber"] = get_service_queuenum(appID, serv);
 	
-	int maxConvNum = CAppConfig::Instance()->getMaxConvNum(appID);
-	if (true == serv.is_busy(maxConvNum))
+	if (true == serv.is_busy())
 	{
 		servJson["status"] = "busy";
 	}
@@ -671,8 +670,6 @@ int CTimerInfo::find_random_service_by_tag(const string &appID, const string &ap
         return SS_ERROR;
     }
 
-	int maxConvNum = CAppConfig::Instance()->getMaxConvNum(appID);
-	
 	//随机分配一个坐席
     srand((unsigned)time(NULL));
     int j = rand() % servHeap.size();
@@ -688,7 +685,7 @@ int CTimerInfo::find_random_service_by_tag(const string &appID, const string &ap
     {
 		//排除old_app_serviceID
 		//如果坐席的服务人数已满，就分配下一个坐席
-        if (old_app_serviceID == (*it) || CAppConfig::Instance()->GetService(*it, target_serv) || !target_serv.is_available(maxConvNum))
+        if (old_app_serviceID == (*it) || CAppConfig::Instance()->GetService(*it, target_serv) || !target_serv.is_available())
         {
 			if (old_app_serviceID == (*it))
 			{
@@ -696,7 +693,7 @@ int CTimerInfo::find_random_service_by_tag(const string &appID, const string &ap
 			}
 			else
 			{
-				LogWarn("service[%s]: user_count[%d], maxConvNum[%d]", target_serv.serviceID.c_str(), target_serv.user_count(), maxConvNum);
+				LogWarn("service[%s]: user_count[%d], maxConvNum[%d]", target_serv.serviceID.c_str(), target_serv.user_count(), target_serv.maxUserNum);
 			}
 
 			++it;
@@ -732,7 +729,6 @@ int CTimerInfo::find_least_service_by_tag(const string &appID, const string &app
         return SS_ERROR;
     }
 
-	int maxConvNum = CAppConfig::Instance()->getMaxConvNum(appID);
 	double service_load = 0.0, min_load = 1.0; //important
 	set<string>::iterator target_it = servHeap._servlist.end();
 	
@@ -741,7 +737,7 @@ int CTimerInfo::find_least_service_by_tag(const string &appID, const string &app
 	for (it = servHeap._servlist.begin(); it != servHeap._servlist.end(); ++it)
     {
 		//排除old_app_serviceID
-        if (old_app_serviceID == (*it) || CAppConfig::Instance()->GetService(*it, serv) || !serv.is_available(maxConvNum))
+        if (old_app_serviceID == (*it) || CAppConfig::Instance()->GetService(*it, serv) || !serv.is_available())
         {
 			if (old_app_serviceID == (*it))
 			{
@@ -749,14 +745,14 @@ int CTimerInfo::find_least_service_by_tag(const string &appID, const string &app
 			}
 			else
 			{
-				LogWarn("service[%s]: user_count[%d], maxConvNum[%d]", serv.serviceID.c_str(), serv.user_count(), maxConvNum);
+				LogWarn("service[%s]: user_count[%d], maxConvNum[%d]", serv.serviceID.c_str(), serv.user_count(), serv.maxUserNum);
 			}
 			
 			continue;
         }
         else
         {
-			service_load = (double)serv.user_count() / (double)maxConvNum;
+			service_load = (double)serv.user_count() / (double)serv.maxUserNum;
 			if (service_load < min_load)
 			{
 				min_load    = service_load;

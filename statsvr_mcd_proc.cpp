@@ -1263,8 +1263,6 @@ void CMCDProc::DispatchUser2Service()
             continue;
         }
 
-        int serverNum = CAppConfig::Instance()->getMaxConvNum(appID);
-		
         string strTags;
         vector<string> tags;
         if (CAppConfig::Instance()->GetValue(appID, "tags", strTags))
@@ -1284,7 +1282,7 @@ void CMCDProc::DispatchUser2Service()
 
 			//LogTrace("tag: %s", tags[i].c_str());
             getTag    = CAppConfig::Instance()->GetTagServiceHeap(tags[i], serviceHeap);
-            offServer = CAppConfig::Instance()->CanOfferService(serviceHeap, serverNum);
+            offServer = CAppConfig::Instance()->CanOfferService(serviceHeap);
             if (getTag || offServer)
             {
 				//LogDebug("No service available");
