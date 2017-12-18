@@ -154,7 +154,7 @@ int GetUserInfoTimer::on_get_userinfo()
 		//update session["notified"]
 		if (1 == m_notify)
 		{
-			DO_FAIL(update_session_notified(m_appID, m_userID));
+			DO_FAIL(UpdateSessionNotified(m_appID, m_userID));
 		}
 		
 		++i;
@@ -220,7 +220,7 @@ int UserOnlineTimer::on_user_online()
 			DO_FAIL(reply_user_json_A(m_appID, m_userID, user));
 
 			//update session["notified"]
-			DO_FAIL(update_session_notified(m_appID, m_userID));
+			DO_FAIL(UpdateSessionNotified(m_appID, m_userID));
 			
 			return SS_OK;
 		}
@@ -248,7 +248,7 @@ int UserOnlineTimer::on_user_online()
 			DO_FAIL(reply_user_json_B(user, sess));
 
 			//update session["notified"]
-			DO_FAIL(update_session_notified(m_appID, m_userID));
+			DO_FAIL(UpdateSessionNotified(m_appID, m_userID));
 
 			return SS_OK;
 		}
@@ -276,7 +276,7 @@ int UserOnlineTimer::on_user_online()
 		DO_FAIL(reply_user_json_B(user, sess));
 
 		//update session["notified"]
-		DO_FAIL(update_session_notified(m_appID, m_userID));
+		DO_FAIL(UpdateSessionNotified(m_appID, m_userID));
 		
 		return SS_OK;
 	}

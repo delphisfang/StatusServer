@@ -467,6 +467,11 @@ int CTimerInfo::on_send_error_reply(ERROR_TYPE code, string msg, const Json::Val
 
 /***************** never use m_xxx in methods below, keep them stateless **************/
 
+inline string CTimerInfo::gen_sessionID(const string &app_userID)
+{
+	return app_userID + "_" + l2str(time(NULL));
+}
+
 int CTimerInfo::get_user_session(const string &appID, const string &app_userID, Session *sess)
 {
 	if (NULL == sess)
@@ -485,18 +490,63 @@ int CTimerInfo::get_user_session(const string &appID, const string &app_userID, 
 	return SS_OK;
 }
 
+int CTimerInfo::update_user_session(const string &appID, const string &app_userID, Session *sess, long long gap_warn, long long gap_expire)
+{
+	if (NULL == sess)
+		return SS_ERROR;
+	
+	SessionQueue* pSessQueue = NULL;
+	if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue)
+		|| pSessQueue->set(app_userID, sess, gap_warn, gap_expire))
+	{
+		LogError("Failed to update session of user[%s]!", app_userID.c_str());
+		return SS_ERROR;
+	}
+
+	return SS_OK;
+}
+
+int CTimerInfo::delete_user_session(const string &appID, const string &app_userID)
+{
+	SessionQueue* pSessQueue = NULL;
+	if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue)
+		|| pSessQueue->delete_session(app_userID))
+	{
+		LogError("Failed to delete session of user[%s]!", app_userID.c_str());
+		return SS_ERROR;
+	}
+
+	return SS_OK;
+}
+
+int CTimerInfo::create_user_session(const string &appID, const string &app_userID, Session *sess, long long gap_warn, long long gap_expire)
+{
+	if (NULL == sess)
+		return SS_ERROR;
+	
+	SessionQueue* pSessQueue = NULL;
+	if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue)
+		|| pSessQueue->insert(app_userID, sess, gap_warn, gap_expire))
+	{
+		LogError("Failed to create session of user[%s]!", app_userID.c_str());
+		return SS_ERROR;
+	}
+
+	return SS_OK;
+}
+
 void CTimerInfo::get_user_json(const string &appID, const string &app_userID, const UserInfo &user, Json::Value &userJson)
 {
-	Session sess;
-	Json::Value sessJson;
-
 	user.toJson(userJson);
+
+	Session sess;
 	if (get_user_session(appID, app_userID, &sess))
 	{
 		userJson["session"] = Json::objectValue;
 	}
 	else
 	{
+		Json::Value sessJson;
 		sess.toJson(sessJson);
 		userJson["session"] = sessJson;
 	}
@@ -504,10 +554,11 @@ void CTimerInfo::get_user_json(const string &appID, const string &app_userID, co
 
 void CTimerInfo::construct_user_json(const UserInfo &user, const Session &sess, Json::Value &userJson)
 {
-	Json::Value sessInfo;
 	user.toJson(userJson);
-	sess.toJson(sessInfo);
-	userJson["session"] = sessInfo;
+
+	Json::Value sessJson;
+	sess.toJson(sessJson);
+	userJson["session"] = sessJson;
 }
 
 int CTimerInfo::reply_user_json_A(const string &appID, const string &app_userID, const UserInfo &user)
@@ -524,6 +575,22 @@ int CTimerInfo::reply_user_json_B(const UserInfo &user, const Session &sess)
 	construct_user_json(user, sess, userJson);
 	DO_FAIL(on_send_reply(userJson));
 	return SS_OK;
+}
+
+unsigned CTimerInfo::get_service_queuenum(const string &appID, const ServiceInfo &serv)
+{
+	unsigned queueNum = 0;
+
+	UserQueue *uq = NULL, *highpri_uq = NULL;
+	for (set<string>::iterator it = serv.tags.begin(); it != serv.tags.end(); ++it)
+	{
+		DO_FAIL(get_normal_queue(appID, *it, &uq));
+		queueNum += uq->size();
+		DO_FAIL(get_highpri_queue(appID, *it, &highpri_uq));
+		queueNum += highpri_uq->size();
+	}
+
+	return queueNum;
 }
 
 int CTimerInfo::get_service_json(const string &appID, const ServiceInfo &serv, Json::Value &servJson)
@@ -562,18 +629,7 @@ int CTimerInfo::get_service_json(const string &appID, const ServiceInfo &serv, J
 	servJson["userList"] = arrayUserList;
 
 	//获取排队人数
-	UserQueue *uq = NULL, *highpri_uq = NULL;
-	unsigned queueNum = 0;
-	for (set<string>::iterator it = serv.tags.begin(); it != serv.tags.end(); it++)
-	{
-		LogDebug("==>service tag: %s", (*it).c_str());
-		
-		DO_FAIL(get_normal_queue(appID, *it, &uq));
-		queueNum += uq->size();
-		DO_FAIL(get_highpri_queue(appID, *it, &highpri_uq));
-		queueNum += highpri_uq->size();
-	}
-	servJson["queueNumber"] = queueNum;
+	servJson["queueNumber"] = get_service_queuenum(appID, serv);
 	
 	int maxConvNum = CAppConfig::Instance()->getMaxConvNum(appID);
 	if (true == serv.is_busy(maxConvNum))
@@ -582,79 +638,26 @@ int CTimerInfo::get_service_json(const string &appID, const ServiceInfo &serv, J
 	}
 }
 
-int CTimerInfo::update_user_session(const string &appID, const string &app_userID, Session *sess, long long gap_warn, long long gap_expire)
-{
-	SessionQueue* pSessQueue = NULL;
-	
-	if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue)
-		|| pSessQueue->set(app_userID, sess, gap_warn, gap_expire))
-	{
-		LogError("Failed to update session of user[%s]!", app_userID.c_str());
-		return SS_ERROR;
-	}
-
-	return SS_OK;
-}
-
-int CTimerInfo::delete_user_session(const string &appID, const string &app_userID)
-{
-	SessionQueue* pSessQueue = NULL;
-	
-	if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue)
-		|| pSessQueue->delete_session(app_userID))
-	{
-		LogError("Failed to delete session of user[%s]!", app_userID.c_str());
-		return SS_ERROR;
-	}
-
-	return SS_OK;
-}
-
-int CTimerInfo::create_user_session(const string &appID, const string &app_userID, Session *sess, long long gap_warn, long long gap_expire)
-{
-	SessionQueue* pSessQueue = NULL;
-	
-	if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue)
-		|| pSessQueue->insert(app_userID, sess, gap_warn, gap_expire))
-	{
-		LogError("Failed to create session of user[%s]!", app_userID.c_str());
-		return SS_ERROR;
-	}
-
-	return SS_OK;
-}
-
-int CTimerInfo::update_session_notified(const string &appID, const string &app_userID)
-{
-	Session sess;
-	GET_SESS(get_user_session(appID, app_userID, &sess));
-
-	if (0 == sess.notified)
-	{
-		sess.notified = 1;
-		DO_FAIL(UpdateUserSession(appID, app_userID, &sess));
-	}
-	return SS_OK;
-}
-
-string CTimerInfo::gen_sessionID(const string &app_userID)
-{
-	return app_userID + "_" + l2str(time(NULL));
-}
 
 int CTimerInfo::get_normal_queue(const string &appID, const string &raw_tag, UserQueue **uq)
 {
-	TagUserQueue* pTagQueues = NULL;
-	GET_FAIL(CAppConfig::Instance()->GetTagQueue(appID, pTagQueues), "tag user queues");
-	GET_FAIL(pTagQueues->get_tag(raw_tag, *uq), "user queue");
+	if (NULL == uq)
+		return SS_ERROR;
+	
+	TagUserQueue *pTagQueues = NULL;
+	GET_FAIL(CAppConfig::Instance()->GetTagQueue(appID, pTagQueues), "tag queues");
+	GET_FAIL(pTagQueues->get_tag(raw_tag, *uq), "queue");
 	return SS_OK;
 }
 
 int CTimerInfo::get_highpri_queue(const string &appID, const string &raw_tag, UserQueue **uq)
 {
-	TagUserQueue* pTagQueues = NULL;
-	GET_FAIL(CAppConfig::Instance()->GetTagHighPriQueue(appID, pTagQueues), "highpri tag user queues");
-	GET_FAIL(pTagQueues->get_tag(raw_tag, *uq), "user queue");
+	if (NULL == uq)
+		return SS_ERROR;
+	
+	TagUserQueue *pTagQueues = NULL;
+	GET_FAIL(CAppConfig::Instance()->GetTagHighPriQueue(appID, pTagQueues), "highpri tag queues");
+	GET_FAIL(pTagQueues->get_tag(raw_tag, *uq), "queue");
 	return SS_OK;
 }
 
@@ -846,7 +849,7 @@ int CTimerInfo::KV_set_queue(string appID, string raw_tag, int highpri)
 	{
 		GET_FAIL(CAppConfig::Instance()->GetTagHighPriQueue(appID, pTagQueues), "tag highpri queues");
 	}
-	GET_FAIL(pTagQueues->get_tag(raw_tag, uq), "user queue");
+	GET_FAIL(pTagQueues->get_tag(raw_tag, uq), "queue");
 
 	string val_queueList = uq->toString();
 	DO_FAIL(KVSetKeyValue(KV_CACHE, key_queueList, val_queueList));
@@ -1021,6 +1024,19 @@ int CTimerInfo::UpdateUserSession(string appID, string app_userID, Session *sess
 	return SS_OK;
 }
 
+int CTimerInfo::UpdateSessionNotified(const string &appID, const string &app_userID)
+{
+	Session sess;
+	GET_SESS(get_user_session(appID, app_userID, &sess));
+
+	if (0 == sess.notified)
+	{
+		sess.notified = 1;
+		DO_FAIL(UpdateUserSession(appID, app_userID, &sess));
+	}
+	return SS_OK;
+}
+
 int CTimerInfo::DeleteUserSession(string appID, string app_userID)
 {
 	SET_SESS(delete_user_session(appID, app_userID));
@@ -1030,6 +1046,9 @@ int CTimerInfo::DeleteUserSession(string appID, string app_userID)
 
 int CTimerInfo::CreateUserSession(string appID, string app_userID, Session *sess, long long gap_warn, long long gap_expire)
 {
+	if (NULL == sess)
+		return SS_ERROR;
+	
 	SET_SESS(create_user_session(appID, app_userID, sess, gap_warn, gap_expire));
 	DO_FAIL(KV_set_session(app_userID, *sess, gap_warn, gap_expire));
 	return SS_OK;

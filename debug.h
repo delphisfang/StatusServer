@@ -55,14 +55,6 @@
 		}while(0)
 
 
-#define ENSURE_RET(expr) do{\
-			if (!(expr))\
-			{\
-				LogError("[ERROR] Ensure %s failed!", #expr);\
-				return SS_ERROR;\
-			}\
-		}while(0)
-
 #define DO_FAIL(expr) do{\
 			if (SS_OK != (expr))\
 			{\

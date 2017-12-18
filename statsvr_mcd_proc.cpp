@@ -1324,7 +1324,7 @@ void CMCDProc::DispatchSessionTimer()
 
 	if (CAppConfig::Instance()->GetNowappIDList(appListString))
 	{
-		LogError("get appIDlist failed.");
+		LogError("Failed to get appIDlist!");
        	return;
 	}
 

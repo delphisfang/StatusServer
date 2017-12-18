@@ -121,11 +121,11 @@ namespace statsvr
 			void construct_user_json(const UserInfo &user, const Session &sess, Json::Value &userJson);
 			int reply_user_json_A(const string &appID, const string &app_userID, const UserInfo &user);
 			int reply_user_json_B(const UserInfo &user, const Session &sess);
+			unsigned get_service_queuenum(const string &appID, const ServiceInfo &serv);
 			int get_service_json(const string &appID, const ServiceInfo &serv, Json::Value &servJson);
 			int update_user_session(const string &appID, const string &app_userID, Session *sess, long long gap_warn, long long gap_expire);
 			int delete_user_session(const string &appID, const string &app_userID);
 			int create_user_session(const string &appID, const string &app_userID, Session *sess, long long gap_warn, long long gap_expire);
-			int update_session_notified(const string &appID, const string &app_userID);
 			string gen_sessionID(const string &app_userID);
 			int get_normal_queue(const string &appID, const string &raw_tag, UserQueue **uq);
 			int get_highpri_queue(const string &appID, const string &raw_tag, UserQueue **uq);
@@ -158,6 +158,7 @@ namespace statsvr
 			int UpdateService(string app_servID, const ServiceInfo &serv);
 			int DeleteService(string app_servID);
 			int UpdateUserSession(string appID, string app_userID, Session *sess);
+			int UpdateSessionNotified(const string &appID, const string &app_userID);
 			int DeleteUserSession(string appID, string app_userID);
 			int CreateUserSession(string appID, string app_userID, Session *sess, long long gap_warn, long long gap_expire);
 			int AddTagOnlineServNum(string appID, const ServiceInfo &serv);
