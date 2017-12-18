@@ -99,6 +99,7 @@ namespace statsvr
 	    set<string> userList;
 		string   serviceName;
 		string   serviceAvatar;
+		unsigned maxConvNum;
 		//string	 whereFrom;
 	};
 

@@ -1187,6 +1187,7 @@ int32_t CMCDProc::Enqueue2DCC(char* data, unsigned data_len, const string& ip, u
         LogError("[Enqueue2DCC] enqueue data to dcc fail\n");
         return -2;
     }
+
     return 0;
 }
 
