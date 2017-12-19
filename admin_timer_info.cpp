@@ -40,9 +40,10 @@ int AdminConfigTimer::do_next_step(string& req_data)
 				m_cur_step = STATE_END;
 				return 1;
 			}
-            else if (m_cmd == "updateConf")
+            else if (m_cmd == "updateConf" || m_cmd == "getConfigForIM-reply")
             {
-                if (on_admin_config())
+				bool need_reply = (m_cmd == "updateConf") ? (true) : (false); 
+                if (on_admin_config(need_reply))
 				{
 					m_cur_step = STATE_END;
 					return -1;
@@ -131,10 +132,10 @@ int AdminConfigTimer::on_admin_send_reply(const Json::Value &data)
 	rsp["data"] = data;
 
     string rsp_str = rsp.toStyledString();
-	LogTrace("=====>admin send reply: %s", rsp_str.c_str());
-    if (m_proc->EnququeHttp2CCD (m_ret_flow, (char *)rsp_str.c_str(), rsp_str.size()))
+	LogTrace("====>admin send reply: %s", rsp_str.c_str());
+    if (m_proc->EnququeHttp2CCD(m_ret_flow, (char *)rsp_str.c_str(), rsp_str.size()))
     {
-    	LogError("enqueue_2_ccd failed.");
+    	LogError("Failed to enqueue to CCD!");
 		m_errno = ERROR_SYSTEM_WRONG;
         m_errmsg = "Error send to client";
         on_error();
@@ -155,7 +156,6 @@ int AdminConfigTimer::on_admin_ping()
         return -1;
     }
 
-    // construct ping response
 	if (ping_req["appIDList"].isNull() || !ping_req["appIDList"].isArray())
 	{
 		LogError("Failed to parse appIDlist! data: [%s]", m_data.c_str());
@@ -163,9 +163,8 @@ int AdminConfigTimer::on_admin_ping()
         return -1;
 	}
 
-    
-	string appIDString = m_data;
-	//LogDebug("appIDString: %s", appIDString.c_str());
+	string appIDListString = m_data;
+	LogDebug("appIDListString: %s", appIDListString.c_str());
 	
 	//参数检查
 	unsigned size = ping_req["appIDList"].size();
@@ -181,39 +180,35 @@ int AdminConfigTimer::on_admin_ping()
     {
         string appID = ping_req["appIDList"][i].asString();
 		
-		/* 获取app version */
-		//LogDebug("GetVersion for appID: %s", appID.c_str());
         unsigned version = CAppConfig::Instance()->GetVersion(appID);
 
 		Json::Value items;
         items["appID"]   = atoi(appID.c_str());
         items["version"] = version;
-		/* 添加到 appIDlistVer */
 		appIDlistVer.append(items);
 
 		/* 核心代码，为appIDList里的每一个appID创建各种数据结构 */
 		#if 0
 		CAppConfig::Instance()->AddOfflineHeap(appID);
 		#endif
-		DO_FAIL(CAppConfig::Instance()->AddTagQueue(appID));
-		DO_FAIL(CAppConfig::Instance()->AddTagHighPriQueue(appID));
-		DO_FAIL(CAppConfig::Instance()->AddSessionQueue(appID));
-		//此处暂不调用AddServiceHeap(tag)，taglist需要等到updateConf操作时才知道
+		CAppConfig::Instance()->AddTagQueue(appID);
+		CAppConfig::Instance()->AddTagHighPriQueue(appID);
+		CAppConfig::Instance()->AddSessionQueue(appID);
+		//暂不调用AddServiceHeap(tag)，tagList需等到updateConf时才确定
 		
 		map_now[appID] = true;
     }
 	
-	//LogDebug("Parse ping request finish");
-	
 	int delnum = CAppConfig::Instance()->CheckDel(map_now);
-	CAppConfig::Instance()->SetNowappIDList(appIDString);
-
+	CAppConfig::Instance()->SetNowappIDList(appIDListString);
+	LogTrace("[pingConf] SetNowappIDList: %s", appIDListString.c_str());
+	
 	int loglevel = LOG_TRACE;
 	if (delnum > 0)
 	{
 		loglevel = LOG_ERROR;
 	}
-	DEBUG_P(loglevel, "PingList:%s, delnum:[%d]", appIDString.c_str(), delnum);
+	DEBUG_P(loglevel, "PingList:%s, delnum:[%d]", appIDListString.c_str(), delnum);
 
 	LogDebug("Send ping response.");
 	Json::Value data;
@@ -276,9 +271,9 @@ int AdminConfigTimer::on_admin_getConf()
 	return on_admin_send_reply(data);
 }
 
-int AdminConfigTimer::on_admin_config()
+int AdminConfigTimer::on_admin_config(bool need_reply)
 {
-	LogDebug("Receive a new push config request.");
+	LogDebug("Receive a new updateConf request.");
 
     Json::Reader reader;
     Json::Value push_config_req;
@@ -290,11 +285,15 @@ int AdminConfigTimer::on_admin_config()
     }
     CAppConfig::Instance()->UpdateappIDConf(push_config_req);
 
-    //construct response and then send it.
-    Json::Value data = Json::objectValue;
-
-	LogDebug("Send config resp");
-	return on_admin_send_reply(data);
+	if (true == need_reply)
+	{
+	    Json::Value data = Json::objectValue;
+		return on_admin_send_reply(data);
+	}
+	else
+	{
+		return 0;
+	}
 }
 
 int AdminConfigTimer::on_admin_getServiceStatus()
@@ -562,5 +561,7 @@ int AdminConfigTimer::on_admin_restore()
 	return SS_OK;
 }
 
-
+AdminConfigTimer::~AdminConfigTimer()
+{
+}
 

@@ -17,7 +17,8 @@ int CAppConfig::UpdateappIDConf (const Json::Value &push_config_req)
 	Json::Value configList = push_config_req["appList"];
 	int size = configList.size();
 	Json::Value appID_conf;
-	
+
+	Json::Value appIDList;
 	for (int i = 0; i < size; ++i)
 	{
 		appID_conf = configList[i];
@@ -36,6 +37,7 @@ int CAppConfig::UpdateappIDConf (const Json::Value &push_config_req)
 		{
 			appID = ui2str(appID_conf["appID"].asUInt());
 		}
+		appIDList.append(appID);
 		
 		string appIDConf = appID_conf.toStyledString();
 		appIDConf = Trim(appIDConf);
@@ -52,7 +54,7 @@ int CAppConfig::UpdateappIDConf (const Json::Value &push_config_req)
 		}
 		SetVersion(appID, version);
 
-	    //LogDebug("[UpdateappIDConf] appID:[%s] conf:%s\n", appID.c_str(), appIDConf.c_str());	    
+	    //LogDebug("appID:[%s], conf:%s", appID.c_str(), appIDConf.c_str());	    
 		SetConf(appID, appIDConf);
 
 		if (!appID_conf["configs"].isNull() && appID_conf["configs"].isObject())
@@ -146,10 +148,9 @@ int CAppConfig::UpdateappIDConf (const Json::Value &push_config_req)
 		{
 			TagUserQueue *pTagQueues = NULL;
 			TagUserQueue *pTagHighPriQueues = NULL;
-			
-			#if 0
-			//兼容没收到pingConf只收到updateConf的情况
 			SessionQueue *pSessQueue = NULL;
+			
+			//兼容没收到pingConf只收到updateConf的情况
 			if (GetTagQueue(appID, pTagQueues))
 			{
 				DO_FAIL(AddTagQueue(appID));
@@ -165,14 +166,10 @@ int CAppConfig::UpdateappIDConf (const Json::Value &push_config_req)
 				DO_FAIL(AddSessionQueue(appID));
 				GetSessionQueue(appID, pSessQueue);
 			}
-			assert(pSessQueue != NULL);
-			#else
-			DO_FAIL(GetTagQueue(appID, pTagQueues));
-			DO_FAIL(GetTagHighPriQueue(appID, pTagHighPriQueues));
-			#endif
-			
+
 			assert(pTagQueues != NULL);
 			assert(pTagHighPriQueues != NULL);
+			assert(pSessQueue != NULL);
 			
 			int tagsNum = appID_conf["tags"].size();
 			string tags = "";
@@ -203,6 +200,12 @@ int CAppConfig::UpdateappIDConf (const Json::Value &push_config_req)
 		#endif
 	}
 
+	Json::Value arr;
+	arr["appIDList"] = appIDList;
+	string appIDListString = arr.toStyledString();
+	CAppConfig::Instance()->SetNowappIDList(appIDListString);
+	LogTrace("[updateConf] SetNowappIDList: %s", appIDListString.c_str());
+	
 	return 0;
 }
 

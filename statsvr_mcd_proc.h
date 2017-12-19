@@ -105,14 +105,15 @@ namespace statsvr
             virtual void run(const std::string& conf_file);
             int32_t Init(const std::string& conf_file);
             int32_t ReloadCfg();
+			int32_t EnququeHttp2DCCInner(const char *http_header, const char* data, unsigned data_len, const string &domain, const string& ip, unsigned short port);
 			int32_t InitSendPing();
             int32_t EnququeHttp2CCD(unsigned long long flow, char *data, unsigned data_len);
             int32_t Enqueue2CCD(unsigned long long flow, char *data, unsigned data_len);
             int32_t Enqueue2DCC(char *data, unsigned data_len, const string& ip, unsigned short port);
             int32_t EnququeHttp2DCC(char* data, unsigned data_len, const string& ip, unsigned short port);
-            int32_t EnququeConfigHttp2DCC();
+            int32_t GetConfigForIM();
             int32_t EnququeErrHttp2DCC(char* data, unsigned data_len);
-            int32_t PostErrLog(string &data, int type, unsigned appID, unsigned level);
+            //int32_t PostErrLog(string &data, int type, unsigned appID, unsigned level);
             void    DispatchCCD();
             void    DispatchInnerCCD();
             
@@ -134,6 +135,7 @@ namespace statsvr
                                 uint32_t client_ip,
                                 timeval& ccd_time);
 
+			int32_t HttpParseResponse(char* data, unsigned data_len, string& outdata, unsigned& out_len);
             
             int32_t HandleResponse(char* data, unsigned data_len, unsigned long long flow,
                                          uint32_t down_ip, unsigned down_port, timeval& dcc_time);
@@ -202,7 +204,7 @@ namespace statsvr
                 value = m_errCmd;
             }
 
-			int32_t InitKVServer();
+			int32_t InitKV();
 			
         private:
           tfc::base::CFastTimerQueue m_timer_queue;

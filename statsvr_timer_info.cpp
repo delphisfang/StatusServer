@@ -29,7 +29,7 @@ int CTimerInfo::init(string req_data, int datalen)
 		m_cmd = get_value_str(js_req_root, "cmd");
 	}
 
-	if ((m_cmd != "getUserInfo" && m_cmd != "getServiceInfo"))
+	if (m_cmd != "getUserInfo" && m_cmd != "getServiceInfo" && m_cmd != "getConfigForIM-reply")
 	{
 		LogDebug("req_data: %s", req_data.c_str());
 	}
@@ -62,7 +62,8 @@ int CTimerInfo::init(string req_data, int datalen)
 		m_appID = ui2str(js_req_data["appID"].asUInt());
 	}
 
-	if (m_cmd != "pingConf" && m_cmd != "updateConf" && m_cmd != "getConf" && m_cmd != "getTodayStatus"
+	if (m_cmd != "pingConf" && m_cmd != "updateConf" && m_cmd != "getConfigForIM-reply"
+		&& m_cmd != "getConf" && m_cmd != "getTodayStatus"
 		&& CAppConfig::Instance()->checkAppIDExist(m_appID))
 	{
 		LogError("Unknown appID[%s]!", m_appID.c_str());
@@ -80,8 +81,8 @@ int CTimerInfo::init(string req_data, int datalen)
 		m_raw_tag = js_req_data["tag"].asString();
 		m_tag = m_appID + "_" + m_raw_tag;
 
-		if (m_cmd != "pingConf" && m_cmd != "updateConf" && m_cmd != "getConf"
-			&& m_cmd != "getTodayStatus" && m_cmd != "changeService"
+		if (m_cmd != "pingConf" && m_cmd != "updateConf" && m_cmd != "getConfigForIM-reply"
+			&& m_cmd != "getConf" && m_cmd != "getTodayStatus" && m_cmd != "changeService"
 			&& CAppConfig::Instance()->checkTagExist(m_appID, m_tag))
 		{
 			LogError("Unknown tag[%s]!", m_tag.c_str());
@@ -298,7 +299,7 @@ void CTimerInfo::on_expire()
 	return;
 }
 
-inline void CTimerInfo::OpStart()
+void CTimerInfo::OpStart()
 {
 	gettimeofday(&m_op_start, NULL);
 }
@@ -374,13 +375,13 @@ void CTimerInfo::on_error_parse_data(string data_name)
 	on_error();
 }
 
-inline void CTimerInfo::set_user_data(Json::Value &data)
+void CTimerInfo::set_user_data(Json::Value &data)
 {
 	data["identity"]  = "user";
 	data["userID"]	  = m_raw_userID;
 }
 
-inline void CTimerInfo::set_service_data(Json::Value &data)
+void CTimerInfo::set_service_data(Json::Value &data)
 {
 	data["identity"]  = "service";
 	data["serviceID"] = m_raw_serviceID;
@@ -467,7 +468,7 @@ int CTimerInfo::on_send_error_reply(ERROR_TYPE code, string msg, const Json::Val
 
 /***************** never use m_xxx in methods below, keep them stateless **************/
 
-inline string CTimerInfo::gen_sessionID(const string &app_userID)
+string CTimerInfo::gen_sessionID(const string &app_userID)
 {
 	return app_userID + "_" + l2str(time(NULL));
 }

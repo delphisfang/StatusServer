@@ -369,7 +369,7 @@ unsigned ServiceInfo::user_count() const
 	return userList.size();
 }
 
-inline bool ServiceInfo::is_available() const
+bool ServiceInfo::is_available() const
 {
 	if (OFFLINE == status || user_count() >= maxUserNum)
 	{
@@ -381,7 +381,7 @@ inline bool ServiceInfo::is_available() const
 	}
 }
 
-inline bool ServiceInfo::is_busy() const
+bool ServiceInfo::is_busy() const
 {
 	if (ONLINE == status && user_count() >= maxUserNum)
 	{
