@@ -556,7 +556,7 @@ int AdminConfigTimer::on_admin_restore()
 	}
 
 	m_proc->m_workMode = statsvr::WORKMODE_WORK;
-	LogTrace(">>>>>>>>>>>>>>>>>>>>Status Server enter workmode<<<<<<<<<<<<<<<<<<<<");
+	LogTrace(">>>>>>>>>>>>>>>>>>>>[%s] enter workmode<<<<<<<<<<<<<<<<<<<<", MODULE_NAME);
 
 	return SS_OK;
 }

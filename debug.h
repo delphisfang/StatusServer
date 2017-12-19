@@ -145,6 +145,7 @@
 /* service fields */
 #define SERV_NAME ("serviceName")
 #define SERV_AVATAR ("serviceAvatar")
+#define MAX_USER_NUM_FIELD ("maxUserNum")
 #define DEF_USER_NUM (5)
 
 #endif

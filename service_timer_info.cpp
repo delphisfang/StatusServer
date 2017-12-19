@@ -115,7 +115,8 @@ void ServiceLoginTimer::set_service_fields(ServiceInfo &serv)
 	serv.atime = GetCurTimeStamp();
 	serv.serviceName = m_serviceName;
 	serv.serviceAvatar = m_serviceAvatar;
-
+	serv.maxUserNum = m_maxUserNum;
+	
 	Json::Reader reader;
 	Json::Value value;
 	if (!reader.parse(m_data, value))

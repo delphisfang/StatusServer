@@ -138,11 +138,13 @@ int CTimerInfo::init(string req_data, int datalen)
 	m_serviceName = get_value_str(js_req_data, "serviceName");
 
 	m_serviceAvatar = get_value_str(js_req_data, "serviceAvatar");
+
+	m_maxUserNum = get_value_uint(js_req_data, "maxUserNum", DEF_USER_NUM);
 	
-	if (!js_req_data["content"].isNull() && js_req_data["content"].isObject())
+	/*if (!js_req_data["content"].isNull() && js_req_data["content"].isObject())
 	{
 		m_content = js_req_data["content"];
-	}
+	}*/
 	
 	if (!js_req_data["changeServiceID"].isNull() && js_req_data["changeServiceID"].isString())
 	{

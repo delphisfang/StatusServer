@@ -278,7 +278,7 @@ ServiceInfo::ServiceInfo(const string& strServiceInfo)
 	cpPort			 = get_value_uint(value, CP_PORT);
 	serviceName 	 = get_value_str(value, SERV_NAME);
 	serviceAvatar    = get_value_str(value, SERV_AVATAR);
-	maxUserNum       = DEF_USER_NUM;
+	maxUserNum       = get_value_uint(value, MAX_USER_NUM_FIELD, DEF_USER_NUM);
 	//whereFrom 	 = value["whereFrom"].asString();
 
 	unsigned tagsLen = value["tags"].size();
@@ -303,7 +303,7 @@ void ServiceInfo::toJson(Json::Value &value) const
 	value[CP_PORT]     = cpPort;
 	value[SERV_NAME]   = serviceName;
 	value[SERV_AVATAR] = serviceAvatar;
-	value["maxUserNum"] = maxUserNum;
+	value[MAX_USER_NUM_FIELD] = maxUserNum;
 	//value["whereFrom"] = whereFrom;
 
 	Json::Value arrayTags;

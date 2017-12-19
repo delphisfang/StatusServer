@@ -68,10 +68,10 @@ namespace statsvr
 				m_identity.clear();
 				m_priority.clear();
 				m_extends.clear();
-                m_content.clear();
+                //m_content.clear();
 
-                m_ret_code.clear();
-                m_ret_msg.clear();
+                //m_ret_code.clear();
+                //m_ret_msg.clear();
                 m_search_no.clear();
 
 	            m_tags.clear();
@@ -83,7 +83,7 @@ namespace statsvr
             {
                 m_tags.clear();
                 m_checkServices.clear();
-                m_content.clear();
+                //m_content.clear();
             }
 
             virtual int  do_next_step(string& req_data)=0;
@@ -197,7 +197,7 @@ namespace statsvr
             string          m_raw_serviceID;
             string          m_serviceID;    //坐席ID
             string          m_sessionID;
-            Json::Value     m_content;
+            //Json::Value     m_content;
 			string          m_raw_changeServiceID;
             string          m_changeServiceID;
 			string          m_raw_lastServiceID;
@@ -208,18 +208,18 @@ namespace statsvr
             set<string>     m_tags;
             set<string>     m_checkServices;
             string          m_priority;
-            string          m_ret_code;
-            string          m_ret_msg;
+            //string          m_ret_code;
+            //string          m_ret_msg;
             string          m_search_no;
             string          m_channel;
 			string          m_status;
             string          m_extends;
             string          m_serviceName;
             string          m_serviceAvatar;
+			unsigned        m_maxUserNum; //客服上限人数
             //string          m_whereFrom;
             //string          m_userInfo;
             unsigned        m_queuePriority;
-            unsigned        m_userCount;
 			unsigned		m_notify;
 
 			set<string> m_userID_list;
