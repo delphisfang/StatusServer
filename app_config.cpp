@@ -8,6 +8,7 @@
 using namespace std;
 using namespace statsvr;
 
+//class member
 CAppConfig* CAppConfig::m_instance = NULL;
 
 /************************************************************************************************/

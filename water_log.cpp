@@ -2,16 +2,11 @@
 #include "string.h"
 #include <iostream>
 #include "common_api.h"
-//#include "sagitdef.h"
 
 using namespace std;
 
-/*const unsigned max_buf_length = 2048;
-char g_wr_buf[max_buf_length] = {0};
-*/
-
+//class member
 CWaterLog* CWaterLog::m_instance = NULL;
-
 
 CWaterLog* CWaterLog::Instance()
 {
