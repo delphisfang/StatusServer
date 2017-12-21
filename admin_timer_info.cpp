@@ -200,8 +200,8 @@ int AdminConfigTimer::on_admin_ping()
     }
 	
 	int delnum = CAppConfig::Instance()->CheckDel(map_now);
-	CAppConfig::Instance()->SetNowappIDList(appIDListString);
-	LogTrace("[pingConf] SetNowappIDList: %s", appIDListString.c_str());
+	CAppConfig::Instance()->SetAppIDList(appIDListString);
+	LogTrace("[pingConf] SetAppIDList: %s", appIDListString.c_str());
 	
 	int loglevel = LOG_TRACE;
 	if (delnum > 0)
@@ -227,7 +227,7 @@ int AdminConfigTimer::on_admin_getConf()
 	configList.resize(0);
 
 	string appListString;
-	if (CAppConfig::Instance()->GetNowappIDList(appListString))
+	if (CAppConfig::Instance()->GetAppIDList(appListString))
 	{
 		LogError("get appIDList failed.");
 		m_errno = ERROR_SYSTEM_WRONG;
@@ -525,7 +525,7 @@ int AdminConfigTimer::on_admin_restore()
 	string appListString;
 
 	/* 获取appID列表 */
-	GET_FAIL(CAppConfig::Instance()->GetNowappIDList(appListString), "appIDList");
+	GET_FAIL(CAppConfig::Instance()->GetAppIDList(appListString), "appIDList");
 	if (!reader.parse(appListString, appList))
 	{
 		LogError("Failed to parse appIDlist:%s!", appListString.c_str());

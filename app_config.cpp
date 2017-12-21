@@ -205,21 +205,21 @@ int CAppConfig::UpdateappIDConf(const Json::Value &push_config_req, bool need_se
 		Json::Value arr;
 		arr["appIDList"] = appIDList;
 		string appIDListString = arr.toStyledString();
-		CAppConfig::Instance()->SetNowappIDList(appIDListString);
-		LogTrace("[updateConf] SetNowappIDList: %s", appIDListString.c_str());
+		CAppConfig::Instance()->SetAppIDList(appIDListString);
+		LogTrace("[updateConf] SetAppIDList: %s", appIDListString.c_str());
 	}
 	
 	return 0;
 }
 
-int CAppConfig::SetNowappIDList(string& value)
+int CAppConfig::SetAppIDList(string& value)
 {
 	SetValue("0", "appIDlist", value);
-	//LogDebug("SetNowappIDList(%s) finish", value.c_str());
+	//LogDebug("SetAppIDList(%s) finish", value.c_str());
 	return 0;
 }
 
-int CAppConfig::GetNowappIDList(string& value)
+int CAppConfig::GetAppIDList(string& value)
 {
 	GetValue("0", "appIDlist", value);
 	return 0;
@@ -251,7 +251,7 @@ int CAppConfig::CheckDel(const map<string, bool>& map_now)
 	Json::Value appList;
 	string appListString;
 	
-	GetNowappIDList(appListString);
+	GetAppIDList(appListString);
 	//LogDebug("appListString: %s", appListString.c_str());
 	
 	reader.parse(appListString, appList);
@@ -992,7 +992,7 @@ int CAppConfig::checkAppIDExist(string appID)
 	Json::Value appList;
 	string appListString;
 	
-	if (GetNowappIDList(appListString))
+	if (GetAppIDList(appListString))
 	{
 		LogError("get appIDlist failed.");
        	return -1;

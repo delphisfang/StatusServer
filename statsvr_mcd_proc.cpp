@@ -1097,7 +1097,7 @@ void CMCDProc::DispatchUser2Service()
 	Json::Value appList;
 	string appListString;
 
-	if (CAppConfig::Instance()->GetNowappIDList(appListString))
+	if (CAppConfig::Instance()->GetAppIDList(appListString))
 	{
 		LogError("get appIDlist failed.");
        	return;
@@ -1185,7 +1185,7 @@ void CMCDProc::DispatchSessionTimer()
 	Json::Value appList;
 	string appListString;
 
-	if (CAppConfig::Instance()->GetNowappIDList(appListString))
+	if (CAppConfig::Instance()->GetAppIDList(appListString))
 	{
 		LogError("Failed to get appIDlist!");
        	return;
@@ -1193,7 +1193,7 @@ void CMCDProc::DispatchSessionTimer()
 
     if (!reader.parse(appListString, appList))
 	{
-		//LogError("parse appIDlist to JSON failed:%s\n", appListString.c_str());
+		//LogError("Failed to parse appIDListString:%s", appListString.c_str());
        	return;
 	}
 
