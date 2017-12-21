@@ -42,8 +42,8 @@ int AdminConfigTimer::do_next_step(string& req_data)
 			}
             else if (m_cmd == "updateConf" || m_cmd == "getConfigForIM-reply")
             {
-				bool need_reply = (m_cmd == "updateConf") ? (true) : (false); 
-                if (on_admin_config(need_reply))
+				bool isUpdateConf = (m_cmd == "updateConf") ? (true) : (false); 
+                if (on_admin_config(isUpdateConf))
 				{
 					m_cur_step = STATE_END;
 					return -1;
@@ -52,7 +52,7 @@ int AdminConfigTimer::do_next_step(string& req_data)
 
 				//防止重复重建
 				if (m_proc->m_workMode == statsvr::WORKMODE_WORK)
-				{	
+				{
 					LogTrace(">>>>>>>>>>>>>>>>>>>Already in workmode, need not restore.");
 					m_cur_step = STATE_END;
 					return 1;
@@ -271,7 +271,7 @@ int AdminConfigTimer::on_admin_getConf()
 	return on_admin_send_reply(data);
 }
 
-int AdminConfigTimer::on_admin_config(bool need_reply)
+int AdminConfigTimer::on_admin_config(bool isUpdateConf)
 {
 	LogDebug("Receive a new updateConf request.");
 
@@ -283,9 +283,10 @@ int AdminConfigTimer::on_admin_config(bool need_reply)
 		ON_ERROR_PARSE_PACKET();
         return -1;
     }
-    CAppConfig::Instance()->UpdateappIDConf(push_config_req);
 
-	if (true == need_reply)
+    CAppConfig::Instance()->UpdateappIDConf(push_config_req, !isUpdateConf);
+
+	if (true == isUpdateConf)
 	{
 	    Json::Value data = Json::objectValue;
 		return on_admin_send_reply(data);

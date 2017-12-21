@@ -14,7 +14,7 @@ int TransferTimer::do_next_step(string& req_data)
 				return -1;
     		}
 			
-            if ("getChatProxyAddress" == m_cmd)
+            if ("getAddrByID" == m_cmd)
             {
                 if (on_get_cp_addr())
 				{
@@ -34,7 +34,7 @@ int TransferTimer::do_next_step(string& req_data)
 		}
 		default:
 		{
-			LogError("error state: %d", m_cur_step);
+			LogError("Wrong TransferTimer state: %d", m_cur_step);
 			return -1;
 		}
 	}
@@ -55,6 +55,7 @@ int TransferTimer::on_rsp_cp_addr()
 {
 	Json::Value data;
 
+	data["appID"]    = m_appID;
 	data["identity"] = m_identity;
 	if ("user" == m_identity)
 	{
@@ -70,7 +71,13 @@ int TransferTimer::on_rsp_cp_addr()
 		data["chatProxyPort"] = m_serviceInfo.cpPort;
 	}
 
-	return on_send_reply(data);
+	Json::Value arr;
+	arr.append(data);
+
+	Json::Value outData;
+	outData["AddrList"] = arr;
+	
+	return on_send_reply(outData);
 }
 
 int TransferTimer::on_get_cp_addr()
@@ -91,7 +98,6 @@ int TransferTimer::on_get_cp_addr()
 	}
 	else
 	{
-		//
 		LogError("Unknown identity: %s!", m_identity.c_str());
 		ON_ERROR_PARSE_DATA("identity");
 		return SS_ERROR;

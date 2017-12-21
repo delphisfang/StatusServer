@@ -224,7 +224,7 @@ int SessionOutTimer::on_session_timeout()
     if (CAppConfig::Instance()->GetService(m_serviceID, m_serviceInfo) 
     	|| m_serviceInfo.find_user(m_raw_userID))
     {
-        LogError("Failed to find user[%s] in service[%s], panic!!!", m_raw_userID.c_str(), m_serviceID.c_str());
+        //LogError("Failed to find user[%s] in service[%s], panic!!!", m_raw_userID.c_str(), m_serviceID.c_str());
 		//ON_ERROR_GET_DATA("service"); //need not send packet
         return SS_ERROR;
     }
@@ -232,7 +232,7 @@ int SessionOutTimer::on_session_timeout()
 
 	LogDebug("==>IN2");
 	//1.记录旧的sessionID，以发送timeout报文
-	//2.设置user的熟客ID
+	//2.set lastServiceID
     m_sessionID              = sess.sessionID;
 	m_userInfo.lastServiceID = sess.serviceID;
 	//3.删除旧session，创建新session
@@ -474,11 +474,13 @@ int UserServiceTimer::on_user_tag()
         return SS_ERROR;
     }
 
+	#if 0
 	//如果该tag内有熟客，优先分配tag内熟客
     if (0 == servHeap.find_service(m_lastServiceID) && SS_OK == on_user_lastService())
     {
         return SS_OK;
     }
+	#endif
 
 	//使用最小负载策略
 	if (find_least_service_by_tag(m_appID, m_tag, "", m_serviceInfo))
@@ -502,6 +504,12 @@ int UserServiceTimer::on_user_lastService()
 	if (false == m_serviceInfo.is_available())
 	{
         LogError("[%s]: Last service[%s] is offline/busy!", m_appID.c_str(), m_lastServiceID.c_str());
+		return SS_ERROR;
+	}
+
+	if (false == m_serviceInfo.check_tag_exist(m_raw_tag))
+	{
+		LogError("[%s]: Last service[%s] has no tag[%s]!", m_appID.c_str(), m_lastServiceID.c_str(), m_raw_tag.c_str());
 		return SS_ERROR;
 	}
 	
@@ -548,7 +556,7 @@ int UserServiceTimer::on_user_common()
 				LogWarn("Service[%s] is offline/busy, find next service!", (*it).c_str());
                 continue;
             }
-			
+
             m_serviceID     = *it;
 			m_raw_serviceID = delappID(m_serviceID);
             LogTrace("Connect userID:%s <-----> common serviceID:%s", m_userID.c_str(), m_serviceID.c_str());
@@ -603,6 +611,7 @@ int UserServiceTimer::on_dequeue_first_user()
     m_sessionID         = m_userInfo.sessionID;
     m_channel           = m_userInfo.channel;
     m_extends           = m_userInfo.extends;
+	//get lastServiceID
     m_raw_lastServiceID = m_userInfo.lastServiceID;
 	m_lastServiceID     = m_appID + "_" + m_raw_lastServiceID;
 

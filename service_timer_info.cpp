@@ -174,7 +174,7 @@ int ServiceLoginTimer::on_service_login()
     }
 	else //service first login, create and add new service
 	{
-		serv = ServiceInfo(m_data);
+		serv = ServiceInfo(m_data, DEF_USER_NUM);
 		LogDebug("Add new service: %s", m_serviceID.c_str());
 		DO_FAIL(AddService(m_appID, m_serviceID, serv));
 		DO_FAIL(AddTagOnlineServNum(m_appID, serv));
@@ -353,7 +353,7 @@ int ChangeServiceTimer::on_change_service()
 
 	if ("" != m_raw_changeServiceID)
 	{
-		DO_FAIL(on_change_service_by_serviceID());
+		DO_FAIL(on_change_service_by_serviceID(true));
 	}
 	else
 	{
@@ -368,20 +368,26 @@ int ChangeServiceTimer::on_change_service()
 }
 
 
-int ChangeServiceTimer::on_change_service_by_serviceID()
+int ChangeServiceTimer::on_change_service_by_serviceID(bool need_reply)
 {
 	//目标坐席下线
 	if (CAppConfig::Instance()->GetService(m_changeServiceID, m_dst_serviceInfo) 
 		|| "offline" == m_dst_serviceInfo.status)
 	{
-		on_service_offline();
+		if (true == need_reply)
+		{
+			on_service_offline();
+		}
 		return SS_ERROR;
 	}
 
 	//目标坐席忙
 	if (true == m_dst_serviceInfo.is_busy())
 	{
-		on_service_busy();
+		if (true == need_reply)
+		{
+			on_service_busy();
+		}
 		return SS_ERROR;
 	}
 
@@ -391,8 +397,21 @@ int ChangeServiceTimer::on_change_service_by_serviceID()
 
 int ChangeServiceTimer::on_change_service_by_tag()
 {
-	//不能转给自己
-	if (find_least_service_by_tag(m_appID, m_tag, m_serviceID, m_dst_serviceInfo))
+	//1、熟客优先
+	if ("lastServiceID" == m_priority)
+	{
+		DO_FAIL(CAppConfig::Instance()->GetUser(m_userID, m_userInfo));
+		m_raw_changeServiceID = m_userInfo.lastServiceID;
+		m_changeServiceID     = m_appID + "_" + m_raw_changeServiceID;
+		if (0 == on_change_service_by_serviceID(false))
+		{
+			LogTrace("[ChangeService] userID:%s <-----> lastServiceID:%s", m_userID.c_str(), m_changeServiceID.c_str());
+			return SS_OK;
+		}
+	}
+	
+	//2、tag内分配
+	if (find_least_service_by_tag(m_appID, m_tag, m_serviceID, m_dst_serviceInfo))//不能转给自己
 	{
 		//tag内未找到可用的目标坐席
 		on_no_tag_service();
@@ -426,6 +445,7 @@ int ChangeServiceTimer::on_change_session()
 	
 	//update user
 	GET_USER(CAppConfig::Instance()->GetUser(m_userID, m_userInfo));
+	//set lastServiceID
 	m_userInfo.lastServiceID = m_raw_serviceID;
 	DO_FAIL(UpdateUser(m_userID, m_userInfo));
 	

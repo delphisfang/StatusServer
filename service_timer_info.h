@@ -94,7 +94,7 @@ namespace statsvr
 		int on_service_offline();
 		int on_no_tag_service();
 		int on_change_service();
-		int on_change_service_by_serviceID();
+		int on_change_service_by_serviceID(bool need_reply);
 		int on_change_service_by_tag();
 		int on_change_session();
 		int on_send_change_success();

@@ -35,7 +35,7 @@ namespace statsvr
 		int  on_admin_send_reply(const Json::Value &rsp);
         int  on_admin_ping();
 		int  on_admin_getConf();
-		int  on_admin_config(bool need_reply);
+		int  on_admin_config(bool isUpdateConf);
 		int  on_admin_getServiceStatus();
 		int  get_app_today_status(string appID, Json::Value &appList);
 		int  on_admin_get_today_status();

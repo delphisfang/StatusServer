@@ -77,33 +77,6 @@ namespace statsvr
 		string m_status;
     };
 
-#if 0
-    class RefreshActiveTimer:public CTimerInfo
-    {
-        public:
-		enum STATE
-		{
-			STATE_INIT		= 0,
-			STATE_RESP_CP	= 1,
-			STATE_REFRESH_ATIME = 2,
-			STATE_END		= 255,
-		};
-
-        RefreshActiveTimer(CMCDProc* const proc
-                      , unsigned msg_seq
-                      , const timeval& ccd_time
-                      , string ccd_client_ip
-                      , uint64_t ret_flow
-                      , uint64_t max_time_gap) 
-                      : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
-        {}
-        ~RefreshActiveTimer();
-
-        int do_next_step(string& req_data);
-        int on_resp_cp();
-		int on_refresh_atime();
-    };
-#endif
     class ConnectServiceTimer:public CTimerInfo
     {
         public:

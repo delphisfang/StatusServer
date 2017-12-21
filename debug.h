@@ -146,7 +146,7 @@
 #define SERV_NAME ("serviceName")
 #define SERV_AVATAR ("serviceAvatar")
 #define MAX_USER_NUM_FIELD ("maxUserNum")
-#define DEF_USER_NUM (5)
+#define DEF_USER_NUM (CAppConfig::Instance()->getMaxConvNum(m_appID))
 
 #endif
 

@@ -444,15 +444,15 @@ int ConnectServiceTimer::on_appoint_service()
 	}
 
 	//发送connectService-reply报文，让用户排队
-	DO_FAIL(on_service_with_noqueue(false));
-	
+	DO_FAIL(on_service_with_noqueue(true));
+
 	//更新session
 	Session sess;
 	GET_SESS(get_user_session(m_appID, m_userID, &sess));
 	sess.serviceID = m_raw_appointServiceID;
 	sess.atime 	   = GetCurTimeStamp();
 	DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess));
-	
+
 	//更新user
 	UserInfo user;
 	GET_USER(CAppConfig::Instance()->GetUser(m_userID, user));
@@ -463,8 +463,9 @@ int ConnectServiceTimer::on_appoint_service()
 
 	//更新service
 	SET_SERV(serv.add_user(m_raw_userID));
-	DO_FAIL(UpdateService(m_serviceID, serv));
+	DO_FAIL(UpdateService(m_appointServiceID, serv));
 	LogTrace("Success to create new session: %s", sess.toString().c_str());
+	
 
 	//发送connectSuccess报文
 	return on_send_connect_success(sess, serv);
@@ -556,8 +557,11 @@ int ConnectServiceTimer::on_queue()
 	}
 	if ("" != m_raw_tag)
     	user.tag           = m_raw_tag;
-    if ("" != m_raw_lastServiceID)
+
+	//set lastServiceID
+	if ("" != m_raw_lastServiceID)
     	user.lastServiceID = m_raw_lastServiceID;
+	
     user.priority      = m_priority;
     user.queuePriority = m_queuePriority;
     user.atime = user.qtime = GetCurTimeStamp();///
@@ -800,6 +804,7 @@ int CloseSessionTimer::on_close_session()
 	
 	//update user
 	user.status        = "inYiBot";
+	//set lastServiceID
 	user.lastServiceID = m_raw_lastServiceID;
 	DO_FAIL(UpdateUser(m_userID, user));
 	

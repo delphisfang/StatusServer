@@ -236,7 +236,7 @@ ServiceInfo::ServiceInfo()
 	userList.clear();
 	serviceName.clear();
 	serviceAvatar.clear();
-	maxUserNum = DEF_USER_NUM;
+	maxUserNum = 5;
 	//whereFrom.clear();
 }
 
@@ -251,11 +251,10 @@ ServiceInfo::~ServiceInfo()
 	userList.clear();
 	serviceName.clear();
 	serviceAvatar.clear();
-	maxUserNum = DEF_USER_NUM;
 	//whereFrom.clear();
 }
 
-ServiceInfo::ServiceInfo(const string& strServiceInfo)
+ServiceInfo::ServiceInfo(const string& strServiceInfo, unsigned dft_user_num)
 {
 	Json::Reader reader;
 	Json::Value value;
@@ -278,7 +277,7 @@ ServiceInfo::ServiceInfo(const string& strServiceInfo)
 	cpPort			 = get_value_uint(value, CP_PORT);
 	serviceName 	 = get_value_str(value, SERV_NAME);
 	serviceAvatar    = get_value_str(value, SERV_AVATAR);
-	maxUserNum       = get_value_uint(value, MAX_USER_NUM_FIELD, DEF_USER_NUM);
+	maxUserNum       = get_value_uint(value, MAX_USER_NUM_FIELD, dft_user_num);
 	//whereFrom 	 = value["whereFrom"].asString();
 
 	unsigned tagsLen = value["tags"].size();
@@ -393,6 +392,18 @@ bool ServiceInfo::is_busy() const
 	}
 }
 
+bool ServiceInfo::check_tag_exist(const string &raw_tag) const
+{
+	set<string>::iterator it;
+	for (it = tags.begin(); it != tags.end(); ++it)
+	{
+		if (raw_tag == *it)
+		{
+			return true;
+		}
+	}
+	return false;
+}
 
 
 ServiceHeap::ServiceHeap()

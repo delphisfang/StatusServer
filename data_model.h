@@ -78,7 +78,7 @@ namespace statsvr
 	{
 	    ServiceInfo();
 		~ServiceInfo();
-	    ServiceInfo(const string& strServiceInfo);
+	    ServiceInfo(const string& strServiceInfo, unsigned dft_user_num);
 
 		void toJson(Json::Value &value) const;
 	    string toString() const;
@@ -89,6 +89,7 @@ namespace statsvr
 		unsigned user_count() const;
 		bool is_available() const;
 		bool is_busy() const;
+		bool check_tag_exist(const string &raw_tag) const;
 		
 		string serviceID;
 		string status;

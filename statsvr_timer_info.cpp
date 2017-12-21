@@ -755,7 +755,7 @@ int CTimerInfo::find_least_service_by_tag(const string &appID, const string &app
         }
         else
         {
-			service_load = (double)serv.user_count() / (double)serv.maxUserNum;
+			service_load = ((double)serv.user_count()) / ((double)serv.maxUserNum);
 			if (service_load < min_load)
 			{
 				min_load    = service_load;
@@ -901,7 +901,7 @@ int CTimerInfo::KV_parse_service(string app_serviceID)
 	DO_FAIL(KVGetKeyValue(KV_CACHE, serv_key, serv_value));
 	
 	/* 解析每个service的详细信息 */
-	ServiceInfo serv(serv_value);
+	ServiceInfo serv(serv_value, DEF_USER_NUM);
 	SET_USER(CAppConfig::Instance()->AddService(app_serviceID, serv));
 	
 	/* 添加到ServiceHeap */

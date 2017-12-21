@@ -12,7 +12,7 @@ CAppConfig* CAppConfig::m_instance = NULL;
 
 /************************************************************************************************/
 
-int CAppConfig::UpdateappIDConf (const Json::Value &push_config_req)
+int CAppConfig::UpdateappIDConf(const Json::Value &push_config_req, bool need_set_appIDList)
 {
 	Json::Value configList = push_config_req["appList"];
 	int size = configList.size();
@@ -200,11 +200,14 @@ int CAppConfig::UpdateappIDConf (const Json::Value &push_config_req)
 		#endif
 	}
 
-	Json::Value arr;
-	arr["appIDList"] = appIDList;
-	string appIDListString = arr.toStyledString();
-	CAppConfig::Instance()->SetNowappIDList(appIDListString);
-	LogTrace("[updateConf] SetNowappIDList: %s", appIDListString.c_str());
+	if (true == need_set_appIDList)
+	{
+		Json::Value arr;
+		arr["appIDList"] = appIDList;
+		string appIDListString = arr.toStyledString();
+		CAppConfig::Instance()->SetNowappIDList(appIDListString);
+		LogTrace("[updateConf] SetNowappIDList: %s", appIDListString.c_str());
+	}
 	
 	return 0;
 }
@@ -501,6 +504,7 @@ int CAppConfig::UpdateService(const string &app_serviceID, const ServiceInfo &se
 	return 0;
 }
 
+#if 0
 int CAppConfig::UpdateService(const string &app_serviceID, const string &value)
 {
 	ServiceInfo serv(value);
@@ -509,6 +513,7 @@ int CAppConfig::UpdateService(const string &app_serviceID, const string &value)
 	_servicelist[app_serviceID] = serv;
 	return 0;
 }
+#endif
 
 int CAppConfig::DelService(const string &app_serviceID)
 {

@@ -87,7 +87,7 @@ public:
 	int CheckDel(const map<unsigned, bool>& map_now);
 	int CheckDel(const map<string, bool>& map_now);
 
-	int UpdateappIDConf (const Json::Value &push_config_req);
+	int UpdateappIDConf (const Json::Value &push_config_req, bool need_set_appIDList);
 	int SetNowappIDList(string& value);
 	int GetNowappIDList(string& value);
 	
@@ -117,7 +117,7 @@ public:
 	int AddService(const string &app_serviceID, ServiceInfo &serv);
 	int GetService(const string& app_serviceID, ServiceInfo &serv);
 	int UpdateService(const string& app_serviceID, const ServiceInfo& serv);
-	int UpdateService(const string& app_serviceID, const string& value);
+	//int UpdateService(const string& app_serviceID, const string& value);
 	int DelService(const string& app_serviceID);
 	int ServiceListToString(string& strServIDList);
 

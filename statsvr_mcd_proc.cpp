@@ -344,7 +344,7 @@ int32_t CMCDProc::InitCmdMap()
 	m_cmdMap["overload"]            = SERVICE_PULLNEXT;
 	m_cmdMap["refreshSession"]      = REFRESH_SESSION;
 
-	m_cmdMap["getChatProxyAddress"] = GET_CP_ADDR;
+	m_cmdMap["getAddrByID"] = GET_CP_ADDR;
 	
 	return 0;
 }
