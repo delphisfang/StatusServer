@@ -148,5 +148,5 @@
 #define MAX_USER_NUM_FIELD ("maxUserNum")
 #define DEF_USER_NUM (CAppConfig::Instance()->getMaxConvNum(m_appID))
 
-#endif
+#endif /* _MY_DEBUG_H_ */
 
