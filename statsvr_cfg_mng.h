@@ -47,16 +47,16 @@ public:
     int       _stat_timeout_2;
     int       _stat_timeout_3;
 
-	/* fff
+    /* fff
     int       _re_msg_send_gap;
     int       _re_msg_send_timeout;
     */
     
     int32_t m_conf_cache_size;//MB
-	int32_t m_conf_shmkey;
-	int32_t m_node_num;
-	int32_t m_block_size;
-	int32_t m_read_only;
+    int32_t m_conf_shmkey;
+    int32_t m_node_num;
+    int32_t m_block_size;
+    int32_t m_read_only;
 
     unsigned  _time_out;
 
@@ -69,22 +69,22 @@ public:
     unsigned  _err_push_port;
     string    _env;
     string    _local_ip;
-	unsigned  _local_port;
-	
+    unsigned  _local_port;
+    
     unsigned  _queue_rate;
     unsigned  _yibot_time;
     time_t    _service_time_gap;
-	time_t    _yibot_time_gap;
-	
-	string    _handler_so_path;
+    time_t    _yibot_time_gap;
+    
+    string    _handler_so_path;
 
-	// add end
+    // add end
 private:
     int loadConfig();
     int32_t LoadCacheConfig(CFileConfig& page);
-	int GetDefault(CFileConfig& page, const string& key, int defval);
-	string GetDefault(CFileConfig& page, const string& key, const string& defval);
-	
+    int GetDefault(CFileConfig& page, const string& key, int defval);
+    string GetDefault(CFileConfig& page, const string& key, const string& defval);
+    
     std::string _config_path;
 };
 

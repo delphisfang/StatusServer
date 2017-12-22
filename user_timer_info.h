@@ -17,11 +17,11 @@ namespace statsvr
     class EchoTimer: public CTimerInfo
     {
         public:
-		enum STATE
-		{
-			STATE_INIT		= 0,
-			STATE_END		= 255,
-		};
+        enum STATE
+        {
+            STATE_INIT        = 0,
+            STATE_END        = 255,
+        };
 
         EchoTimer(CMCDProc* const proc
                       , unsigned msg_seq
@@ -51,7 +51,7 @@ namespace statsvr
         ~GetUserInfoTimer();
 
         int do_next_step(string& req_data);
-		int on_not_online();
+        int on_not_online();
         int on_get_userinfo();
     };
 
@@ -69,12 +69,12 @@ namespace statsvr
         ~UserOnlineTimer();
 
         int do_next_step(string& req_data);
-		//int on_resp_cp();
-		//int on_already_online();
-		void set_user_fields(UserInfo &user);
-		int on_user_online();
+        //int on_resp_cp();
+        //int on_already_online();
+        void set_user_fields(UserInfo &user);
+        int on_user_online();
 
-		string m_status;
+        string m_status;
     };
 
     class ConnectServiceTimer:public CTimerInfo
@@ -92,17 +92,17 @@ namespace statsvr
         ~ConnectServiceTimer();
 
         int do_next_step(string& req_data);
-		int set_data(Json::Value &data);
-		int on_already_onqueue();
-		int on_no_service();
-		int on_reject_enqueue();
-		int on_already_inservice();
-		int on_service_with_noqueue(bool flag);
-		int on_appoint_service_offline();
-		int on_send_connect_success(const Session &sess, const ServiceInfo &serv);
-		int on_appoint_service();
-		int on_queue();
-		int on_connect_service();
+        int set_data(Json::Value &data);
+        int on_already_onqueue();
+        int on_no_service();
+        int on_reject_enqueue();
+        int on_already_inservice();
+        int on_service_with_noqueue(bool flag);
+        int on_appoint_service_offline();
+        int on_send_connect_success(const Session &sess, const ServiceInfo &serv);
+        int on_appoint_service();
+        int on_queue();
+        int on_connect_service();
     };
 
     class CancelQueueTimer:public CTimerInfo
@@ -120,8 +120,8 @@ namespace statsvr
 
         int do_next_step(string& req_data);
         int on_resp_cp();
-		int on_not_onqueue();
-		int on_cancel_queue();
+        int on_not_onqueue();
+        int on_cancel_queue();
     };
 
     class CloseSessionTimer:public CTimerInfo
@@ -139,11 +139,11 @@ namespace statsvr
 
         int do_next_step(string& req_data);
         int on_closeSession_reply(const string &oldSessionID);
-		int on_not_inservice();
-		int on_close_session();
+        int on_not_inservice();
+        int on_close_session();
 
-		Session m_session;
-		ServiceInfo m_serviceInfo;
+        Session m_session;
+        ServiceInfo m_serviceInfo;
     };
 
 }

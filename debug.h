@@ -4,25 +4,25 @@
 #define SS_OK (0)
 #define SS_ERROR (-1)
 
-#define LogDebug(fmt, ...)	do{			\
-		DEBUG_P(LOG_DEBUG, "[DEBUG] [%s:%d] " fmt "\n", __func__, __LINE__, ##__VA_ARGS__);	\
-	}while(0)
+#define LogDebug(fmt, ...)    do{            \
+        DEBUG_P(LOG_DEBUG, "[DEBUG] [%s:%d] " fmt "\n", __func__, __LINE__, ##__VA_ARGS__);    \
+    }while(0)
 
-#define LogWarn(fmt, ...)	do{			\
-		DEBUG_P(LOG_ERROR, "\033[1m\033[33;40m[ERROR] [%s:%d] " fmt "\033[0m\n", __func__, __LINE__, ##__VA_ARGS__);	\
-	}while(0)
+#define LogWarn(fmt, ...)    do{            \
+        DEBUG_P(LOG_ERROR, "\033[1m\033[33;40m[ERROR] [%s:%d] " fmt "\033[0m\n", __func__, __LINE__, ##__VA_ARGS__);    \
+    }while(0)
 
-#define LogError(fmt, ...)	do{			\
-		DEBUG_P(LOG_ERROR, "\033[1m\033[31;40m[ERROR] [%s:%d] " fmt "\033[0m\n", __func__, __LINE__, ##__VA_ARGS__);	\
-	}while(0)
+#define LogError(fmt, ...)    do{            \
+        DEBUG_P(LOG_ERROR, "\033[1m\033[31;40m[ERROR] [%s:%d] " fmt "\033[0m\n", __func__, __LINE__, ##__VA_ARGS__);    \
+    }while(0)
 
-#define LogTrace(fmt, ...)	do{			\
-		DEBUG_P(LOG_TRACE, "\033[1m\033[32;40m[TRACE] [%s:%d] " fmt "\033[0m\n", __func__, __LINE__, ##__VA_ARGS__);	\
-	}while(0)
+#define LogTrace(fmt, ...)    do{            \
+        DEBUG_P(LOG_TRACE, "\033[1m\033[32;40m[TRACE] [%s:%d] " fmt "\033[0m\n", __func__, __LINE__, ##__VA_ARGS__);    \
+    }while(0)
 
-#define LogFatal(fmt, ...)	do{			\
-		DEBUG_P(LOG_FATAL, "[FATAL] [%s:%d] " fmt "\n", __func__, __LINE__, ##__VA_ARGS__);	\
-	}while(0)
+#define LogFatal(fmt, ...)    do{            \
+        DEBUG_P(LOG_FATAL, "[FATAL] [%s:%d] " fmt "\n", __func__, __LINE__, ##__VA_ARGS__);    \
+    }while(0)
 
 #define LogErrPrint(fmt, ...)   do{         \
         LogError("[ERROR] [%s:%d]" fmt "\n", __func__, __LINE__, ##__VA_ARGS__);    \
@@ -35,51 +35,51 @@
 #define MINOR_VERSION  "0"
 
 #define ON_ERROR_PARSE_PACKET() do{\
-		LogError("Error parse http data!");\
-		on_error_parse_packet("Error unknown packet");\
-	}while(0)
+        LogError("Error parse http data!");\
+        on_error_parse_packet("Error unknown packet");\
+    }while(0)
 
 #define ON_ERROR_PARSE_DATA(data_name) do{\
-		LogError("[%s] Error parse %s!\n", m_search_no.c_str(), data_name);\
-		on_error_parse_data(data_name);\
-	}while(0)
+        LogError("[%s] Error parse %s!\n", m_search_no.c_str(), data_name);\
+        on_error_parse_data(data_name);\
+    }while(0)
 
 #define ON_ERROR_GET_DATA(data_name) do{\
-		LogError("[%s] Error get %s!", m_search_no.c_str(), data_name);\
-		on_error_get_data(data_name);\
-	}while(0)
+        LogError("[%s] Error get %s!", m_search_no.c_str(), data_name);\
+        on_error_get_data(data_name);\
+    }while(0)
 
 #define ON_ERROR_SET_DATA(data_name) do{\
-			LogError("[%s] Error set %s!", m_search_no.c_str(), data_name);\
-			on_error_set_data(data_name);\
-		}while(0)
+            LogError("[%s] Error set %s!", m_search_no.c_str(), data_name);\
+            on_error_set_data(data_name);\
+        }while(0)
 
 
 #define DO_FAIL(expr) do{\
-			if (SS_OK != (expr))\
-			{\
-				LogError("[ERROR] Failed to call %s!", #expr);\
-				return SS_ERROR;\
-			}\
-		}while(0)
+            if (SS_OK != (expr))\
+            {\
+                LogError("[ERROR] Failed to call %s!", #expr);\
+                return SS_ERROR;\
+            }\
+        }while(0)
 
 #define GET_FAIL(expr, data_name) do{\
-			if (SS_OK != (expr))\
-			{\
-				LogError("[ERROR] Failed to call %s!", #expr);\
-				ON_ERROR_GET_DATA(data_name);\
-				return SS_ERROR;\
-			}\
-		}while(0)
+            if (SS_OK != (expr))\
+            {\
+                LogError("[ERROR] Failed to call %s!", #expr);\
+                ON_ERROR_GET_DATA(data_name);\
+                return SS_ERROR;\
+            }\
+        }while(0)
 
 #define SET_FAIL(expr, data_name) do{\
-			if (SS_OK != (expr))\
-			{\
-				LogError("[ERROR] Failed to call %s!", #expr);\
-				ON_ERROR_SET_DATA(data_name);\
-				return SS_ERROR;\
-			}\
-		}while(0)
+            if (SS_OK != (expr))\
+            {\
+                LogError("[ERROR] Failed to call %s!", #expr);\
+                ON_ERROR_SET_DATA(data_name);\
+                return SS_ERROR;\
+            }\
+        }while(0)
 
 #define GET_USER(expr) GET_FAIL(expr, "user")
 #define GET_SERV(expr) GET_FAIL(expr, "service")

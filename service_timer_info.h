@@ -28,7 +28,7 @@ namespace statsvr
         ~GetServiceInfoTimer();
 
         int do_next_step(string& req_data);
-		int on_not_online();
+        int on_not_online();
         int on_get_serviceinfo();
     };
 
@@ -46,10 +46,10 @@ namespace statsvr
         ~ServiceLoginTimer();
 
         int do_next_step(string& req_data);
-		int on_serviceLogin_reply();
-		int on_already_online();
-		void set_service_fields(ServiceInfo &serv);
-		int on_service_login();
+        int on_serviceLogin_reply();
+        int on_already_online();
+        void set_service_fields(ServiceInfo &serv);
+        int on_service_login();
     };
 
     class ServiceChangeStatusTimer:public CTimerInfo
@@ -67,10 +67,10 @@ namespace statsvr
 
         int do_next_step(string& req_data);
         int on_resp_cp();
-		int on_already_online();
-		int on_already_offline();
-		int on_not_online();
-		int on_service_changestatus();
+        int on_already_online();
+        int on_already_offline();
+        int on_not_online();
+        int on_service_changestatus();
     };
 
     class ChangeServiceTimer:public CTimerInfo
@@ -88,22 +88,22 @@ namespace statsvr
 
         int do_next_step(string& req_data);
         int on_resp_cp();
-		void set_change_service_data(Json::Value &data);
-		int on_service_busy();
-		int on_session_wrong();
-		int on_service_offline();
-		int on_no_tag_service();
-		int on_change_service();
-		int on_change_service_by_serviceID(bool need_reply);
-		int on_change_service_by_tag();
-		int on_change_session();
-		int on_send_change_success();
-		
-		int m_maxConvNum;
-		UserInfo m_userInfo;
-		ServiceInfo m_src_serviceInfo;
-		ServiceInfo m_dst_serviceInfo;
-		Session m_session;
+        void set_change_service_data(Json::Value &data);
+        int on_service_busy();
+        int on_session_wrong();
+        int on_service_offline();
+        int on_no_tag_service();
+        int on_change_service();
+        int on_change_service_by_serviceID(bool need_reply);
+        int on_change_service_by_tag();
+        int on_change_session();
+        int on_send_change_success();
+        
+        int m_maxConvNum;
+        UserInfo m_userInfo;
+        ServiceInfo m_src_serviceInfo;
+        ServiceInfo m_dst_serviceInfo;
+        Session m_session;
     };
 
     class ServicePullNextTimer:public CTimerInfo
@@ -120,11 +120,11 @@ namespace statsvr
         ~ServicePullNextTimer();
 
         int do_next_step(string& req_data);
-		int on_send_connect_success();
+        int on_send_connect_success();
         int on_pull_next();
 
-		Session m_session;
-		ServiceInfo m_serviceInfo;
+        Session m_session;
+        ServiceInfo m_serviceInfo;
     };
 
 }
