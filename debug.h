@@ -149,5 +149,5 @@
 #define DEF_USER_NUM (CAppConfig::Instance()->getMaxConvNum(m_appID))
 
 /* end of file */
-#endif
+#endif /* _MY_DEBUG_H_ */
 
