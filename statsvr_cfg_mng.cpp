@@ -10,7 +10,7 @@ using namespace statsvr;
 
 CStatSvrCfgMng::CStatSvrCfgMng()
 {
-	// debug log default config
+    // debug log default config
     _log_para.log_level_     = DEF_LOG_LEVEL;
     _log_para.log_type_      = DEF_LOG_TYPE;
     _log_para.path_          = DEF_LOG_PATH;
@@ -18,7 +18,7 @@ CStatSvrCfgMng::CStatSvrCfgMng()
     _log_para.max_file_size_ = DEF_FILE_SIZE;
     _log_para.max_file_no_   = DEF_MIN_LOG_FILE_NUM;
 
-	// stat log default config
+    // stat log default config
     _stat_log_para.log_level_     = DEF_LOG_LEVEL;
     _stat_log_para.log_type_      = DEF_LOG_TYPE;
     _stat_log_para.path_          = DEF_LOG_PATH;
@@ -27,7 +27,7 @@ CStatSvrCfgMng::CStatSvrCfgMng()
     _stat_log_para.max_file_no_   = DEF_MIN_LOG_FILE_NUM;
     _stat_gap                     = DEF_STAT_GAP;
 
-	// water log default config
+    // water log default config
     _water_log.log_level_     = DEF_LOG_LEVEL;
     _water_log.log_type_      = DEF_LOG_TYPE;
     _water_log.path_          = DEF_LOG_PATH;
@@ -45,17 +45,17 @@ CStatSvrCfgMng::~CStatSvrCfgMng()
 
 int32_t CStatSvrCfgMng::LoadCacheConfig(CFileConfig& page)
 {
-	m_conf_cache_size = GetDefault(page, "root\\config_cache\\cache_size", 10);
-	m_conf_shmkey     = GetDefault(page, "root\\config_cache\\shmkey", 612500);
-	m_node_num        = GetDefault(page, "root\\config_cache\\node_num", 10000);
-	m_block_size      = GetDefault(page, "root\\config_cache\\block_size", 100);
-	m_read_only       = GetDefault(page, "root\\config_cache\\read_only", 1);
-	
-	return 0;
+    m_conf_cache_size = GetDefault(page, "root\\config_cache\\cache_size", 10);
+    m_conf_shmkey     = GetDefault(page, "root\\config_cache\\shmkey", 612500);
+    m_node_num        = GetDefault(page, "root\\config_cache\\node_num", 10000);
+    m_block_size      = GetDefault(page, "root\\config_cache\\block_size", 100);
+    m_read_only       = GetDefault(page, "root\\config_cache\\read_only", 1);
+    
+    return 0;
 }
 
 int CStatSvrCfgMng::loadConfig()
-{	
+{    
     CFileConfig page;
     page.Init(_config_path);
 
@@ -89,7 +89,7 @@ int CStatSvrCfgMng::loadConfig()
     struct hostent *hptr;
     if ((hptr = gethostbyname(_config_domin.c_str())) == NULL)
     {
-		LogError("Failed to gethostbyname()!");
+        LogError("Failed to gethostbyname()!");
         _config_ip = "127.0.0.1";
     }
     else
@@ -97,7 +97,7 @@ int CStatSvrCfgMng::loadConfig()
         _config_ip.assign(inet_ntoa(*((struct in_addr *)hptr->h_addr)));
     }
     _config_port = GetDefault(page, "root\\config_port", 80);
-	LogTrace("config_domain: %s, config_ip: %s, config_port: %u", _config_domin.c_str(), _config_ip.c_str(), _config_port);
+    LogTrace("config_domain: %s, config_ip: %s, config_port: %u", _config_domin.c_str(), _config_ip.c_str(), _config_port);
 
     _err_push_ip = GetDefault(page, "root\\err_push_ip", "127.0.0.1");
     if (_err_push_ip == "127.0.0.1")
@@ -111,13 +111,13 @@ int CStatSvrCfgMng::loadConfig()
     _err_push_port = GetDefault(page, "root\\err_push_port", 80);
     _env           = GetDefault(page, "root\\env", "test");
     _local_ip      = GetDefault(page, "root\\local_ip", "127.0.0.1");
-	_local_port	   = GetDefault(page, "root\\local_port", 80);
+    _local_port       = GetDefault(page, "root\\local_port", 80);
 
     _service_time_gap = GetDefault(page, "root\\service_time_gap", 1800); //30min
     _yibot_time_gap   = GetDefault(page, "root\\yibot_time_gap", 1000000);
     _queue_rate       = GetDefault(page, "root\\operation\\queue_rate", 10000);
     _yibot_time       = GetDefault(page, "root\\operation\\yibot_time", 480); //min
-	LogTrace("yibot_time_gap: %d, service_time_gap: %d, queue_rate: %d", _yibot_time_gap, _service_time_gap, _queue_rate);
+    LogTrace("yibot_time_gap: %d, service_time_gap: %d, queue_rate: %d", _yibot_time_gap, _service_time_gap, _queue_rate);
 
     LoadCacheConfig(page);
     return 0;
@@ -125,55 +125,55 @@ int CStatSvrCfgMng::loadConfig()
 
 int CStatSvrCfgMng::GetDefault(CFileConfig& page, const string& key, int defval)
 {
-	try
-	{
-		return tfc::base::from_str<int>(page[key]);
-	}
-	catch (...)
-	{
-		return defval;
-	}
+    try
+    {
+        return tfc::base::from_str<int>(page[key]);
+    }
+    catch (...)
+    {
+        return defval;
+    }
 }
 
 string CStatSvrCfgMng::GetDefault(CFileConfig& page, const string& key, const string& defval)
 {
-	try
-	{
-		return page[key];
-	}
-	catch (...)
-	{
-		return defval;
-	}
+    try
+    {
+        return page[key];
+    }
+    catch (...)
+    {
+        return defval;
+    }
 }
 
 /******************************** public functions ********************************/
 
 int CStatSvrCfgMng::LoadCfg(const string& cfg_path)
 {
-	_config_path = cfg_path;
-	return loadConfig();
+    _config_path = cfg_path;
+    return loadConfig();
 }
 
 int CStatSvrCfgMng::Reload()
 {
-	return loadConfig();
+    return loadConfig();
 }
 
 string CStatSvrCfgMng::ToString()
 {
-	string ret = "\n-----------------config begin-------------------\n";	
-	char buf[64];
+    string ret = "\n-----------------config begin-------------------\n";    
+    char buf[64];
 
-	memset(buf, 0, sizeof(buf));
-	snprintf(buf, sizeof(buf), "log_level:%d\n", _log_para.log_level_);
-	ret += string(buf);
+    memset(buf, 0, sizeof(buf));
+    snprintf(buf, sizeof(buf), "log_level:%d\n", _log_para.log_level_);
+    ret += string(buf);
 
-	memset(buf, 0, sizeof(buf));
-	snprintf(buf, sizeof(buf), "timeout:%u\n", _time_out);
-	ret += string(buf);
-	
-	ret += "-----------------config end---------------------\n";
-	return ret;
+    memset(buf, 0, sizeof(buf));
+    snprintf(buf, sizeof(buf), "timeout:%u\n", _time_out);
+    ret += string(buf);
+    
+    ret += "-----------------config end---------------------\n";
+    return ret;
 }
 

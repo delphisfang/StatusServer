@@ -65,16 +65,16 @@ unsigned  str2unsign(const unsigned char* what,int len);
 int GetMd5random(char * value, unsigned value_len, unsigned mod_base);
 
 /*
- * make_flow64():		Get a 64 bit flow number from IP, PORT and Index.
- * @ip:					IP.
- * @port:				PORT.
- * @index:				Internal index.
- * Returns:				Always return a flow number.
+ * make_flow64():        Get a 64 bit flow number from IP, PORT and Index.
+ * @ip:                    IP.
+ * @port:                PORT.
+ * @index:                Internal index.
+ * Returns:                Always return a flow number.
  */
 static inline unsigned long long
                     make_flow64(unsigned ip, unsigned short port, unsigned short index = 0)
 {
-    unsigned long long	flow = 0, flow_low = 0;
+    unsigned long long    flow = 0, flow_low = 0;
 
     flow = ip;
     flow = flow << 32;

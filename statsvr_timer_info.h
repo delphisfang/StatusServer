@@ -20,59 +20,59 @@ using namespace tfc::base;
 
 namespace statsvr
 {
-	class CMCDProc;
+    class CMCDProc;
 
     class CTimerInfo : public tfc::base::CFastTimerInfo
     {
     public:
-	    CTimerInfo()
-	    {
-	    }
+        CTimerInfo()
+        {
+        }
 
-	    CTimerInfo(CMCDProc* const proc, unsigned msg_seq, const timeval& ccd_time, string ccd_client_ip
-	             , uint64_t ret_flow, uint64_t max_time_gap = 10000)
-	    {
-	        gettimeofday(&m_start_time, NULL);
-	        m_op_start      = m_start_time;
-	        m_end_time      = m_start_time;
-	        m_cur_step      = 0;
-	        m_errno         = 0;
-	        m_msg_seq       = msg_seq;                
-	        m_proc          = proc;
-	        m_max_time_gap  = max_time_gap;
-	        m_ccd_time      = ccd_time;
-	        m_ret_flow      = ret_flow;
-	        m_client_ip     = ccd_client_ip;
-	        m_errmsg.clear();
+        CTimerInfo(CMCDProc* const proc, unsigned msg_seq, const timeval& ccd_time, string ccd_client_ip
+                 , uint64_t ret_flow, uint64_t max_time_gap = 10000)
+        {
+            gettimeofday(&m_start_time, NULL);
+            m_op_start      = m_start_time;
+            m_end_time      = m_start_time;
+            m_cur_step      = 0;
+            m_errno         = 0;
+            m_msg_seq       = msg_seq;                
+            m_proc          = proc;
+            m_max_time_gap  = max_time_gap;
+            m_ccd_time      = ccd_time;
+            m_ret_flow      = ret_flow;
+            m_client_ip     = ccd_client_ip;
+            m_errmsg.clear();
 
-	        m_cmd.clear();
-	        m_seq = 0;
+            m_cmd.clear();
+            m_seq = 0;
 
-			m_raw_userID.clear();
-			m_raw_serviceID.clear();
-			m_raw_changeServiceID.clear();
-			m_raw_lastServiceID.clear();
-			m_raw_appointServiceID.clear();
+            m_raw_userID.clear();
+            m_raw_serviceID.clear();
+            m_raw_changeServiceID.clear();
+            m_raw_lastServiceID.clear();
+            m_raw_appointServiceID.clear();
 
-	        m_userID.clear();
-	        m_serviceID.clear();
-	        m_changeServiceID.clear();
-	        m_lastServiceID.clear();
-			m_appointServiceID.clear();
+            m_userID.clear();
+            m_serviceID.clear();
+            m_changeServiceID.clear();
+            m_lastServiceID.clear();
+            m_appointServiceID.clear();
 
-			m_sessionID.clear();
-			m_identity.clear();
-			m_priority.clear();
-			m_extends.clear();
-	        //m_content.clear();
+            m_sessionID.clear();
+            m_identity.clear();
+            m_priority.clear();
+            m_extends.clear();
+            //m_content.clear();
 
-	        //m_ret_code.clear();
-	        //m_ret_msg.clear();
-	        m_search_no.clear();
+            //m_ret_code.clear();
+            //m_ret_msg.clear();
+            m_search_no.clear();
 
-	        //m_tags.clear();
-	        m_queuePriority = 0;
-	    }
+            //m_tags.clear();
+            m_queuePriority = 0;
+        }
 
         virtual ~CTimerInfo()
         {
@@ -97,69 +97,68 @@ namespace statsvr
         uint32_t GetMsgSeq() { return m_msg_seq; }
         uint64_t GetTimeGap();
 
-		void on_error_parse_packet(string errmsg);
-		void on_error_get_data(string data_name);
-		void on_error_set_data(string data_name);
-		void on_error_parse_data(string data_name);
-		void set_user_data(Json::Value &data);
-		void set_service_data(Json::Value & data);
-		int on_send_request(string cmd, string ip, unsigned short port, const Json::Value &data, bool with_code = false);
-		int on_send_reply(const Json::Value &data);
-		int on_send_error_reply(ERROR_TYPE code, string msg, const Json::Value &data);
+        void on_error_parse_packet(string errmsg);
+        void on_error_get_data(string data_name);
+        void on_error_set_data(string data_name);
+        void on_error_parse_data(string data_name);
+        void set_user_data(Json::Value &data);
+        void set_service_data(Json::Value & data);
+        int on_send_request(string cmd, string ip, unsigned short port, const Json::Value &data, bool with_code = false);
+        int on_send_reply(const Json::Value &data);
+        int on_send_error_reply(ERROR_TYPE code, string msg, const Json::Value &data);
 
 
-		/***************** never use m_xxx in methods below, keep them stateless **************/
-		
-		int get_user_session(const string &appID, const string &app_userID, Session *sess);
-		void get_user_json(const string &appID, const string &app_userID, const UserInfo &user, Json::Value &userJson);
-		void construct_user_json(const UserInfo &user, const Session &sess, Json::Value &userJson);
-		int reply_user_json_A(const string &appID, const string &app_userID, const UserInfo &user);
-		int reply_user_json_B(const UserInfo &user, const Session &sess);
-		unsigned get_service_queuenum(const string &appID, const ServiceInfo &serv);
-		int get_service_json(const string &appID, const ServiceInfo &serv, Json::Value &servJson);
-		int update_user_session(const string &appID, const string &app_userID, Session *sess, long long gap_warn, long long gap_expire);
-		int delete_user_session(const string &appID, const string &app_userID);
-		int create_user_session(const string &appID, const string &app_userID, Session *sess, long long gap_warn, long long gap_expire);
-		string gen_sessionID(const string &app_userID);
-		int get_normal_queue(const string &appID, const string &raw_tag, UserQueue **uq);
-		int get_highpri_queue(const string &appID, const string &raw_tag, UserQueue **uq);
+        /***************** never use m_xxx in methods below, keep them stateless **************/
 
-		int find_random_service_by_tag(const string &appID, const string &app_tag,
-								const string &old_app_serviceID, ServiceInfo &target_serv);
-		int find_least_service_by_tag(const string &appID, const string &app_tag,
-									const string &old_app_serviceID, ServiceInfo &target_serv);
-		
-		/********************************* KV methods *************************************/
+        int get_user_session(const string &appID, const string &app_userID, Session *sess);
+        void get_user_json(const string &appID, const string &app_userID, const UserInfo &user, Json::Value &userJson);
+        void construct_user_json(const UserInfo &user, const Session &sess, Json::Value &userJson);
+        int reply_user_json_A(const string &appID, const string &app_userID, const UserInfo &user);
+        int reply_user_json_B(const UserInfo &user, const Session &sess);
+        unsigned get_service_queuenum(const string &appID, const ServiceInfo &serv);
+        int get_service_json(const string &appID, const ServiceInfo &serv, Json::Value &servJson);
+        int update_user_session(const string &appID, const string &app_userID, Session *sess, long long gap_warn, long long gap_expire);
+        int delete_user_session(const string &appID, const string &app_userID);
+        int create_user_session(const string &appID, const string &app_userID, Session *sess, long long gap_warn, long long gap_expire);
+        string gen_sessionID(const string &app_userID);
+        int get_normal_queue(const string &appID, const string &raw_tag, UserQueue **uq);
+        int get_highpri_queue(const string &appID, const string &raw_tag, UserQueue **uq);
 
-		int KV_set_userIDList();
-		int KV_set_servIDList();
-		int KV_set_user(string app_userID, const UserInfo &user);
-		int KV_set_service(string app_serviceID, const ServiceInfo &serv);
-		int KV_del_service(const string &app_serviceID);
-		int KV_set_session(string app_userID, const Session &sess, long long gap_warn, long long gap_expire);
-		int KV_del_session(string app_userID);
-		int KV_set_queue(string appID, string raw_tag, int highpri);
-		int KV_parse_user(string app_userID);
-		int KV_parse_session(string app_userID);
-		int KV_parse_service(string app_serviceID);
-		int KV_parse_queue(string app_tag, bool highpri);
+        int find_random_service_by_tag(const string &appID, const string &app_tag,
+                                const string &old_app_serviceID, ServiceInfo &target_serv);
+        int find_least_service_by_tag(const string &appID, const string &app_tag,
+                                    const string &old_app_serviceID, ServiceInfo &target_serv);
 
+        /********************************* KV methods *************************************/
 
-		/************************* wrapper methods **********************/
-		int AddUser(string app_userID, const UserInfo &user);
-		int UpdateUser(string app_userID, const UserInfo &user);
-		int AddService(string appID, string app_servID, ServiceInfo &serv);
-		int UpdateService(string app_servID, const ServiceInfo &serv);
-		int DeleteService(string app_servID);
-		int UpdateUserSession(string appID, string app_userID, Session *sess);
-		int UpdateSessionNotified(const string &appID, const string &app_userID);
-		int DeleteUserSession(string appID, string app_userID);
-		int CreateUserSession(string appID, string app_userID, Session *sess, long long gap_warn, long long gap_expire);
-		int AddTagOnlineServNum(string appID, const ServiceInfo &serv);
-		int DelTagOnlineServNum(string appID, const ServiceInfo &serv);
+        int KV_set_userIDList();
+        int KV_set_servIDList();
+        int KV_set_user(string app_userID, const UserInfo &user);
+        int KV_set_service(string app_serviceID, const ServiceInfo &serv);
+        int KV_del_service(const string &app_serviceID);
+        int KV_set_session(string app_userID, const Session &sess, long long gap_warn, long long gap_expire);
+        int KV_del_session(string app_userID);
+        int KV_set_queue(string appID, string raw_tag, int highpri);
+        int KV_parse_user(string app_userID);
+        int KV_parse_session(string app_userID);
+        int KV_parse_service(string app_serviceID);
+        int KV_parse_queue(string app_tag, bool highpri);
 
-	public:
-		int32_t         m_errno;
+        /************************* wrapper methods **********************/
+        int AddUser(string app_userID, const UserInfo &user);
+        int UpdateUser(string app_userID, const UserInfo &user);
+        int AddService(string appID, string app_servID, ServiceInfo &serv);
+        int UpdateService(string app_servID, const ServiceInfo &serv);
+        int DeleteService(string app_servID);
+        int UpdateUserSession(string appID, string app_userID, Session *sess);
+        int UpdateSessionNotified(const string &appID, const string &app_userID);
+        int DeleteUserSession(string appID, string app_userID);
+        int CreateUserSession(string appID, string app_userID, Session *sess, long long gap_warn, long long gap_expire);
+        int AddTagOnlineServNum(string appID, const ServiceInfo &serv);
+        int DelTagOnlineServNum(string appID, const ServiceInfo &serv);
+
+    public:
+        int32_t         m_errno;
         string          m_errmsg;
 
     protected:
@@ -178,7 +177,7 @@ namespace statsvr
 
         string          m_cmd;
         uint32_t        m_seq;
-		string          m_raw_tag;
+        string          m_raw_tag;
         string          m_tag;
         timeval         m_cur_time;
         string          m_appID;
@@ -192,31 +191,31 @@ namespace statsvr
         string          m_serviceID;
         string          m_sessionID;
         //Json::Value     m_content;
-		string          m_raw_changeServiceID;
+        string          m_raw_changeServiceID;
         string          m_changeServiceID;
-		string          m_raw_lastServiceID;
+        string          m_raw_lastServiceID;
         string          m_lastServiceID;
-		bool            m_has_appointServiceID;
-		string          m_raw_appointServiceID;
-		string          m_appointServiceID;
+        bool            m_has_appointServiceID;
+        string          m_raw_appointServiceID;
+        string          m_appointServiceID;
         //set<string>     m_tags;
         string          m_priority;
         //string          m_ret_code;
         //string          m_ret_msg;
         string          m_search_no;
         string          m_channel;
-		string          m_status;
+        string          m_status;
         string          m_extends;
         string          m_serviceName;
         string          m_serviceAvatar;
-		unsigned        m_maxUserNum; //客服上限人数
+        unsigned        m_maxUserNum; //客服上限人数
         //string          m_whereFrom;
         //string          m_userInfo;
         unsigned        m_queuePriority;
-		unsigned		m_notify;
+        unsigned        m_notify;
 
-		set<string> m_userID_list;
-		set<string> m_serviceID_list;
-   };
+        set<string> m_userID_list;
+        set<string> m_serviceID_list;
+    };
 }
 #endif

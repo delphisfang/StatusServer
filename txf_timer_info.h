@@ -16,12 +16,12 @@ namespace statsvr
     class TransferTimer: public CTimerInfo
     {
     public:
-		enum STATE
-		{
-			STATE_INIT		= 0,
-			STATE_END		= 255,
-		};
-		
+        enum STATE
+        {
+            STATE_INIT        = 0,
+            STATE_END        = 255,
+        };
+        
         TransferTimer(CMCDProc* const proc
                       , unsigned msg_seq
                       , const timeval& ccd_time
@@ -30,14 +30,14 @@ namespace statsvr
                       , uint64_t max_time_gap) 
                       : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
         {}
-		~TransferTimer();
+        ~TransferTimer();
         int do_next_step(string& req_data);
-		int on_not_online();
-		int on_rsp_cp_addr();
-		int on_get_cp_addr();
+        int on_not_online();
+        int on_rsp_cp_addr();
+        int on_get_cp_addr();
 
-		UserInfo m_userInfo;
-		ServiceInfo m_serviceInfo;
+        UserInfo m_userInfo;
+        ServiceInfo m_serviceInfo;
     };
     
 }
