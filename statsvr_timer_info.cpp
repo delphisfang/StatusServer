@@ -4,62 +4,52 @@
 using namespace tfc::base;
 using namespace statsvr;
 
-//extern char BUF[DATA_BUF_SIZE];
 
 int CTimerInfo::init(string req_data, int datalen)
 {
 	Json::Reader reader;
-	Json::Value js_req_root;
-	Json::Value js_req_data;
-
-	if (!reader.parse(req_data, js_req_root))
+	Json::Value js_root;
+	
+	if (!reader.parse(req_data, js_root))
 	{
 		LogError("Failed to parse req_data: %s!", req_data.c_str());
 		return -1;
 	}
 
-	//m_whereFrom = get_value_str(js_req_root, "whereFrom");
-
-	if (!js_req_root["method"].isNull() && js_req_root["method"].isString())
+	if (!js_root["method"].isNull() && js_root["method"].isString())
 	{
-		m_cmd = get_value_str(js_req_root, "method");
+		m_cmd = get_value_str(js_root, "method");
 	}
 	else
 	{
-		m_cmd = get_value_str(js_req_root, "cmd");
+		m_cmd = get_value_str(js_root, "cmd");
 	}
 
-	if (m_cmd != "getUserInfo" && m_cmd != "getServiceInfo" && m_cmd != "getConfigForIM-reply")
+	if ("getUserInfo" != m_cmd && "getServiceInfo" != m_cmd && "getConfigForIM-reply" != m_cmd)
 	{
 		LogDebug("req_data: %s", req_data.c_str());
 	}
 	
-	m_seq = get_value_uint(js_req_root, "innerSeq");
+	m_seq = get_value_uint(js_root, "innerSeq");
 
-	if (!js_req_root["appID"].isNull() && js_req_root["appID"].isString())
-	{
-		m_appID = js_req_root["appID"].asString();
-	}
-	else if (!js_req_root["appID"].isNull() && js_req_root["appID"].isUInt())
-	{
-		m_appID = ui2str(js_req_root["appID"].asUInt());
-	}
+	get_value_str_safe(js_root["appID"], m_appID);
 	
-	if (js_req_root["data"].isNull() || !js_req_root["data"].isObject())
+	if (js_root["data"].isNull() || !js_root["data"].isObject())
 	{
 		m_search_no = m_appID + "_" + i2str(m_msg_seq);
 		return 0;
 	}
-	js_req_data = js_req_root["data"];
-	m_data = js_req_data.toStyledString();
 
-	if (!js_req_data["appID"].isNull() && js_req_data["appID"].isString())
+	Json::Value js_data = js_root["data"];
+	m_data = js_data.toStyledString();
+
+	if (!js_data["appID"].isNull() && js_data["appID"].isString())
 	{
-		m_appID = js_req_data["appID"].asString();
+		m_appID = js_data["appID"].asString();
 	}
-	else if (!js_req_data["appID"].isNull() && js_req_data["appID"].isUInt())
+	else if (!js_data["appID"].isNull() && js_data["appID"].isUInt())
 	{
-		m_appID = ui2str(js_req_data["appID"].asUInt());
+		m_appID = ui2str(js_data["appID"].asUInt());
 	}
 
 	if (m_cmd != "pingConf" && m_cmd != "updateConf" && m_cmd != "getConfigForIM-reply"
@@ -70,16 +60,14 @@ int CTimerInfo::init(string req_data, int datalen)
 		return -1;
 	}
 	
-	m_identity = get_value_str(js_req_data, "identity");
+	m_identity = get_value_str(js_data, "identity");
+	m_cpIP     = get_value_str(js_data, "chatProxyIp");
+	m_cpPort   = get_value_uint(js_data, "chatProxyPort");
 
-	m_cpIP = get_value_str(js_req_data, "chatProxyIp");
-
-	m_cpPort = get_value_uint(js_req_data, "chatProxyPort");
-
-	if (!js_req_data["tag"].isNull() && js_req_data["tag"].isString())
+	if (!js_data["tag"].isNull() && js_data["tag"].isString())
 	{
-		m_raw_tag = js_req_data["tag"].asString();
-		m_tag = m_appID + "_" + m_raw_tag;
+		m_raw_tag = js_data["tag"].asString();
+		m_tag     = m_appID + "_" + m_raw_tag;
 
 		if (m_cmd != "pingConf" && m_cmd != "updateConf" && m_cmd != "getConfigForIM-reply"
 			&& m_cmd != "getConf" && m_cmd != "getTodayStatus" && m_cmd != "changeService"
@@ -89,79 +77,71 @@ int CTimerInfo::init(string req_data, int datalen)
 			return -1;
 		}
 	}
-	
-	if (!js_req_data["userID"].isNull() && js_req_data["userID"].isString())
+
+	if (!js_data["userID"].isNull() && js_data["userID"].isString())
 	{
-		m_raw_userID = js_req_data["userID"].asString();
-		m_userID = m_appID + "_" + m_raw_userID;
+		m_raw_userID = js_data["userID"].asString();
+		m_userID     = m_appID + "_" + m_raw_userID;
 	}
-	else if (!js_req_data["userID"].isNull() && js_req_data["userID"].isArray())
+	else if (!js_data["userID"].isNull() && js_data["userID"].isArray())
 	{
-		Json::Value userID_list = js_req_data["userID"];
-		for(int i = 0; i < userID_list.size(); i++)
+		Json::Value userID_list = js_data["userID"];
+		for (int i = 0; i < userID_list.size(); i++)
 		{
 			m_userID_list.insert(m_appID + "_" + userID_list[i].asString());
 		}
 	}
 	
-	if (!js_req_data["serviceID"].isNull() && js_req_data["serviceID"].isString())
+	if (!js_data["serviceID"].isNull() && js_data["serviceID"].isString())
 	{
-		m_raw_serviceID = js_req_data["serviceID"].asString();
-		m_serviceID = m_appID + "_" + m_raw_serviceID;
+		m_raw_serviceID = js_data["serviceID"].asString();
+		m_serviceID     = m_appID + "_" + m_raw_serviceID;
 	}
-	else if (!js_req_data["serviceID"].isNull() && js_req_data["serviceID"].isArray())
+	else if (!js_data["serviceID"].isNull() && js_data["serviceID"].isArray())
 	{
-		Json::Value serviceID_list = js_req_data["serviceID"];
-		for(int i = 0; i < serviceID_list.size(); i++)
+		Json::Value serviceID_list = js_data["serviceID"];
+		for (int i = 0; i < serviceID_list.size(); i++)
 		{
 			m_serviceID_list.insert(m_appID + "_" + serviceID_list[i].asString());
 		}
 	}
-	else if (!js_req_data["services"].isNull() && js_req_data["services"].isArray())
+	else if (!js_data["services"].isNull() && js_data["services"].isArray())
 	{
-		Json::Value serviceID_list = js_req_data["services"];
-		for(int i = 0; i < serviceID_list.size(); i++)
+		Json::Value serviceID_list = js_data["services"];
+		for (int i = 0; i < serviceID_list.size(); i++)
 		{
 			m_serviceID_list.insert(m_appID + "_" + serviceID_list[i].asString());
 		}
 	}
 	
-	m_channel = get_value_str(js_req_data, "channel");
-
-	m_status  = get_value_str(js_req_data, "status");
+	m_channel = get_value_str(js_data, "channel");
+	m_status  = get_value_str(js_data, "status");
 	
-	if (!js_req_data["extends"].isNull() && js_req_data["extends"].isObject())
+	if (!js_data["extends"].isNull() && js_data["extends"].isObject())
 	{
-		m_extends = js_req_data["extends"].toStyledString();
+		m_extends = js_data["extends"].toStyledString();
 	}
 	
-	m_serviceName = get_value_str(js_req_data, "serviceName");
-
-	m_serviceAvatar = get_value_str(js_req_data, "serviceAvatar");
-
-	m_maxUserNum = get_value_uint(js_req_data, "maxUserNum", DEF_USER_NUM);
+	m_serviceName   = get_value_str(js_data, "serviceName");
+	m_serviceAvatar = get_value_str(js_data, "serviceAvatar");
+	m_maxUserNum    = get_value_uint(js_data, "maxUserNum", DEF_USER_NUM);
 	
-	/*if (!js_req_data["content"].isNull() && js_req_data["content"].isObject())
+	if (!js_data["changeServiceID"].isNull() && js_data["changeServiceID"].isString())
 	{
-		m_content = js_req_data["content"];
-	}*/
-	
-	if (!js_req_data["changeServiceID"].isNull() && js_req_data["changeServiceID"].isString())
-	{
-		m_raw_changeServiceID = js_req_data["changeServiceID"].asString();
+		m_raw_changeServiceID = js_data["changeServiceID"].asString();
 		m_changeServiceID = m_appID + "_" + m_raw_changeServiceID;
 	}
 	
-	if (!js_req_data["lastServiceID"].isNull() && js_req_data["lastServiceID"].isString())
+	if (!js_data["lastServiceID"].isNull() && js_data["lastServiceID"].isString())
 	{
-		m_raw_lastServiceID = js_req_data["lastServiceID"].asString();
+		m_raw_lastServiceID = js_data["lastServiceID"].asString();
 		m_lastServiceID = m_appID + "_" + m_raw_lastServiceID;
 	}
 
-	if (!js_req_data["appointServiceID"].isNull() && js_req_data["appointServiceID"].isString())
+	if (!js_data["appointServiceID"].isNull() && js_data["appointServiceID"].isString())
 	{
 		m_has_appointServiceID = true;
-		m_raw_appointServiceID = js_req_data["appointServiceID"].asString();
+		m_raw_appointServiceID = js_data["appointServiceID"].asString();
 		m_appointServiceID     = m_appID + "_" + m_raw_appointServiceID;
 	}
 	else
@@ -169,37 +149,39 @@ int CTimerInfo::init(string req_data, int datalen)
 		m_has_appointServiceID = false;
 	}
 
-	//0: normal queue, 1: highpri queue
-	m_queuePriority = get_value_uint(js_req_data, "queuePriority");
+	m_queuePriority = get_value_uint(js_data, "queuePriority");
 
-	if (!js_req_data["tags"].isNull() && js_req_data["tags"].isArray())
+	#if 0
+	if (!js_data["tags"].isNull() && js_data["tags"].isArray())
 	{
-		Json::Value jsTags;
-		jsTags = js_req_data["tags"];
-		for (int i = 0; i < jsTags.size(); i++)
+		for (int i = 0; i < js_data["tags"].size(); i++)
 		{
-			m_tags.insert(m_appID + "_" + jsTags[i].asString());
+			string raw_tag;
+			if (get_value_str_safe(js_data["tags"][i], raw_tag))
+			{
+				LogError("Error get tags[%d]!", i);
+				continue;
+			}
+
+			string app_tag = m_appID + "_" + raw_tag;
+			if (CAppConfig::Instance()->checkTagExist(m_appID, app_tag))
+			{
+				LogError("Unknown tags[%d]:%s!", i, raw_tag.c_str());
+				continue;
+			}
+			
+			m_tags.insert(app_tag);
 		}
 	}
-
-	m_priority = get_value_str(js_req_data, "priority");
+	#endif
 	
-	if (!js_req_data["services"].isNull() && js_req_data["services"].isArray())
-	{
-		Json::Value services;
-		services = js_req_data["services"];
-		for(int i = 0; i < services.size(); i++)
-		{
-			m_checkServices.insert(m_appID + "_" + services[i].asString());
-		}
-	}
+	m_priority = get_value_str(js_data, "priority");
+	m_notify   = get_value_uint(js_data, "notify");
 
-	m_notify = get_value_uint(js_req_data, "notify", 0);
-	
 	char id_buf[64];
-    snprintf (id_buf, sizeof(id_buf), "%s:%s--%s:%d", m_appID.c_str(), m_serviceID.c_str(), m_userID.c_str(), m_msg_seq);
+    snprintf(id_buf, sizeof(id_buf), "%s:%s:%s:%d", m_appID.c_str(), m_serviceID.c_str(), m_userID.c_str(), m_msg_seq);
 	m_search_no = string(id_buf);
-
+	
 	LogDebug("Init request data OK! [id:%s,cmd:%s,userID:%s,servID:%s,msg_seq:%u]", 
 				m_identity.c_str(), m_cmd.c_str(), m_userID.c_str(), m_serviceID.c_str(), m_msg_seq);
 
@@ -284,10 +266,8 @@ int CTimerInfo::on_stat()
 void CTimerInfo::on_expire()
 {
 	Json::Value error_rsp;
-	string strRsp;
 	
-	LogError("[on_expire] searchid[%s]:handle timer timeout, statue[%d].", 
-				m_search_no.c_str(), m_cur_step);
+	LogError("searchid[%s]: timer handle timeout, status[%d].", m_search_no.c_str(), m_cur_step);
 
 	error_rsp["method"]   = m_cmd + "-reply";
 	error_rsp["innerSeq"] = m_seq;
@@ -295,8 +275,7 @@ void CTimerInfo::on_expire()
 	error_rsp["msg"]      = "System handle timeout";
 
 	Json::FastWriter writer;
-	strRsp = writer.write(error_rsp);
-	
+	string strRsp = writer.write(error_rsp);
 	m_proc->EnququeHttp2CCD(m_ret_flow, (char*)strRsp.c_str(), strRsp.size());
 	return;
 }
@@ -587,9 +566,13 @@ unsigned CTimerInfo::get_service_queuenum(const string &appID, const ServiceInfo
 	UserQueue *uq = NULL, *highpri_uq = NULL;
 	for (set<string>::iterator it = serv.tags.begin(); it != serv.tags.end(); ++it)
 	{
-		DO_FAIL(get_normal_queue(appID, *it, &uq));
+		if (get_normal_queue(appID, *it, &uq))
+			continue;
+
+		if (get_highpri_queue(appID, *it, &highpri_uq))
+			continue;
+
 		queueNum += uq->size();
-		DO_FAIL(get_highpri_queue(appID, *it, &highpri_uq));
 		queueNum += highpri_uq->size();
 	}
 

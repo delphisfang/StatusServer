@@ -34,7 +34,7 @@ int EchoTimer::on_echo()
 	Json::Value userListJson, servListJson, sessQueueJson, normalQueueJson, highpriQueueJson, onlineServNumJson;
 	Json::Value data;
 
-	LogTrace("Get appID[%s] data structures...", m_appID.c_str());
+	LogTrace("Get appID[%s] DataStructs...", m_appID.c_str());
 	
 	CAppConfig::Instance()->getUserListJson(m_appID, userListJson);
 	CAppConfig::Instance()->getServiceListJson(m_appID, servListJson);
@@ -84,7 +84,7 @@ int GetUserInfoTimer::on_not_online()
 }
 
 /* 
-input: m_userID_list 
+input: m_userID_list
 */
 int GetUserInfoTimer::on_get_userinfo()
 {

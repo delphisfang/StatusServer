@@ -123,13 +123,10 @@ void ServiceLoginTimer::set_service_fields(ServiceInfo &serv)
 	{
 		return;
 	}
+	
 	//clear serv.tags first
 	serv.tags.clear();
-	unsigned tagsLen = value["tags"].size();
-	for (unsigned i = 0; i < tagsLen; i++)
-	{
-		serv.tags.insert(value["tags"][i].asString());
-	}
+	serv.parse_tags(value);
 
 	//do not change serv.userList
 }

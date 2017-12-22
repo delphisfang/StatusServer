@@ -258,12 +258,22 @@ int AdminConfigTimer::on_admin_getConf()
 		}
 		
 		int version = CAppConfig::Instance()->GetVersion(appID);
-		string appConf;
-		CAppConfig::Instance()->GetConf(appID, appConf);
 		Json::Value data_rsp;
 		data_rsp["appID"]   = atoi(appID.c_str());
-		data_rsp["configs"] = appConf;
 		data_rsp["version"] = version;
+
+		string appConf;
+		CAppConfig::Instance()->GetConf(appID, appConf);
+		Json::Value js_appConf;
+		if (!reader.parse(appConf, js_appConf))
+		{
+			data_rsp["configs"] = appConf;
+		}
+		else
+		{
+			data_rsp["configs"] = js_appConf;
+		}
+		
 		configList.append(data_rsp);
 	}
 	data["appList"] = configList;
@@ -284,7 +294,7 @@ int AdminConfigTimer::on_admin_config(bool isUpdateConf)
         return -1;
     }
 
-    CAppConfig::Instance()->UpdateappIDConf(push_config_req, !isUpdateConf);
+    CAppConfig::Instance()->UpdateAppConf(push_config_req, !isUpdateConf);
 
 	if (true == isUpdateConf)
 	{

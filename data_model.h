@@ -80,6 +80,10 @@ namespace statsvr
 		~ServiceInfo();
 	    ServiceInfo(const string& strServiceInfo, unsigned dft_user_num);
 
+
+		void parse_tags(const Json::Value &value);
+		void parse_userList(const Json::Value &value);
+
 		void toJson(Json::Value &value) const;
 	    string toString() const;
 

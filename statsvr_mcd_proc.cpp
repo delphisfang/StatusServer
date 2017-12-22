@@ -631,7 +631,7 @@ int32_t CMCDProc::HandleRequest(char* data, unsigned data_len,
 			break;
 			
         default:
-            LogError( "Unknown cmd[%d] from IP[%s]!", cmd, str_client_ip.c_str());
+            LogError("Unknown cmd[%d] from IP[%s]!", cmd, str_client_ip.c_str());
             Json::Value resp;
             resp["method"] = "-reply";
             if (cmd == -2)

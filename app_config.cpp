@@ -13,7 +13,7 @@ CAppConfig* CAppConfig::m_instance = NULL;
 
 /************************************************************************************************/
 
-int CAppConfig::UpdateappIDConf(const Json::Value &push_config_req, bool need_set_appIDList)
+int CAppConfig::UpdateAppConf(const Json::Value &push_config_req, bool need_set_appIDList)
 {
 	Json::Value configList = push_config_req["appList"];
 	int size = configList.size();
@@ -23,30 +23,22 @@ int CAppConfig::UpdateappIDConf(const Json::Value &push_config_req, bool need_se
 	for (int i = 0; i < size; ++i)
 	{
 		appID_conf = configList[i];
-		if (appID_conf["appID"].isNull() || (!appID_conf["appID"].isString() && !appID_conf["appID"].isUInt()))
-		{
-			LogError("Failed to get <appID> field in request!");
-			return -1;
-		}
 
+		//appID
 		string appID;
-		if (appID_conf["appID"].isString())
+		if (get_value_str_safe(appID_conf["appID"], appID))
 		{
-	    	appID = appID_conf["appID"].asString();
-		}
-		else
-		{
-			appID = ui2str(appID_conf["appID"].asUInt());
+			LogError("Error get <appID>, i:%d!", i);
+			continue;
 		}
 		appIDList.append(appID);
-		
-		string appIDConf = appID_conf.toStyledString();
-		appIDConf = Trim(appIDConf);
-		
+
+		//version
 		unsigned version;
-		if (!appID_conf["version"].isNull() && appID_conf["version"].isUInt())
+		if (get_value_uint_safe(appID_conf["version"], version))
 		{
-			version = appID_conf["version"].asUInt();
+			LogError("Error get <version>, appID[%s]!", appID.c_str());
+			continue;
 		}
 		int myVersion = GetVersion(appID);
 		if (myVersion >= version)
@@ -55,15 +47,16 @@ int CAppConfig::UpdateappIDConf(const Json::Value &push_config_req, bool need_se
 		}
 		SetVersion(appID, version);
 
-	    //LogDebug("appID:[%s], conf:%s", appID.c_str(), appIDConf.c_str());	    
-		SetConf(appID, appIDConf);
-
-		if (!appID_conf["configs"].isNull() && appID_conf["configs"].isObject())
+		//configs
+		if (appID_conf["configs"].isNull() || !appID_conf["configs"].isObject())
 		{
-			appID_conf = appID_conf["configs"];
+			LogError("Error get <configs>, appID[%s]!", appID.c_str());
+			continue;
 		}
+		appID_conf = appID_conf["configs"];
+		SetConf(appID, appID_conf.toStyledString());
 
-		//Intelligence route
+		//configs sub-fields
 		if (!appID_conf["autoTransfer"].isNull() && appID_conf["autoTransfer"].isInt())
 		{
 			int autoTransfer = appID_conf["autoTransfer"].asInt();
@@ -144,7 +137,8 @@ int CAppConfig::UpdateappIDConf(const Json::Value &push_config_req, bool need_se
 			string recommendEnd = appID_conf["recommendEnd"].asString();
 			SetValue(appID, "recommendEnd", recommendEnd);
 		}
-		
+
+		//tags
 		if (!appID_conf["tags"].isNull() && appID_conf["tags"].isArray())
 		{
 			TagUserQueue *pTagQueues = NULL;
@@ -186,19 +180,10 @@ int CAppConfig::UpdateappIDConf(const Json::Value &push_config_req, bool need_se
 			}
 			SetValue(appID, "tags", tags);
 		}
-		
-		#if 0
-		if (!appID_conf["changeServiceWord"].isNull() && appID_conf["changeServiceWord"].isArray())
+		else
 		{
-			int wordNum = appID_conf["changeServiceWord"].size();
-
-			for(int i = 0; i < wordNum; i++)
-			{
-				string wordStr = appID_conf["changeServiceWord"][i].asString();
-				AddConnectServiceWord(wordStr);
-			}
+			LogError("Error get <tags>, appID[%s]!", appID.c_str());
 		}
-		#endif
 	}
 
 	if (true == need_set_appIDList)

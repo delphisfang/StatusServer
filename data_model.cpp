@@ -264,12 +264,6 @@ ServiceInfo::ServiceInfo(const string& strServiceInfo, unsigned dft_user_num)
 		return;
 	}
 
-	/*atime 	= value["activeTime"].asInt64();*/
-	/*
-	timeval nowTime;
-	gettimeofday(&nowTime, NULL);
-	atime = (nowTime.tv_sec*1000 + nowTime.tv_usec / 1000);
-	*/
 	serviceID 		 = get_value_str(value, SERV_ID);
 	status	  		 = DEF_SERV_STATUS;
 	atime			 = GetCurTimeStamp();
@@ -280,16 +274,43 @@ ServiceInfo::ServiceInfo(const string& strServiceInfo, unsigned dft_user_num)
 	maxUserNum       = get_value_uint(value, MAX_USER_NUM_FIELD, dft_user_num);
 	//whereFrom 	 = value["whereFrom"].asString();
 
+	parse_tags(value);
+	parse_userList(value);
+}
+
+void ServiceInfo::parse_tags(const Json::Value &value)
+{
 	unsigned tagsLen = value["tags"].size();
 	for (unsigned i = 0; i < tagsLen; i++)
 	{
-		tags.insert(value["tags"][i].asString());
+		string raw_tag;
+		if (get_value_str_safe(value["tags"][i], raw_tag))
+		{
+			LogError("Error get tags[%d]!", i);
+			continue;
+		}
+		else
+		{
+			tags.insert(raw_tag);
+		}
 	}
+}
 
+void ServiceInfo::parse_userList(const Json::Value &value)
+{
 	unsigned userLen = value["userList"].size();
 	for (unsigned i = 0; i < userLen; i++)
 	{
-		userList.insert(value["userList"][i].asString());
+		string raw_userID;
+		if (get_value_str_safe(value["userList"][i], raw_userID))
+		{
+			LogError("Error get userList[%d]!", i);
+			continue;
+		}
+		else
+		{
+			userList.insert(raw_userID);
+		}
 	}
 }
 

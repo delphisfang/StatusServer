@@ -1045,6 +1045,72 @@ unsigned long long get_value_uint64(Json::Value &jv, const string &key, const un
 	}
 }
 
+int get_value_str_safe(const Json::Value &jv, string &value, const string def)
+{
+	if (jv.isNull())
+	{
+		value = def;
+		return -1;
+	}
+
+	if (jv.isString())
+	{
+		value = jv.asString();
+		return 0;
+	}
+	else if (jv.isUInt())
+	{
+		value = ui2str(jv.asUInt());
+		return 0;
+	}
+	else if (jv.isInt())
+	{
+		value = i2str(jv.asInt());
+		return 0;
+	}
+	else
+	{
+		value = def;
+		return -2;
+	}
+}
+
+int get_value_int_safe(const Json::Value &jv, int &value, int def)
+{
+	if (jv.isNull())
+	{
+		value = def;
+		return -1;
+	}
+
+	if (jv.isInt())
+	{
+		value = jv.asInt();
+		return 0;
+	}
+
+	value = def;
+	return -2;
+}
+
+int get_value_uint_safe(const Json::Value &jv, unsigned int &value, unsigned int def)
+{
+	if (jv.isNull())
+	{
+		value = def;
+		return -1;
+	}
+
+	if (jv.isUInt())
+	{
+		value = jv.asUInt();
+		return 0;
+	}
+
+	value = def;
+	return -2;
+}
+
 long long GetCurTimeStamp()
 {
 	timeval nowTime;

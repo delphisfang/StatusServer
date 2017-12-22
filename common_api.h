@@ -140,11 +140,17 @@ string getDomainIp(const string domainName);
 int cancelUserFromString(const string& userID, string& queueString);
 
 
-string get_value_str(Json::Value &jv, const string &key, const string def_val = "");
-int get_value_int(Json::Value &jv, const string &key, const int def_val = 0);
-unsigned int get_value_uint(Json::Value &jv, const string &key, const unsigned int def_val = 0);
-long long get_value_int64(Json::Value &jv, const string &key, const long long def_val = 0);
-unsigned long long get_value_uint64(Json::Value &jv, const string &key, const unsigned long long def_val = 0);
+string get_value_str(Json::Value &jv, const string &key, const string def = "");
+int get_value_int(Json::Value &jv, const string &key, const int def = 0);
+unsigned int get_value_uint(Json::Value &jv, const string &key, const unsigned int def = 0);
+long long get_value_int64(Json::Value &jv, const string &key, const long long def = 0);
+unsigned long long get_value_uint64(Json::Value &jv, const string &key, const unsigned long long def = 0);
+
+
+int get_value_str_safe(const Json::Value &jv, string &value, const string def = "");
+int get_value_int_safe(const Json::Value &jv, int &value, const int def = 0);
+int get_value_uint_safe(const Json::Value &jv, unsigned int &value, const unsigned int def = 0);
+
 
 long long GetCurTimeStamp();
 
