@@ -13,8 +13,8 @@ INC +=-I$(TOP)/mcp++/inc -I$(TOP)/mcp++/mcp++/src/tns/inc
 INC +=-I$(CODE)/kv_store/kv_server/kv_module -I$(CODE)/kv_store/kv_core/
 
 LIB +=-L$(TFC_WD)/. -lpthread \
-      $(CODE)/build64_release/thirdparty/jsoncpp-0.6.0-dev/libjsoncpp.a \
-      -L$(CODE)/public/mcp++/lib
+		$(CODE)/build64_release/thirdparty/jsoncpp-0.6.0-dev/libjsoncpp.a \
+		-L$(CODE)/public/mcp++/lib
 
 LIB += $(CODE)/kv_store/kv_module/libkv_module.a
 LIB += $(CODE)/public/mcp++/lib/libtfc.a
@@ -27,17 +27,17 @@ FLAGS:=-Wl,-rpath,/usr/local/lib/
 
 
 all: $(OBJ)
-    g++ $(CFLAGS) -shared -o $(TARGET) $(OBJ) $(INC) $(LIB) $(FLAGS)
+	g++ $(CFLAGS) -shared -o $(TARGET) $(OBJ) $(INC) $(LIB) $(FLAGS)
 
 ${MODULE_PUBLIC}/%.o: ${MODULE_PUBLIC}/%.cpp
-    $(CXX) $(CFLAGS) $(INC) -c -o $@ $<
+	$(CXX) $(CFLAGS) $(INC) -c -o $@ $<
 
 ${MODULE_PUBLIC}/%.o: ${MODULE_PUBLIC}/%.c
-    $(CC) $(CFLAGS) $(INC) -c -o $@ $<
+	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
 %.o: %.cpp
-    $(CXX) $(CFLAGS) $(INC) -c -o $@ $<
+	$(CXX) $(CFLAGS) $(INC) -c -o $@ $<
 
 clean:
-    rm -rf *.o $(TARGET)
-    rm -rf $(OBJ)
+	rm -rf *.o $(TARGET)
+	rm -rf $(OBJ)
