@@ -316,7 +316,7 @@ int AdminConfigTimer::on_admin_getServiceStatus()
         ServiceInfo serv;
         if (CAppConfig::Instance()->GetService(app_serviceID, serv))
         {
-            servInfo["serviceStatus"] = "offline";
+            servInfo["serviceStatus"] = DEF_SERV_STATUS;
             servInfo["userNum"]       = 0;
         }
         else
@@ -325,7 +325,7 @@ int AdminConfigTimer::on_admin_getServiceStatus()
             //当前服务人数>=最大会话人数时，返回busy
             if (true == serv.is_busy())
             {
-                servInfo["serviceStatus"] = "busy";
+                servInfo["serviceStatus"] = BUSY;
             }
             servInfo["userNum"] = serv.user_count();
         }
@@ -380,7 +380,6 @@ int AdminConfigTimer::get_app_today_status(string appID, Json::Value &appList)
     app_data["serviceNumber"] = onlineServiceNumber;
 
     appList.append(app_data);
-
     return 0;
 }
 

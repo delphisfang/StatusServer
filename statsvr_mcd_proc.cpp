@@ -1058,6 +1058,11 @@ int32_t CMCDProc::Enqueue2DCC(char* data, unsigned data_len, const string& ip, u
 void CMCDProc::DispatchServiceTimeout()
 {
     static struct timeval last_check_time = {0, 0};
+
+    if (m_workMode == statsvr::WORKMODE_READY)
+    {
+        return;
+    }
     
     timeval ntv;
     gettimeofday(&ntv, NULL);
@@ -1100,12 +1105,12 @@ void CMCDProc::DispatchUser2Service()
     if (CAppConfig::Instance()->GetAppIDList(appListString))
     {
         LogError("get appIDlist failed.");
-           return;
+        return;
     }
     if (!reader.parse(appListString, appList))
     {
         //LogError("parse appIDlist to JSON failed: %s", appListString.c_str());
-           return;
+        return;
     }
 
     for (int i = 0; i < appList["appIDList"].size(); i++)
@@ -1118,7 +1123,7 @@ void CMCDProc::DispatchUser2Service()
             CAppConfig::Instance()->GetTagHighPriQueue(appID, pTagHighPriQueues))
         {
             //LogError("Fail to get user queues for appID: %s", appID.c_str());
-               continue;
+            continue;
         }
 
         if (pTagQueues->total_queue_count() <= 0 && pTagHighPriQueues->total_queue_count() <= 0)
@@ -1188,13 +1193,13 @@ void CMCDProc::DispatchSessionTimer()
     if (CAppConfig::Instance()->GetAppIDList(appListString))
     {
         LogError("Failed to get appIDlist!");
-           return;
+        return;
     }
 
     if (!reader.parse(appListString, appList))
     {
         //LogError("Failed to parse appIDListString:%s", appListString.c_str());
-           return;
+        return;
     }
 
     for (int i = 0; i < appList["appIDList"].size(); i++)
@@ -1219,7 +1224,7 @@ void CMCDProc::CheckTimeoutQueue(const string &appID, TagUserQueue *pTagQueues, 
     map<string, UserQueue*>::iterator it;
     for (it = pTagQueues->_tag_queue.begin(); it != pTagQueues->_tag_queue.end(); it++)
     {
-        uq    = it->second;
+        uq = it->second;
 
         app_tag = appID + "_" + (it->first);
         if (CAppConfig::Instance()->CheckTagServiceHeapHasOnline(app_tag))

@@ -43,6 +43,7 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config_req, bool need_set_
         int myVersion = GetVersion(appID);
         if (myVersion >= version)
         {
+            LogWarn("appID: %s, version:%d <= myVersion:%d!", appID.c_str(), version, myVersion);
             continue;
         }
         SetVersion(appID, version);
@@ -57,6 +58,7 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config_req, bool need_set_
         SetConf(appID, appID_conf.toStyledString());
 
         //configs sub-fields
+        #if 0
         if (!appID_conf["autoTransfer"].isNull() && appID_conf["autoTransfer"].isInt())
         {
             int autoTransfer = appID_conf["autoTransfer"].asInt();
@@ -72,6 +74,7 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config_req, bool need_set_
             string yibotTalk = appID_conf["yibotTalk"].toStyledString();
             SetValue(appID, "yibotTalk", yibotTalk);
         }
+        #endif
         if (!appID_conf["max_conv_num"].isNull() && appID_conf["max_conv_num"].isInt())
         {
             int max_conv_num = appID_conf["max_conv_num"].asInt();
@@ -127,6 +130,7 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config_req, bool need_set_
             string timeout_end_hint = appID_conf["timeout_end_hint"].asString();
             SetValue(appID, "timeout_end_hint", timeout_end_hint);
         }
+        #if 0
         if (!appID_conf["recommendPre"].isNull() && appID_conf["recommendPre"].isString())
         {
             string recommendPre = appID_conf["recommendPre"].asString();
@@ -137,7 +141,8 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config_req, bool need_set_
             string recommendEnd = appID_conf["recommendEnd"].asString();
             SetValue(appID, "recommendEnd", recommendEnd);
         }
-
+        #endif
+        
         //tags
         if (!appID_conf["tags"].isNull() && appID_conf["tags"].isArray())
         {
@@ -170,13 +175,19 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config_req, bool need_set_
             string tags = "";
             for (int j = 0; j < tagsNum; j++)
             {
-                string tag_key = appID + "_" + appID_conf["tags"][j].asString();
-
-                DO_FAIL(AddTagServiceHeap(tag_key));
-                DO_FAIL(pTagQueues->add_tag(appID_conf["tags"][j].asString()));
-                DO_FAIL(pTagHighPriQueues->add_tag(appID_conf["tags"][j].asString()));
+                string raw_tag;
+                if (get_value_str_safe(appID_conf["tags"][j], raw_tag))
+                {
+                    LogError("Error get <tags[%d]>, appID[%s]!", j, appID.c_str());
+                    continue;
+                }
                 
-                tags += tag_key + ";";
+                string app_tag = appID + "_" + raw_tag;
+                DO_FAIL(AddTagServiceHeap(app_tag));
+                DO_FAIL(pTagQueues->add_tag(raw_tag));
+                DO_FAIL(pTagHighPriQueues->add_tag(raw_tag));
+                
+                tags += app_tag + ";";
             }
             SetValue(appID, "tags", tags);
         }
@@ -439,7 +450,9 @@ int CAppConfig::UserListToString(string &strUserIDList)
     }
 
     arr["userIDList"] = userIDList;
-    strUserIDList = arr.toStyledString();
+
+    Json::FastWriter writer;
+    strUserIDList = writer.write(arr);
     return 0;
 }
 
@@ -520,7 +533,9 @@ int CAppConfig::ServiceListToString(string &strServIDList)
     }
 
     arr["serviceIDList"] = servIDList;
-    strServIDList = arr.toStyledString();
+
+    Json::FastWriter writer;
+    strServIDList = writer.write(arr);
     return 0;
 }
 
