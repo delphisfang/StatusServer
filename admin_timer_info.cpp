@@ -131,9 +131,10 @@ int AdminConfigTimer::on_admin_send_reply(const Json::Value &data)
     rsp["seq"]  = m_seq;
     rsp["data"] = data;
 
-    string rsp_str = rsp.toStyledString();
-    LogTrace("====>admin send reply: %s", rsp_str.c_str());
-    if (m_proc->EnququeHttp2CCD(m_ret_flow, (char *)rsp_str.c_str(), rsp_str.size()))
+    Json::FastWriter writer;
+    string strRsp = writer.write(rsp);
+    LogTrace("====>admin send reply: %s", strRsp.c_str());
+    if (m_proc->EnququeHttp2CCD(m_ret_flow, (char *)strRsp.c_str(), strRsp.size()))
     {
         LogError("Failed to enqueue to CCD!");
         m_errno = ERROR_SYSTEM_WRONG;

@@ -75,14 +75,10 @@ namespace statsvr
         {
             m_recv_buf = NULL;
             m_send_buf = NULL;
-            m_last_stat_time = time(NULL);
-            m_last_check     = m_last_stat_time;
-            m_adjust_times_seq = 0;
+            //m_last_stat_time = time(NULL);
+            //m_last_check     = m_last_stat_time;
+            //m_adjust_times_seq = 0;
             m_workMode = WORKMODE_READY;
-            /* fff
-            m_serviceTimeoutOn = 0;
-            m_appCmdList.clear();
-            */
             m_errCmd.clear();
         }
 
@@ -106,37 +102,34 @@ namespace statsvr
         int32_t ReloadCfg();
         int32_t EnququeHttp2DCCInner(const char *http_header, const char* data, unsigned data_len, const string &domain, const string& ip, unsigned short port);
         int32_t InitSendPing();
-        int32_t EnququeHttp2CCD(unsigned long long flow, char *data, unsigned data_len);
-        int32_t Enqueue2CCD(unsigned long long flow, char *data, unsigned data_len);
-        int32_t Enqueue2DCC(char *data, unsigned data_len, const string& ip, unsigned short port);
-        int32_t EnququeHttp2DCC(char* data, unsigned data_len, const string& ip, unsigned short port);
+        int32_t EnququeHttp2CCD(unsigned long long flow, const char *data, unsigned data_len);
+        //int32_t Enqueue2CCD(unsigned long long flow, const char *data, unsigned data_len);
+        //int32_t Enqueue2DCC(char *data, unsigned data_len, const string& ip, unsigned short port);
+        int32_t EnququeHttp2DCC(const char *data, unsigned data_len, const string& ip, unsigned short port);
         int32_t GetConfigForIM();
-        int32_t EnququeErrHttp2DCC(char* data, unsigned data_len);
+        int32_t EnququeErrHttp2DCC(const char *data, unsigned data_len);
         //int32_t PostErrLog(string &data, int type, unsigned appID, unsigned level);
         void    DispatchCCD();
-        void    DispatchInnerCCD();
-            
-        int32_t HandleResponseHttp(char* data,
+        /*int32_t HandleResponseHttp(char* data,
                              unsigned data_len,
                              unsigned long long flow,
                              uint32_t down_ip, unsigned down_port, timeval& dcc_time);
-
-        int     Enqueue_2_inner_ccd (const string &msg, uint16_t serviceType, unsigned seq_no, unsigned long long flow);
+        */
         void    DispatchDCC();
 
         int32_t HttpGetBu(const char *uri_buf, string &bu_name, string &param_str);
-        int32_t HttpParseCmd(char* data, unsigned data_len, string& outdata, unsigned& out_len);
+        int32_t HttpParseCmd(const char *data, unsigned data_len, string& outdata, unsigned& out_len);
         void    DispatchDCCHttp();
 
-        int32_t HandleRequest(char* data,
+        int32_t HandleRequest(const char *data,
                             unsigned data_len,
                             unsigned long long flow,
                             uint32_t client_ip,
                             timeval& ccd_time);
 
-        int32_t HttpParseResponse(char* data, unsigned data_len, string& outdata, unsigned& out_len);
+        int32_t HttpParseResponse(const char *data, unsigned data_len, string& outdata, unsigned& out_len);
 
-        int32_t HandleResponse(char* data, unsigned data_len, unsigned long long flow,
+        int32_t HandleResponse(const char *data, unsigned data_len, unsigned long long flow,
                                      uint32_t down_ip, unsigned down_port, timeval& dcc_time);
 
         void DispatchServiceTimeout();
@@ -215,8 +208,8 @@ namespace statsvr
         tfc::net::CFifoSyncMQ* m_mq_mcd_2_dcc_http;*/
 
         CStatistic  m_stat;
-        time_t      m_last_stat_time;
-        time_t      m_last_get_conf_time;
+        //time_t      m_last_stat_time;
+        //time_t      m_last_get_conf_time;
         char*       m_recv_buf;
         char*       m_send_buf;
 
@@ -224,20 +217,12 @@ namespace statsvr
         char**      m_arg_vals;
         int         m_arg_cnt;
         char        m_r_clength[CLENGTH_LEN];
-        time_t m_last_print_conf;
+        //time_t m_last_print_conf;
 
-        time_t       m_last_check;
-        int          m_adjust_times_seq;
+        //time_t       m_last_check;
+        //int          m_adjust_times_seq;
 
-        /*map<string, unsigned> m_userMap;
-        map<string, unsigned> m_serviceMap;
-        map<string, unsigned> m_replyMap;
-        */
         map<string, unsigned> m_cmdMap;
-
-        /* fff
-        map<unsigned, list<unsigned> > m_appCmdList;
-        */
 
         string m_seq;
         vector<string>  m_errCmd;
@@ -249,10 +234,6 @@ namespace statsvr
         ad::kv_server::KvCacheCtrl kv_cache;
 
         int         m_workMode;
-        /* fff
-        bool        m_serviceTimeoutOn;
-        */
-        static const int KNetDataBufLen = (32 << 20);
             
     private:
         int32_t InitSo();

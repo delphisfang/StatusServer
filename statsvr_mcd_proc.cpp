@@ -30,11 +30,11 @@
 using namespace std;
 using namespace statsvr;
 
-#define HTTP_PACKET_MAX_LEN (20480)
+#define HTTP_PACKET_MAX_LEN (20*1024)
 
-#define BUFF_SIZE (2 * 1024 * 1024)
+#define BUFF_SIZE (2*1024*1024)
 
-#define ARG_CNT_MAX    (32)
+#define ARG_CNT_MAX (32)
 
 static char r_code_200[]   = "200";
 static char r_reason_200[] = "OK";
@@ -447,7 +447,7 @@ int32_t CMCDProc::HttpGetBu(const char *uri_buf, string &bu_name, string &param_
     return 0;
 }
 
-int32_t CMCDProc::HttpParseCmd(char* data, unsigned data_len, string& outdata, unsigned& out_len)
+int32_t CMCDProc::HttpParseCmd(const char *data, unsigned data_len, string& outdata, unsigned& out_len)
 {
     if (data_len < 5)
     {
@@ -558,7 +558,7 @@ int32_t CMCDProc::HttpParseCmd(char* data, unsigned data_len, string& outdata, u
 }
 
 
-int32_t CMCDProc::HandleRequest(char* data, unsigned data_len, 
+int32_t CMCDProc::HandleRequest(const char *data, unsigned data_len, 
                                 unsigned long long flow, uint32_t client_ip, timeval& ccd_time)
 {    
     string str_client_ip;
@@ -710,7 +710,7 @@ void CMCDProc::DispatchDCC()
 }
 
 
-int32_t CMCDProc::HttpParseResponse(char* data, unsigned data_len, string& outdata, unsigned& out_len)
+int32_t CMCDProc::HttpParseResponse(const char *data, unsigned data_len, string& outdata, unsigned& out_len)
 {
     if (data_len < 5)
     {
@@ -736,7 +736,7 @@ int32_t CMCDProc::HttpParseResponse(char* data, unsigned data_len, string& outda
 }
 
 
-int32_t CMCDProc::HandleResponse(char* data,
+int32_t CMCDProc::HandleResponse(const char *data,
                                  unsigned data_len,
                                  unsigned long long flow,
                                  uint32_t down_ip, unsigned down_port, timeval& dcc_time)
@@ -820,7 +820,7 @@ int32_t CMCDProc::HandleResponse(char* data,
 }
 
                                  
-int32_t CMCDProc::EnququeHttp2CCD(unsigned long long flow, char *data, unsigned data_len)
+int32_t CMCDProc::EnququeHttp2CCD(unsigned long long flow, const char *data, unsigned data_len)
 {
     m_arg_vals[0] = r_code_200;
     m_arg_vals[1] = r_reason_200;
@@ -872,7 +872,7 @@ int32_t CMCDProc::EnququeHttp2CCD(unsigned long long flow, char *data, unsigned 
     return 0;
 }
 
-int32_t CMCDProc::EnququeHttp2DCCInner(const char *http_header, const char* data, unsigned data_len, const string &domain, const string& ip, unsigned short port)
+int32_t CMCDProc::EnququeHttp2DCCInner(const char *http_header, const char *data, unsigned data_len, const string &domain, const string& ip, unsigned short port)
 {
     char uri[HTTP_PACKET_MAX_LEN] = {0};
     snprintf(uri, HTTP_PACKET_MAX_LEN, http_header, domain.c_str(), port, data_len, data);
@@ -964,7 +964,7 @@ int32_t CMCDProc::GetConfigForIM()
 }
 
 
-int32_t CMCDProc::EnququeHttp2DCC(char* data, unsigned data_len, const string& ip, unsigned short port)
+int32_t CMCDProc::EnququeHttp2DCC(const char *data, unsigned data_len, const string& ip, unsigned short port)
 {
     const char *http_header = ""
             "POST /chatpass HTTP/1.1\r\n"
@@ -981,7 +981,7 @@ int32_t CMCDProc::EnququeHttp2DCC(char* data, unsigned data_len, const string& i
     return 0;
 }
 
-int32_t CMCDProc::EnququeErrHttp2DCC(char* data, unsigned data_len)
+int32_t CMCDProc::EnququeErrHttp2DCC(const char *data, unsigned data_len)
 {
     const char *http_header = ""
         "POST /pushError/ HTTP/1.1\r\n"

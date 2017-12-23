@@ -34,7 +34,7 @@ CWaterLog::~CWaterLog()
 {
 }
 
-void CWaterLog::WriteLog(timeval& op_time, int op, char* ip, unsigned port, int ret, char* data)
+void CWaterLog::WriteLog(timeval& op_time, int op, const char *ip, unsigned port, int ret, const char *data)
 {
     string opString;
     if (op == 0)
@@ -51,10 +51,10 @@ void CWaterLog::WriteLog(timeval& op_time, int op, char* ip, unsigned port, int 
     }
     
     #if 0
-    m_log.log_p(0,    "[%s] | OP:%s | IP:%s | Port:%u | ret:%d | data:%s\n"
+    m_log.log_p(0, "[%s] | OP:%s | IP:%s | Port:%u | ret:%d | data:%s\n"
               , GetFormatTime(op_time).c_str(), opString.c_str(), ip, port, ret, data);
     #else
-    m_log.log_p(0,    "%s | %s | %u | %d | %s", opString.c_str(), ip, port, ret, data);
+    m_log.log_p(0, "%s | %s | %u | %d | %s", opString.c_str(), ip, port, ret, (char*)data);
     #endif
 }
 

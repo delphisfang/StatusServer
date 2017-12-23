@@ -18,7 +18,7 @@ public:
     static CWaterLog* Instance();
     static void Destance();
     int  Init(const string &path, const string &file_prex, unsigned max_size, unsigned max_num);
-    void WriteLog(timeval& op_time, int op, char* ip, unsigned port, int ret, char* data);
+    void WriteLog(timeval& op_time, int op, const char *ip, unsigned port, int ret, const char *data);
 
 private:
     CWaterLog();
