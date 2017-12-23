@@ -53,11 +53,13 @@ extern "C"
         CMCDProc *app = (CMCDProc*)papp;
         app->DispatchDCC();
     }
+    #if 0
     static void disp_dcc_http(void *papp)
     {
         CMCDProc *app = (CMCDProc*)papp;
         app->DispatchDCCHttp();
     }
+    #endif
 }
 
 void CMCDProc::run(const std::string& conf_file)

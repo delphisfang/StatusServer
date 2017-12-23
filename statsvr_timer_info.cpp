@@ -359,7 +359,7 @@ void CTimerInfo::on_error_parse_data(string data_name)
 void CTimerInfo::set_user_data(Json::Value &data)
 {
     data["identity"]  = "user";
-    data["userID"]      = m_raw_userID;
+    data["userID"]    = m_raw_userID;
 }
 
 void CTimerInfo::set_service_data(Json::Value &data)
@@ -776,21 +776,29 @@ int CTimerInfo::KV_set_servIDList()
     return KVSetKeyValue(KV_CACHE, SERVLIST_KEY, strServIDList);    
 }
 
-int CTimerInfo::KV_set_user(string app_userID, const UserInfo &user)
+int CTimerInfo::KV_set_user(string app_userID, const UserInfo &user, bool isUpdate)
 {
     string key, value;
     key   = USER_PREFIX+app_userID;
     value = user.toString();
 
     DO_FAIL(KVSetKeyValue(KV_CACHE, key, value));
-    DO_FAIL(KV_set_userIDList());
+
+    if (false == isUpdate)
+    {
+        DO_FAIL(KV_set_userIDList());
+    }
     return SS_OK;
 }
 
-int CTimerInfo::KV_set_service(string app_serviceID, const ServiceInfo &serv)
+int CTimerInfo::KV_set_service(string app_serviceID, const ServiceInfo &serv, bool isUpdate)
 {
     DO_FAIL(KVSetKeyValue(KV_CACHE, SERV_PREFIX+app_serviceID, serv.toString()));
-    DO_FAIL(KV_set_servIDList());
+
+    if (false == isUpdate)
+    {
+        DO_FAIL(KV_set_servIDList());
+    }
     return SS_OK;
 }
 
@@ -821,7 +829,7 @@ int CTimerInfo::KV_set_queue(string appID, string raw_tag, int highpri)
     UserQueue *uq = NULL;
 
     string prefix         = (highpri) ? (HIGHQ_PREFIX) : (QUEUE_PREFIX);
-    string key_queueList = prefix + appID + "_" + raw_tag;
+    string key_queueList  = prefix + appID + "_" + raw_tag;
 
     if (highpri)
     {
@@ -958,14 +966,14 @@ int CTimerInfo::KV_parse_queue(string app_tag, bool highpri)
 int CTimerInfo::AddUser(string app_userID, const UserInfo &user)
 {
     SET_USER(CAppConfig::Instance()->AddUser(app_userID, user));
-    DO_FAIL(KV_set_user(app_userID, user));
+    DO_FAIL(KV_set_user(app_userID, user, false));
     return SS_OK;
 }
 
 int CTimerInfo::UpdateUser(string app_userID, const UserInfo &user)
 {
     SET_USER(CAppConfig::Instance()->UpdateUser(app_userID, user));
-    DO_FAIL(KV_set_user(app_userID, user));
+    DO_FAIL(KV_set_user(app_userID, user, true));
     return SS_OK;
 }
 
@@ -974,7 +982,7 @@ int CTimerInfo::AddService(string appID, string app_servID, ServiceInfo &serv)
     SET_SERV(CAppConfig::Instance()->AddService(app_servID, serv));
     //insert service in every tag serviceHeap
     SET_FAIL(CAppConfig::Instance()->AddService2Tags(appID, serv), "service heap");
-    DO_FAIL(KV_set_service(app_servID, serv));
+    DO_FAIL(KV_set_service(app_servID, serv, false));
     return SS_OK;
 
 }
@@ -982,7 +990,7 @@ int CTimerInfo::AddService(string appID, string app_servID, ServiceInfo &serv)
 int CTimerInfo::UpdateService(string app_servID, const ServiceInfo &serv)
 {
     SET_SERV(CAppConfig::Instance()->UpdateService(app_servID, serv));
-    DO_FAIL(KV_set_service(app_servID, serv));
+    DO_FAIL(KV_set_service(app_servID, serv, true));
     return SS_OK;
 }
 
@@ -998,7 +1006,7 @@ int CTimerInfo::UpdateUserSession(string appID, string app_userID, Session *sess
     if (NULL == sess)
         return SS_ERROR;
     
-    long long gap_warn     = ("" != sess->serviceID) ? (DEF_SESS_TIMEWARN) : (MAX_INT);
+    long long gap_warn   = ("" != sess->serviceID) ? (DEF_SESS_TIMEWARN) : (MAX_INT);
     long long gap_expire = ("" != sess->serviceID) ? (DEF_SESS_TIMEOUT) : (MAX_INT);
     
     SET_SESS(update_user_session(appID, app_userID, sess, gap_warn, gap_expire));

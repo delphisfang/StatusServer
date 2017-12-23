@@ -37,12 +37,12 @@ namespace statsvr
             m_end_time      = m_start_time;
             m_cur_step      = 0;
             m_errno         = 0;
-            m_msg_seq       = msg_seq;                
+            m_msg_seq       = msg_seq;
             m_proc          = proc;
             m_max_time_gap  = max_time_gap;
             m_ccd_time      = ccd_time;
             m_ret_flow      = ret_flow;
-            m_client_ip     = ccd_client_ip;
+            //m_client_ip     = ccd_client_ip;
             m_errmsg.clear();
 
             m_cmd.clear();
@@ -76,8 +76,6 @@ namespace statsvr
 
         virtual ~CTimerInfo()
         {
-            //m_tags.clear();
-            //m_content.clear();
         }
 
         virtual int  do_next_step(string& req_data)=0;
@@ -133,8 +131,8 @@ namespace statsvr
 
         int KV_set_userIDList();
         int KV_set_servIDList();
-        int KV_set_user(string app_userID, const UserInfo &user);
-        int KV_set_service(string app_serviceID, const ServiceInfo &serv);
+        int KV_set_user(string app_userID, const UserInfo &user, bool isUpdate);
+        int KV_set_service(string app_serviceID, const ServiceInfo &serv, bool isUpdate);
         int KV_del_service(const string &app_serviceID);
         int KV_set_session(string app_userID, const Session &sess, long long gap_warn, long long gap_expire);
         int KV_del_session(string app_userID);
@@ -173,13 +171,13 @@ namespace statsvr
         struct timeval  m_ccd_time;
         uint64_t        m_max_time_gap;
         uint64_t        m_ret_flow;
-        string          m_client_ip;
+        //string          m_client_ip;
 
         string          m_cmd;
         uint32_t        m_seq;
         string          m_raw_tag;
         string          m_tag;
-        timeval         m_cur_time;
+        //timeval         m_cur_time;
         string          m_appID;
         string          m_data;
         string          m_cpIP;
