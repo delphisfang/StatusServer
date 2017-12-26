@@ -48,13 +48,13 @@ Session::Session(const string& strSession)
     }
     
     sessionID = get_value_str(value, SESSION_ID);
-    userID      = get_value_str(value, USER_ID);
+    userID    = get_value_str(value, USER_ID);
     serviceID = get_value_str(value, SERV_ID);
-    atime      = get_value_uint64(value, ACTIVE_TIME);
-    btime     = get_value_uint64(value, BUILD_TIME);
+    atime     = get_value_uint64(value, ACTIVE_TIME, GetCurTimeStamp());
+    btime     = get_value_uint64(value, BUILD_TIME, GetCurTimeStamp());
     cpIP      = get_value_str(value, CP_IP);
     cpPort    = get_value_uint(value, CP_PORT);
-    notified  = 0;
+    notified  = get_value_int(value, NOTIFIED, 0);
     
     /*if (!value["toIM"].isNull() && (value["toIM"].isBool() || value["toIM"].isInt()))
     {
@@ -168,15 +168,9 @@ UserInfo::UserInfo(const string& strUserInfo)
     tag    = get_value_str(value, USER_TAG);
     status = get_value_str(value, STATUS, IN_YIBOT);
     
-    /*if (!value["activeTime"].isNull() && value["activeTime"].isInt64())
-    {
-        atime = value["activeTime"].asInt64();
-    }
-    */
-
-    atime         = GetCurTimeStamp();
-    qtime          = get_value_uint64(value, QTIME);
-    sessionID      = get_value_str(value, SESSION_ID);
+    atime         = get_value_int64(value, ACTIVE_TIME, GetCurTimeStamp());
+    qtime         = get_value_uint64(value, QTIME);
+    sessionID     = get_value_str(value, SESSION_ID);
     lastServiceID = get_value_str(value, LAST_SERV_ID);
     priority      = get_value_str(value, PRIO);
     queuePriority = get_value_uint(value, QUEUE_PRIO);
@@ -264,11 +258,11 @@ ServiceInfo::ServiceInfo(const string& strServiceInfo, unsigned dft_user_num)
         return;
     }
 
-    serviceID          = get_value_str(value, SERV_ID);
-    status               = DEF_SERV_STATUS;
-    atime             = GetCurTimeStamp();
+    atime            = get_value_int64(value, ACTIVE_TIME, GetCurTimeStamp());
+    serviceID        = get_value_str(value, SERV_ID);
+    status           = get_value_str(value, STATUS, DEF_SERV_STATUS);
     cpIP             = get_value_str(value, CP_IP);
-    cpPort             = get_value_uint(value, CP_PORT);
+    cpPort           = get_value_uint(value, CP_PORT);
     serviceName      = get_value_str(value, SERV_NAME);
     serviceAvatar    = get_value_str(value, SERV_AVATAR);
     maxUserNum       = get_value_uint(value, MAX_USER_NUM_FIELD, dft_user_num);
@@ -516,5 +510,4 @@ int ServiceHeap::delete_service(const string &app_serviceID)
         return -1;
     }
 }
-
 

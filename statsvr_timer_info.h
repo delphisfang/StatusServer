@@ -132,11 +132,12 @@ namespace statsvr
         int KV_set_userIDList();
         int KV_set_servIDList();
         int KV_set_user(string app_userID, const UserInfo &user, bool isUpdate);
+        int KV_del_user(const string &app_userID);
         int KV_set_service(string app_serviceID, const ServiceInfo &serv, bool isUpdate);
         int KV_del_service(const string &app_serviceID);
         int KV_set_session(string app_userID, const Session &sess, long long gap_warn, long long gap_expire);
         int KV_del_session(string app_userID);
-        int KV_set_queue(string appID, string raw_tag, int highpri);
+        int KV_set_queue(string appID, string raw_tag, bool highpri);
         int KV_parse_user(string app_userID);
         int KV_parse_session(string app_userID);
         int KV_parse_service(string app_serviceID);
@@ -145,6 +146,7 @@ namespace statsvr
         /************************* wrapper methods **********************/
         int AddUser(string app_userID, const UserInfo &user);
         int UpdateUser(string app_userID, const UserInfo &user);
+        int DeleteUser(string app_userID);
         int AddService(string appID, string app_servID, ServiceInfo &serv);
         int UpdateService(string app_servID, const ServiceInfo &serv);
         int DeleteService(string app_servID);

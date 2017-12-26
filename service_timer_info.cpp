@@ -519,19 +519,25 @@ int ServicePullNextTimer::do_next_step(string& req_data)
 int ServicePullNextTimer::on_send_connect_success()
 {
     Json::Value serviceData;
-    //Json::Reader reader;
-    //Json::Value json_extends;
 
     serviceData["userID"]    = m_raw_userID;
     serviceData["serviceID"] = m_raw_serviceID;
     serviceData["sessionID"] = m_sessionID;
     //serviceData["channel"]   = m_userInfo.channel;
-#if 0
-    reader.parse(m_userInfo.extends, json_extends);
-    serviceData["extends"] = json_extends;
-#else
-    serviceData["extends"] = Json::objectValue;
-#endif
+
+    //解析extends
+    
+    Json::Reader reader;
+    Json::Value json_extends;
+    if (!reader.parse(m_userInfo.extends, json_extends))
+    {
+        serviceData["extends"] = Json::objectValue;
+    }
+    else
+    {
+        serviceData["extends"] = json_extends;
+    }
+
     serviceData["serviceName"]   = m_serviceInfo.serviceName;
     serviceData["serviceAvatar"] = m_serviceInfo.serviceAvatar;
     
@@ -567,7 +573,6 @@ int ServicePullNextTimer::on_pull_next()
     UserQueue *uq = NULL;
     int num    = 1;
     int direct = 1; //默认从队尾拉取
-    UserInfo user;
 
     //优先从HighPriQueue拉取
     if (0 == CAppConfig::Instance()->GetTagHighPriQueue(m_appID, pTagQueue)
@@ -591,7 +596,7 @@ int ServicePullNextTimer::on_pull_next()
     
     GET_SERV(CAppConfig::Instance()->GetService(m_serviceID, m_serviceInfo));
 
-    LogTrace("==========>service[%s]", m_serviceID.c_str());
+    LogTrace("====> service[%s]", m_serviceID.c_str());
     //拉取一个user
     num    = CAppConfig::Instance()->getUserQueueNum(m_appID);
     direct = CAppConfig::Instance()->getUserQueueDir(m_appID);
@@ -602,22 +607,22 @@ int ServicePullNextTimer::on_pull_next()
         on_error();
         return SS_OK;
     }
-    LogTrace("============>pull out user[%s]", m_userID.c_str());
+    LogTrace("====> pull out user[%s]", m_userID.c_str());
     m_raw_userID = delappID(m_userID);
 
     //找到user
-    GET_USER(CAppConfig::Instance()->GetUser(m_userID, user));
-    LogTrace("============>user[%s]'s tag: %s", m_userID.c_str(), user.tag.c_str());
+    GET_USER(CAppConfig::Instance()->GetUser(m_userID, m_userInfo));
+    LogTrace("====> user[%s]'s tag: %s", m_userID.c_str(), m_userInfo.tag.c_str());
     
     //user出队
-    GET_QUEUE(pTagQueue->get_tag(user.tag, uq));
+    GET_QUEUE(pTagQueue->get_tag(m_userInfo.tag, uq));
     SET_QUEUE(uq->delete_user(m_userID));
-    DO_FAIL(KV_set_queue(m_appID, user.tag, m_queuePriority));
+    DO_FAIL(KV_set_queue(m_appID, m_userInfo.tag, m_queuePriority));
     
     //update user
-    user.status = "inService";
-    user.qtime  = 0;
-    DO_FAIL(UpdateUser(m_userID, user));
+    m_userInfo.status = "inService";
+    m_userInfo.qtime  = 0;
+    DO_FAIL(UpdateUser(m_userID, m_userInfo));
     
     //update service
     SET_SERV(m_serviceInfo.add_user(m_raw_userID));

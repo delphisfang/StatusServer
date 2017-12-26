@@ -778,16 +778,19 @@ int CTimerInfo::KV_set_servIDList()
 
 int CTimerInfo::KV_set_user(string app_userID, const UserInfo &user, bool isUpdate)
 {
-    string key, value;
-    key   = USER_PREFIX+app_userID;
-    value = user.toString();
-
-    DO_FAIL(KVSetKeyValue(KV_CACHE, key, value));
+    DO_FAIL(KVSetKeyValue(KV_CACHE, USER_PREFIX+app_userID, user.toString()));
 
     if (false == isUpdate)
     {
         DO_FAIL(KV_set_userIDList());
     }
+    return SS_OK;
+}
+
+int CTimerInfo::KV_del_user(const string &app_userID)
+{
+    DO_FAIL(KVDelKeyValue(KV_CACHE, USER_PREFIX+app_userID));
+    DO_FAIL(KV_set_userIDList());
     return SS_OK;
 }
 
@@ -823,7 +826,7 @@ int CTimerInfo::KV_del_session(string app_userID)
     return KVDelKeyValue(KV_CACHE, SESS_PREFIX+app_userID);
 }
 
-int CTimerInfo::KV_set_queue(string appID, string raw_tag, int highpri)
+int CTimerInfo::KV_set_queue(string appID, string raw_tag, bool highpri)
 {
     TagUserQueue *pTagQueues = NULL;
     UserQueue *uq = NULL;
@@ -833,13 +836,13 @@ int CTimerInfo::KV_set_queue(string appID, string raw_tag, int highpri)
 
     if (highpri)
     {
-        GET_FAIL(CAppConfig::Instance()->GetTagQueue(appID, pTagQueues), "tag queues");
+        DO_FAIL(CAppConfig::Instance()->GetTagHighPriQueue(appID, pTagQueues));
     }
     else
     {
-        GET_FAIL(CAppConfig::Instance()->GetTagHighPriQueue(appID, pTagQueues), "tag highpri queues");
+        DO_FAIL(CAppConfig::Instance()->GetTagQueue(appID, pTagQueues));
     }
-    GET_FAIL(pTagQueues->get_tag(raw_tag, uq), "queue");
+    DO_FAIL(pTagQueues->get_tag(raw_tag, uq));
 
     string val_queueList = uq->toString();
     DO_FAIL(KVSetKeyValue(KV_CACHE, key_queueList, val_queueList));
@@ -887,7 +890,7 @@ int CTimerInfo::KV_parse_service(string app_serviceID)
     LogTrace("parse serviceID:%s", app_serviceID.c_str());
     
     /*获取*/
-    string serv_key = "serv_" + app_serviceID;
+    string serv_key = SERV_PREFIX + app_serviceID;
     string serv_value;
     DO_FAIL(KVGetKeyValue(KV_CACHE, serv_key, serv_value));
     
@@ -954,7 +957,7 @@ int CTimerInfo::KV_parse_queue(string app_tag, bool highpri)
     for (int i = 0; i < queueNum; i++)
     {
         queueNode = obj["queueList"][i];
-        string userID          = queueNode["userID"].asString();
+        string userID         = queueNode["userID"].asString();
         long long expire_time = queueNode["expire_time"].asInt64();
         SET_USER(pTagQueues->add_user(raw_tag, userID, expire_time));
     }
@@ -974,6 +977,13 @@ int CTimerInfo::UpdateUser(string app_userID, const UserInfo &user)
 {
     SET_USER(CAppConfig::Instance()->UpdateUser(app_userID, user));
     DO_FAIL(KV_set_user(app_userID, user, true));
+    return SS_OK;
+}
+
+int CTimerInfo::DeleteUser(string app_userID)
+{
+    SET_SERV(CAppConfig::Instance()->DelUser(app_userID));
+    DO_FAIL(KV_del_user(app_userID));
     return SS_OK;
 }
 

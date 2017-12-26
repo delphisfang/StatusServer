@@ -124,6 +124,7 @@ namespace statsvr
         int on_pull_next();
 
         Session m_session;
+        UserInfo m_userInfo;
         ServiceInfo m_serviceInfo;
     };
 

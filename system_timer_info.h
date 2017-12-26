@@ -32,6 +32,26 @@ namespace statsvr
     };
     #endif
 
+    class UserOutTimer:public CTimerInfo
+    {
+        public:
+        UserOutTimer(CMCDProc* const proc
+                      , unsigned msg_seq
+                      , const timeval& ccd_time
+                      , string ccd_client_ip
+                      , uint64_t ret_flow
+                      , uint64_t max_time_gap) 
+                      : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
+        {}
+        ~UserOutTimer();
+        
+        int  do_next_step(string& req_data);
+        int  on_user_timeout();
+
+        int  m_user_time_gap;
+        set<string> m_userList;
+    };
+
     class ServiceOutTimer:public CTimerInfo
     {
         public:

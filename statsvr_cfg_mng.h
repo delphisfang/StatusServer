@@ -47,11 +47,6 @@ public:
     int       _stat_timeout_2;
     int       _stat_timeout_3;
 
-    /* fff
-    int       _re_msg_send_gap;
-    int       _re_msg_send_timeout;
-    */
-    
     int32_t m_conf_cache_size;//MB
     int32_t m_conf_shmkey;
     int32_t m_node_num;
@@ -73,10 +68,11 @@ public:
     
     unsigned  _queue_rate;
     unsigned  _yibot_time;
+    time_t    _user_time_gap;
     time_t    _service_time_gap;
     time_t    _yibot_time_gap;
     
-    string    _handler_so_path;
+    //string    _handler_so_path;
 
     // add end
 private:

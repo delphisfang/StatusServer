@@ -119,6 +119,7 @@ public:
     int UpdateService(const string& app_serviceID, const ServiceInfo& serv);
     //int UpdateService(const string& app_serviceID, const string& value);
     int DelService(const string& app_serviceID);
+    int CheckServiceList();
     int ServiceListToString(string& strServIDList);
 
     int AddTagServiceHeap(const string& app_tag);
@@ -152,6 +153,7 @@ public:
     int AddTagOnlineServiceNum(string appID, string raw_tag);
     int DelTagOnlineServiceNum(string appID, string raw_tag);
 
+    int GetTimeoutUsers(long long time_gap, set<string>& userList);
     int GetTimeoutServices(long long time_gap, set<string>& serviceList);
 
     int checkAppIDExist(string appID);

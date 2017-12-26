@@ -25,7 +25,7 @@ int YiBotOutTimer::do_next_step(string& req_data)
     }
 
     Json::Value js_userID_list = data["userID"];
-    for(int i = 0; i < js_userID_list.size(); i++)
+    for (int i = 0; i < js_userID_list.size(); i++)
     {
         m_userID_list.insert(js_userID_list[i].asString());
     }
@@ -75,7 +75,7 @@ int YiBotOutTimer::on_yibot_timeout()
         UserInfo user;
         DO_FAIL(CAppConfig::Instance()->GetUser(m_userID, user));
         user.sessionID = sess.sessionID;
-        user.atime     = sess.atime;
+        //don't update user atime
         DO_FAIL(UpdateUser(m_userID, user));
     }
     
@@ -86,6 +86,85 @@ YiBotOutTimer::~YiBotOutTimer()
 {
 }
 #endif
+
+
+int UserOutTimer::do_next_step(string& req_data)
+{
+    m_user_time_gap = atoi(req_data.c_str());
+
+    if (on_user_timeout())
+    {
+        return -1;
+    }
+    else
+    {
+        return 1;///important
+    }
+}
+
+int UserOutTimer::on_user_timeout()
+{
+    CAppConfig::Instance()->GetTimeoutUsers(m_user_time_gap, m_userList);
+    if (m_userList.size() == 0)
+    {
+        LogTrace("no user timeout, do nothing!");
+        return 0;
+    }
+
+    set<string>::iterator it;
+    for (it = m_userList.begin(); it != m_userList.end(); it++)
+    {
+        LogTrace("====> goto delete timeout user[%s]", (*it).c_str());
+        
+        m_userID     = *it;
+        m_raw_userID = delappID(m_userID);
+        m_appID      = getappID(m_userID);
+
+        //获取user
+        UserInfo user;
+        DO_FAIL(CAppConfig::Instance()->GetUser(m_userID, user));
+        m_raw_tag = user.tag;
+        
+        //删除user
+        DO_FAIL(DeleteUser(m_userID));
+
+        //从service.userList删除user
+        Session sess;
+        get_user_session(m_appID, m_userID, &sess);
+        if ("" != sess.serviceID)
+        {
+            m_serviceID = m_appID + "_" + sess.serviceID;
+            ServiceInfo serv;
+            DO_FAIL(CAppConfig::Instance()->GetService(m_serviceID, serv));
+            serv.delete_user(m_raw_userID);
+            DO_FAIL(UpdateService(m_serviceID, serv));
+            LogTrace("====> Service[%s] Delete user[%s]", m_serviceID.c_str(), m_userID.c_str());
+        }
+        
+        //删除user session
+        DO_FAIL(DeleteUserSession(m_appID, m_userID));
+        
+        //从排队队列中删除user
+        UserQueue *uq = NULL;
+        if (0 == get_highpri_queue(m_appID, m_raw_tag, &uq) && NULL != uq)
+        {
+            uq->delete_user(m_userID);
+            KV_set_queue(m_appID, m_raw_tag, true);
+        }
+        if (0 == get_normal_queue(m_appID, m_raw_tag, &uq) && NULL != uq)
+        {
+            uq->delete_user(m_userID);
+            KV_set_queue(m_appID, m_raw_tag, false);
+        }
+    }
+
+    return 0;
+}
+
+UserOutTimer::~UserOutTimer()
+{
+}
+
 
 int ServiceOutTimer::do_next_step(string& req_data)
 {
@@ -784,10 +863,26 @@ int RefreshSessionTimer::on_refresh_session()
     Session sess;
     GET_SESS(get_user_session(m_appID, m_userID, &sess));
 
-    //update session.activeTime
+    //update session.atime
     sess.atime = GetCurTimeStamp();
     DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess));
 
+    //update user.atime
+    UserInfo user;
+    DO_FAIL(CAppConfig::Instance()->GetUser(m_userID, user));
+    user.atime = sess.atime;
+    DO_FAIL(UpdateUser(m_userID, user));
+
+    //update service.atime
+    if ("" != sess.serviceID)
+    {
+        m_serviceID = m_appID + "_" + sess.serviceID;
+        ServiceInfo serv;
+        DO_FAIL(CAppConfig::Instance()->GetService(m_serviceID, serv));
+        serv.atime = sess.atime;
+        DO_FAIL(UpdateService(m_serviceID, serv));
+    }
+    
     //send reply
     Json::Value data = Json::objectValue;
     DO_FAIL(on_send_reply(data));

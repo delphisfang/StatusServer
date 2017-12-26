@@ -769,7 +769,7 @@ int CloseSessionTimer::on_close_session()
     string oldSessionID;
 
     LogDebug("==>IN");    
-    
+
     if (CI->GetUser(m_userID, user) || user.status != "inService")
     {
         on_not_inservice();

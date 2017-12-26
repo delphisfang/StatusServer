@@ -93,7 +93,9 @@ void CMCDProc::run(const std::string& conf_file)
     {
         DispatchUser2Service();
         DispatchSessionTimer();
+        //DispatchUserTimeout();
         DispatchServiceTimeout();
+        //CAppConfig::Instance()->CheckServiceList();
         run_epoll_4_mq();
         CheckFlag(true);
     }
@@ -1056,6 +1058,41 @@ int32_t CMCDProc::Enqueue2DCC(char* data, unsigned data_len, const string& ip, u
     return 0;
 }
 #endif
+
+void CMCDProc::DispatchUserTimeout()
+{
+    static struct timeval user_last_check_time = {0, 0};
+
+    if (m_workMode == statsvr::WORKMODE_READY)
+    {
+        return;
+    }
+    
+    timeval ntv;
+    gettimeofday(&ntv, NULL);
+
+    if (ntv.tv_sec - user_last_check_time.tv_sec < 15)
+    {
+        return;
+    }
+    else
+    {
+        user_last_check_time = ntv;
+    }
+
+    LogTrace("====> Check user timeout at time: %d", ntv.tv_sec);
+    CTimerInfo *ti  = new UserOutTimer(this, GetMsgSeq(), ntv, "", 0, m_cfg._time_out);
+    string req_data = i2str(m_cfg._user_time_gap);
+
+    if (ti->do_next_step(req_data) == 0)
+    {
+        m_timer_queue.set(ti->GetMsgSeq(), ti, ti->GetTimeGap());
+    }
+    else
+    {
+        delete ti;
+    }
+}
 
 void CMCDProc::DispatchServiceTimeout()
 {

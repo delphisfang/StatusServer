@@ -468,10 +468,16 @@ int AdminConfigTimer::restore_userList()
     for (int i = 0; i < userNum; ++i)
     {
         /* 解析每个user的详细信息 */
-        DO_FAIL(KV_parse_user(userIDList[i]));
+        if (KV_parse_user(userIDList[i]))
+        {
+            continue;
+        }
     
         /* 解析每个user session */
-        DO_FAIL(KV_parse_session(userIDList[i]));
+        if (KV_parse_session(userIDList[i]))
+        {
+            continue;
+        }
     }
 
     return SS_OK;
@@ -490,12 +496,15 @@ int AdminConfigTimer::restore_serviceList()
         return SS_OK;
     }
 
-    servNum = get_id_list(val_servIDList, "servIDList", servIDList);
+    servNum = get_id_list(val_servIDList, "serviceIDList", servIDList);
     
     /* 解析每个service, 添加到ServiceHeap */
     for (int i = 0; i < servNum; ++i)
     {
-        DO_FAIL(KV_parse_service(servIDList[i]));
+        if (KV_parse_service(servIDList[i]))
+        {
+            continue;
+        }
     }
 
     return SS_OK;
@@ -506,7 +515,10 @@ int AdminConfigTimer::restore_queue(string appID, vector<string> appID_tags, boo
 {
     for (unsigned i = 0; i < appID_tags.size(); i++)
     {
-        DO_FAIL(KV_parse_queue(appID_tags[i], highpri));
+        if (KV_parse_queue(appID_tags[i], highpri))
+        {
+            continue;
+        }
     }
 
     return SS_OK;
@@ -536,10 +548,10 @@ int AdminConfigTimer::on_admin_restore()
     }
 
     /* 重建userList */
-    DO_FAIL(restore_userList());
+    restore_userList();
     
     /* 重建serviceList,   添加到ServiceHeap */
-    DO_FAIL(restore_serviceList());
+    restore_serviceList();
 
     /* 遍历appID列表 */
     for (int i = 0; i < appList["appIDList"].size(); i++)
@@ -553,14 +565,17 @@ int AdminConfigTimer::on_admin_restore()
         MySplitTag((char *)str_appID_tags.c_str(), ";", appID_tags);
 
         /* 解析普通队列 - 先解析userList，再解析排队队列 */
-        DO_FAIL(restore_queue(appID, appID_tags, false));
+        restore_queue(appID, appID_tags, false);
+
         /* 解析高优先级队列 */
-        DO_FAIL(restore_queue(appID, appID_tags, true));
+        restore_queue(appID, appID_tags, true);
     }
 
     m_proc->m_workMode = statsvr::WORKMODE_WORK;
     LogTrace(">>>>>>>>>>>>>>>>>>>>[%s] enter workmode<<<<<<<<<<<<<<<<<<<<", MODULE_NAME);
 
+    //CAppConfig::Instance()->CheckServiceList();
+    
     return SS_OK;
 }
 

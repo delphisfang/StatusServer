@@ -132,6 +132,7 @@ namespace statsvr
         int32_t HandleResponse(const char *data, unsigned data_len, unsigned long long flow,
                                      uint32_t down_ip, unsigned down_port, timeval& dcc_time);
 
+        void DispatchUserTimeout();
         void DispatchServiceTimeout();
         void DispatchUser2Service();
         void DispatchSessionTimer();

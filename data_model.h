@@ -261,7 +261,7 @@ namespace statsvr
                 }
             }
 
-            LogError("Failed to delete user[%s] from queue!", userID.c_str());
+            LogWarn("Failed to delete user[%s] from queue, no such user.", userID.c_str());
             return -1;
         }
 

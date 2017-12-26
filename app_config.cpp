@@ -518,6 +518,31 @@ int CAppConfig::DelService(const string &app_serviceID)
     return 0;
 }
 
+int CAppConfig::CheckServiceList()
+{
+    map<string, ServiceInfo>::iterator it;
+    
+    for (it = _servicelist.begin(); it != _servicelist.end(); ++it)
+    {
+        string appID      = getappID(it->first);
+        ServiceInfo &serv = it->second;
+
+        set<string>::iterator it2;
+        for (it2 = serv.userList.begin(); it2 != serv.userList.end(); ++it2)
+        {
+            string app_userID = appID + "_" + (*it2);
+            UserInfo user;
+            if (GetUser(app_userID, user))
+            {
+                LogTrace("====> Service[%s] Delete user[%s]", (it->first).c_str(), app_userID.c_str());
+                serv.delete_user(*it2);
+            }
+        }
+    }
+    
+    return 0;
+}
+
 int CAppConfig::ServiceListToString(string &strServIDList)
 {
     map<string, ServiceInfo>::iterator it;
@@ -959,6 +984,22 @@ int CAppConfig::DelTagOnlineServiceNum(string appID, string raw_tag)
     return 0;
 }
 
+int CAppConfig::GetTimeoutUsers(long long time_gap, set<string>& userList)
+{
+    long long nowTime = time(NULL);
+    long long atime;
+    
+    map<string, UserInfo>::iterator it;
+    for (it = _userlist.begin(); it != _userlist.end(); ++it)
+    {
+        atime = ((it->second).atime / 1000);
+        if (nowTime >= atime + time_gap)
+        {
+            userList.insert(it->first);
+        }
+    }
+    return 0;
+}
 
 int CAppConfig::GetTimeoutServices(long long time_gap, set<string>& serviceList)
 {
