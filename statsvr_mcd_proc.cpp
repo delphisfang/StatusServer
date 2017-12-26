@@ -117,13 +117,11 @@ int32_t CMCDProc::Init(const std::string& conf_file)
         goto err_out;
     }
 
-    #if 1
     if (InitLog() < 0)
     {
         LogError("Failed to InitLog()!");
         goto err_out;
     }
-    #endif
     
     if (InitStat() < 0)
     {
