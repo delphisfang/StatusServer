@@ -347,6 +347,13 @@ int32_t CMCDProc::InitCmdMap()
     m_cmdMap["refreshSession"]      = REFRESH_SESSION;
 
     m_cmdMap["getAddrByID"] = GET_CP_ADDR;
+
+    #ifdef _STASVR_DEBUG_
+    m_cmdMap["debugUser"]    = DEBUG_USER;
+    m_cmdMap["debugService"] = DEBUG_SERV;
+    m_cmdMap["debugSession"] = DEBUG_SESS;
+    m_cmdMap["debugQueue"]   = DEBUG_QUEUE;
+    #endif
     
     return 0;
 }
@@ -570,7 +577,7 @@ int32_t CMCDProc::HandleRequest(const char *data, unsigned data_len,
 
     str_client_ip = INET_ntoa(client_ip);
     cmd = HttpParseCmd(data, data_len, outdata, out_len);
-    CWaterLog::Instance()->WriteLog(ccd_time, 0, (char *)str_client_ip.c_str(), 0, cmd, (char *)outdata.c_str());
+    CWaterLog::Instance()->WriteLog(ccd_time, 0, str_client_ip.c_str(), 0, cmd, outdata.c_str());
 
     CTimerInfo* ti = NULL;
     unsigned msg_seq = GetMsgSeq();
@@ -743,6 +750,13 @@ int32_t CMCDProc::HandleResponse(const char *data,
                                  unsigned long long flow,
                                  uint32_t down_ip, unsigned down_port, timeval& dcc_time)
 {
+    string str_client_ip;
+    str_client_ip = INET_ntoa(down_ip);
+    string str_data;
+    str_data.assign(data, data_len);
+    CWaterLog::Instance()->WriteLog(dcc_time, 0, str_client_ip.c_str(), down_port, 0, str_data.c_str());
+    LogTrace("====> DCC receive RSP data: %s", str_data.c_str());
+    
     string outdata;
     unsigned out_len = 0;
     int ret = HttpParseResponse(data, data_len, outdata, out_len);
@@ -860,7 +874,7 @@ int32_t CMCDProc::EnququeHttp2CCD(unsigned long long flow, const char *data, uns
         LogError("Failed to enqueue to CCD!");
         timeval nowTime;
         gettimeofday(&nowTime, NULL);
-        CWaterLog::Instance()->WriteLog(nowTime, 1, (char *)"", 0, -1, data);
+        CWaterLog::Instance()->WriteLog(nowTime, 1, "", 0, -1, data);
         return -1;
     }
     else
@@ -868,7 +882,7 @@ int32_t CMCDProc::EnququeHttp2CCD(unsigned long long flow, const char *data, uns
         /*LogDebug("Success to enqueue to CCD, total_len:%d, ccd_header:%d.", totallen, CCD_HEADER_LEN);*/
         timeval nowTime;
         gettimeofday(&nowTime, NULL);
-        CWaterLog::Instance()->WriteLog(nowTime, 1, (char *)"", 0, 0, data);
+        CWaterLog::Instance()->WriteLog(nowTime, 1, "", 0, 0, data);
     }
 
     return 0;
@@ -904,7 +918,7 @@ int32_t CMCDProc::EnququeHttp2DCCInner(const char *http_header, const char *data
         LogError("Failed to enqueue to DCC!");
         timeval nowTime;
         gettimeofday(&nowTime, NULL);
-        CWaterLog::Instance()->WriteLog(nowTime, 1, (char *)ip.c_str(), port, -1, (char*)data);
+        CWaterLog::Instance()->WriteLog(nowTime, 1, ip.c_str(), port, -1, data);
         return -1;
     }
     else
@@ -912,7 +926,7 @@ int32_t CMCDProc::EnququeHttp2DCCInner(const char *http_header, const char *data
         LogDebug("Success to enqueue to DCC, total_len:%d, dcc_header:%d.", totallen, DCC_HEADER_LEN);
         timeval nowTime;
         gettimeofday(&nowTime, NULL);
-        CWaterLog::Instance()->WriteLog(nowTime, 1, (char *)ip.c_str(), port, 0, (char*)data);
+        CWaterLog::Instance()->WriteLog(nowTime, 1, ip.c_str(), port, 0, data);
         return 0;
     }
 }
