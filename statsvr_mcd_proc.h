@@ -47,8 +47,8 @@ namespace statsvr
         CANCEL_QUEUE = 3,
         CLOSE_SESSION = 4,
         CONNECT_SERVICE = 5,
-        REFRESH_ACTIVE_TIME = 6,
-
+        REFRESH_USER_TIME = 6,
+        
         GET_SERVICE_INFO = 11,
         SERVICE_LOGIN = 12,
         SERVICE_CHANGESTATUS = 13,

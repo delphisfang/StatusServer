@@ -94,7 +94,6 @@ int GetUserInfoTimer::on_get_userinfo()
     Json::Value userJson;
     
     TagUserQueue* pTagQueues = NULL;
-    UserInfo user;
     SessionQueue*  pSessQueue = NULL;
     Session sess;
     int queueRank = 0;
@@ -103,14 +102,15 @@ int GetUserInfoTimer::on_get_userinfo()
     int i = 0;
     for (set<string>::iterator it = m_userID_list.begin(); it != m_userID_list.end(); it++)
     {
-        m_userID   = (*it);
+        m_userID     = (*it);
         m_raw_userID = delappID(m_userID);
         LogDebug("try to get userInfo: %s", m_userID.c_str());
 
-        if (CAppConfig::Instance()->GetUser(m_userID, user))
+        UserInfo user;
+        if (mGetUser(m_userID, user))
         {
             on_not_online();
-            return SS_ERROR;
+            continue;
         }
 
         // get user queueRank
@@ -151,10 +151,14 @@ int GetUserInfoTimer::on_get_userinfo()
         
         userInfoList[i] = userJson;
 
+        //update user.atime
+        user.atime = GetCurTimeStamp();
+        UpdateUser(m_userID, user);
+
         //update session["notified"]
         if (1 == m_notify)
         {
-            DO_FAIL(UpdateSessionNotified(m_appID, m_userID));
+            UpdateSessionNotified(m_appID, m_userID);
         }
         
         ++i;
@@ -208,7 +212,7 @@ int UserOnlineTimer::on_user_online()
     Json::Value data;
     Session sess;
     
-    if (SS_OK == CAppConfig::Instance()->GetUser(m_userID, user))
+    if (SS_OK == mGetUser(m_userID, user))
     {
         if (m_cpIP == user.cpIP && m_cpPort == user.cpPort)
         {
@@ -261,6 +265,7 @@ int UserOnlineTimer::on_user_online()
         user.status    = "inYiBot";
         user.sessionID = gen_sessionID(m_userID);
         DO_FAIL(AddUser(m_userID, user));
+        
         //create session
         LogDebug("Add session for user: %s", m_userID.c_str());
         sess.sessionID = user.sessionID;
@@ -436,7 +441,7 @@ int ConnectServiceTimer::on_appoint_service()
     
     //无需判定坐席的服务上限，直接服务
     ServiceInfo serv;
-    if (CAppConfig::Instance()->GetService(m_appointServiceID, serv)
+    if (mGetService(m_appointServiceID, serv)
         || "offline" == serv.status)
     {
         LogTrace("[%s]: appointService[%s] is offline!", m_appID.c_str(), m_appointServiceID.c_str());
@@ -450,19 +455,20 @@ int ConnectServiceTimer::on_appoint_service()
     Session sess;
     GET_SESS(get_user_session(m_appID, m_userID, &sess));
     sess.serviceID = m_raw_appointServiceID;
-    sess.atime        = GetCurTimeStamp();
+    sess.atime     = GetCurTimeStamp();
     DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess));
 
     //更新user
     UserInfo user;
-    GET_USER(CAppConfig::Instance()->GetUser(m_userID, user));
+    GET_USER(mGetUser(m_userID, user));
     user.status = "inService";
     user.qtime  = 0;
-    user.atime  = GetCurTimeStamp();
+    user.atime  = sess.atime;
     DO_FAIL(UpdateUser(m_userID, user));
 
     //更新service
     SET_SERV(serv.add_user(m_raw_userID));
+    serv.atime  = sess.atime;
     DO_FAIL(UpdateService(m_appointServiceID, serv));
     LogTrace("Success to create new session: %s", sess.toString().c_str());
     
@@ -547,7 +553,7 @@ int ConnectServiceTimer::on_queue()
     
     //获取user
     UserInfo user;
-    GET_USER(CAppConfig::Instance()->GetUser(m_userID, user));
+    GET_USER(mGetUser(m_userID, user));
     if ("" != m_channel)
         user.channel       = m_channel;
     if ("" != m_extends)
@@ -564,7 +570,7 @@ int ConnectServiceTimer::on_queue()
     
     user.priority      = m_priority;
     user.queuePriority = m_queuePriority;
-    user.atime = user.qtime = GetCurTimeStamp();///
+    user.atime = user.qtime = GetCurTimeStamp();
 
     //将user插入排队队列
     LogDebug("Go to add user onQueue. tag: %s, queuePriority: %u, user: %s", m_raw_tag.c_str(), m_queuePriority, user.toString().c_str());
@@ -671,7 +677,7 @@ int CancelQueueTimer::on_cancel_queue()
 
     LogDebug("==>IN");    
     
-    GET_USER(CAppConfig::Instance()->GetUser(m_userID, user));
+    GET_USER(mGetUser(m_userID, user));
 
     if (user.status != "onQueue")
     {
@@ -814,6 +820,43 @@ int CloseSessionTimer::on_close_session()
 }
 
 CloseSessionTimer::~CloseSessionTimer()
+{
+}
+
+
+int RefreshUserTimer::do_next_step(string& req_data)
+{
+    if (init(req_data, req_data.size()))
+    {
+        ON_ERROR_PARSE_PACKET();
+        return -1;
+    }
+    
+    if (on_refresh_user())
+    {
+        return -1;
+    }
+    else
+    {
+        return 1;
+    }
+}
+
+int RefreshUserTimer::on_refresh_user()
+{
+    //update user.atime
+    UserInfo user;
+    DO_FAIL(mGetUser(m_userID, user));
+    user.atime = GetCurTimeStamp();
+    DO_FAIL(UpdateUser(m_userID, user));
+
+    //send reply
+    Json::Value data = Json::objectValue;
+    DO_FAIL(on_send_reply(data));
+    return SS_OK;
+}
+
+RefreshUserTimer::~RefreshUserTimer()
 {
 }
 

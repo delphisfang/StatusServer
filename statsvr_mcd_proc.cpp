@@ -93,7 +93,7 @@ void CMCDProc::run(const std::string& conf_file)
     {
         DispatchUser2Service();
         DispatchSessionTimer();
-        //DispatchUserTimeout();
+        DispatchUserTimeout();
         DispatchServiceTimeout();
         //CAppConfig::Instance()->CheckServiceList();
         run_epoll_4_mq();
@@ -338,6 +338,7 @@ int32_t CMCDProc::InitCmdMap()
     m_cmdMap["cancelQueue"]         = CANCEL_QUEUE;
     m_cmdMap["closeSession"]        = CLOSE_SESSION;
     m_cmdMap["connectService"]      = CONNECT_SERVICE;
+    m_cmdMap["refreshUserTime"]     = REFRESH_USER_TIME;
     
     m_cmdMap["getServiceInfo"]      = GET_SERVICE_INFO;
     m_cmdMap["serviceLogin"]        = SERVICE_LOGIN;
@@ -609,6 +610,10 @@ int32_t CMCDProc::HandleRequest(const char *data, unsigned data_len,
 
         case CONNECT_SERVICE:
             ti = new ConnectServiceTimer(this, msg_seq, ccd_time, str_client_ip, flow, m_cfg._time_out);
+            break;
+
+        case REFRESH_USER_TIME:
+            ti = new RefreshUserTimer(this, msg_seq, ccd_time, str_client_ip, flow, m_cfg._time_out);
             break;
         
         case GET_SERVICE_INFO:

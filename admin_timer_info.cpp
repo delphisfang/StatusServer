@@ -316,7 +316,7 @@ int AdminConfigTimer::on_admin_getServiceStatus()
         servInfo["serviceID"] = delappID(app_serviceID);
 
         ServiceInfo serv;
-        if (CAppConfig::Instance()->GetService(app_serviceID, serv))
+        if (mGetService(app_serviceID, serv))
         {
             servInfo["serviceStatus"] = DEF_SERV_STATUS;
             servInfo["userNum"]       = 0;

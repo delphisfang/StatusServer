@@ -599,7 +599,7 @@ int CTimerInfo::get_service_json(const string &appID, const ServiceInfo &serv, J
         app_userID = appID + "_" + userID;
     
         userJson["userID"] = userID;
-        if (CAppConfig::Instance()->GetUser(app_userID, user))
+        if (mGetUser(app_userID, user))
         {
             LogError("Failed to get user: %s!", app_userID.c_str());
             userJson["sessionID"] = "";
@@ -672,7 +672,7 @@ int CTimerInfo::find_random_service_by_tag(const string &appID, const string &ap
     {
         //排除old_app_serviceID
         //如果坐席的服务人数已满，就分配下一个坐席
-        if (old_app_serviceID == (*it) || CAppConfig::Instance()->GetService(*it, target_serv) || !target_serv.is_available())
+        if (old_app_serviceID == (*it) || mGetService(*it, target_serv) || !target_serv.is_available())
         {
             if (old_app_serviceID == (*it))
             {
@@ -724,7 +724,7 @@ int CTimerInfo::find_least_service_by_tag(const string &appID, const string &app
     for (it = servHeap._servlist.begin(); it != servHeap._servlist.end(); ++it)
     {
         //排除old_app_serviceID
-        if (old_app_serviceID == (*it) || CAppConfig::Instance()->GetService(*it, serv) || !serv.is_available())
+        if (old_app_serviceID == (*it) || mGetService(*it, serv) || !serv.is_available())
         {
             if (old_app_serviceID == (*it))
             {

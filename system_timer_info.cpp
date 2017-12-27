@@ -73,7 +73,7 @@ int YiBotOutTimer::on_yibot_timeout()
         DO_FAIL(CreateUserSession(m_appID, m_userID, &sess, MAX_INT, MAX_INT));
         //update user
         UserInfo user;
-        DO_FAIL(CAppConfig::Instance()->GetUser(m_userID, user));
+        DO_FAIL(mGetUser(m_userID, user));
         user.sessionID = sess.sessionID;
         //don't update user atime
         DO_FAIL(UpdateUser(m_userID, user));
@@ -114,7 +114,7 @@ int UserOutTimer::on_user_timeout()
     set<string>::iterator it;
     for (it = m_userList.begin(); it != m_userList.end(); it++)
     {
-        LogTrace("====> goto delete timeout user[%s]", (*it).c_str());
+        LogTrace("Goto delete timeout user[%s].", (*it).c_str());
         
         m_userID     = *it;
         m_raw_userID = delappID(m_userID);
@@ -122,12 +122,17 @@ int UserOutTimer::on_user_timeout()
 
         //获取user
         UserInfo user;
-        DO_FAIL(CAppConfig::Instance()->GetUser(m_userID, user));
-        m_raw_tag = user.tag;
-        
-        //删除user
-        DO_FAIL(DeleteUser(m_userID));
+        if (mGetUser(m_userID, user))
+        {
+            continue;
+        }
 
+        if (IN_YIBOT != user.status)
+        {
+            continue;
+        }
+
+        #if 0
         //从service.userList删除user
         Session sess;
         get_user_session(m_appID, m_userID, &sess);
@@ -135,27 +140,40 @@ int UserOutTimer::on_user_timeout()
         {
             m_serviceID = m_appID + "_" + sess.serviceID;
             ServiceInfo serv;
-            DO_FAIL(CAppConfig::Instance()->GetService(m_serviceID, serv));
-            serv.delete_user(m_raw_userID);
-            DO_FAIL(UpdateService(m_serviceID, serv));
-            LogTrace("====> Service[%s] Delete user[%s]", m_serviceID.c_str(), m_userID.c_str());
+            if (0 == mGetService(m_serviceID, serv))
+            {
+                serv.delete_user(m_raw_userID);
+                UpdateService(m_serviceID, serv);
+                LogTrace("Service[%s] Delete user[%s]", m_serviceID.c_str(), m_userID.c_str());
+            }
         }
+        #endif
         
         //删除user session
-        DO_FAIL(DeleteUserSession(m_appID, m_userID));
-        
+        DeleteUserSession(m_appID, m_userID);
+
+        #if 0
         //从排队队列中删除user
+        m_raw_tag = user.tag;
         UserQueue *uq = NULL;
         if (0 == get_highpri_queue(m_appID, m_raw_tag, &uq) && NULL != uq)
         {
-            uq->delete_user(m_userID);
-            KV_set_queue(m_appID, m_raw_tag, true);
+            if (0 == uq->delete_user(m_userID))
+            {
+                KV_set_queue(m_appID, m_raw_tag, true);
+            }
         }
         if (0 == get_normal_queue(m_appID, m_raw_tag, &uq) && NULL != uq)
         {
-            uq->delete_user(m_userID);
-            KV_set_queue(m_appID, m_raw_tag, false);
+            if (0 == uq->delete_user(m_userID))
+            {
+                KV_set_queue(m_appID, m_raw_tag, false);
+            }
         }
+        #endif
+        
+        //最后删除user
+        DeleteUser(m_userID);
     }
 
     return 0;
@@ -199,7 +217,7 @@ int ServiceOutTimer::on_service_timeout()
         
         //获取service
         ServiceInfo serv;
-        DO_FAIL(CAppConfig::Instance()->GetService(servID, serv));
+        DO_FAIL(mGetService(servID, serv));
         //删除service
         DO_FAIL(DeleteService(servID));
         //更新tagServiceHeap
@@ -211,7 +229,7 @@ int ServiceOutTimer::on_service_timeout()
         #else
         LogTrace("====>goto force-offline timeout-service[%s]", servID.c_str());
         ServiceInfo serv;
-        DO_FAIL(CAppConfig::Instance()->GetService(servID, serv));
+        DO_FAIL(mGetService(servID, serv));
         //若service已经offline，无需再强迫下线
         if (OFFLINE == serv.status)
         {
@@ -301,14 +319,14 @@ int SessionOutTimer::on_session_timeout()
     m_raw_serviceID = sess.serviceID;
     m_userID        = m_appID + "_" + m_raw_userID;
     m_serviceID     = m_appID + "_" + m_raw_serviceID;
-    if (CAppConfig::Instance()->GetService(m_serviceID, m_serviceInfo) 
+    if (mGetService(m_serviceID, m_serviceInfo) 
         || m_serviceInfo.find_user(m_raw_userID))
     {
         //LogError("Failed to find user[%s] in service[%s], panic!!!", m_raw_userID.c_str(), m_serviceID.c_str());
         //ON_ERROR_GET_DATA("service"); //need not send packet
         return SS_ERROR;
     }
-    GET_USER(CAppConfig::Instance()->GetUser(m_userID, m_userInfo));
+    GET_USER(mGetUser(m_userID, m_userInfo));
 
     LogDebug("==>IN2");
     //1.记录旧的sessionID，以发送timeout报文
@@ -411,7 +429,7 @@ int SessionWarnTimer::on_session_timewarn()
     m_serviceID     = m_appID + "_" + m_raw_serviceID;
     m_sessionID     = sess.sessionID;
 
-    if (CAppConfig::Instance()->GetService(m_serviceID, m_serviceInfo) 
+    if (mGetService(m_serviceID, m_serviceInfo) 
         || m_serviceInfo.find_user(m_raw_userID))
     {
         ON_ERROR_GET_DATA("user");
@@ -419,7 +437,7 @@ int SessionWarnTimer::on_session_timewarn()
         return SS_OK;   //continue check warn
     }
     //获取user，以便发送timewarn报文
-    GET_USER(CAppConfig::Instance()->GetUser(m_userID, m_userInfo));
+    GET_USER(mGetUser(m_userID, m_userInfo));
 
     #if 0
     if (m_whereFrom == "websocket")
@@ -487,7 +505,7 @@ int QueueOutTimer::on_queue_timeout(string &req_data)
     //get first user on queue
     if (SS_OK != pTagQueues->get_tag(m_raw_tag, uq)
         || SS_OK != uq->get_first(m_userID, expire_time)
-        || SS_OK != CAppConfig::Instance()->GetUser(m_userID, user))
+        || SS_OK != mGetUser(m_userID, user))
     {
         LogError("[%s]: Error get queue or empty queue", m_appID.c_str());
         ON_ERROR_GET_DATA("user");
@@ -579,7 +597,7 @@ int UserServiceTimer::on_user_lastService()
 {
     LogDebug("==>IN");
 
-    DO_FAIL(CAppConfig::Instance()->GetService(m_lastServiceID, m_serviceInfo));
+    DO_FAIL(mGetService(m_lastServiceID, m_serviceInfo));
 
     if (false == m_serviceInfo.is_available())
     {
@@ -626,7 +644,7 @@ int UserServiceTimer::on_user_common()
         
         for (set<string>::iterator it = servHeap._servlist.begin(); it != servHeap._servlist.end(); it++)
         {
-            if (CAppConfig::Instance()->GetService(*it, m_serviceInfo))
+            if (mGetService(*it, m_serviceInfo))
             {
                 continue;
             }
@@ -668,14 +686,14 @@ int UserServiceTimer::on_dequeue_first_user()
     //从m_raw_tag排队队列弹出一个user
     if (0 == get_highpri_queue(m_appID, m_raw_tag, &uq)
         && 0 == uq->get_first(m_userID, expire_time)
-        && 0 == CAppConfig::Instance()->GetUser(m_userID, m_userInfo))
+        && 0 == mGetUser(m_userID, m_userInfo))
     {
         m_queuePriority = 1;
         LogTrace("[%s]: Dequeue user[%s] from HighPriQueue.", m_appID.c_str(), m_userID.c_str());
     }
     else if (0 == get_normal_queue(m_appID, m_raw_tag, &uq)
             && 0 == uq->get_first(m_userID, expire_time)
-            && 0 == CAppConfig::Instance()->GetUser(m_userID, m_userInfo))
+            && 0 == mGetUser(m_userID, m_userInfo))
     {
         m_queuePriority = 0;
         LogTrace("[%s]: Dequeue user[%s] from NormalQueue.", m_appID.c_str(), m_userID.c_str());
@@ -778,7 +796,7 @@ int UserServiceTimer::on_create_session()
     //更新user
     m_userInfo.status = "inService";
     m_userInfo.qtime  = 0;
-    m_userInfo.atime  = GetCurTimeStamp();
+    m_userInfo.atime  = m_session.atime;
     DO_FAIL(UpdateUser(m_userID, m_userInfo));
     
     LogTrace("Success to create new session: %s", m_session.toString().c_str());
@@ -870,7 +888,7 @@ int RefreshSessionTimer::on_refresh_session()
 
     //update user.atime
     UserInfo user;
-    DO_FAIL(CAppConfig::Instance()->GetUser(m_userID, user));
+    DO_FAIL(mGetUser(m_userID, user));
     user.atime = sess.atime;
     DO_FAIL(UpdateUser(m_userID, user));
 
@@ -879,7 +897,7 @@ int RefreshSessionTimer::on_refresh_session()
     {
         m_serviceID = m_appID + "_" + sess.serviceID;
         ServiceInfo serv;
-        DO_FAIL(CAppConfig::Instance()->GetService(m_serviceID, serv));
+        DO_FAIL(mGetService(m_serviceID, serv));
         serv.atime = sess.atime;
         DO_FAIL(UpdateService(m_serviceID, serv));
     }

@@ -20,6 +20,9 @@ using namespace tfc::base;
 
 namespace statsvr
 {
+    #define mGetUser(app_userID, user) CAppConfig::Instance()->GetUser(app_userID, user)
+    #define mGetService(app_servID, serv) CAppConfig::Instance()->GetService(app_servID, serv)
+    
     class CMCDProc;
 
     class CTimerInfo : public tfc::base::CFastTimerInfo

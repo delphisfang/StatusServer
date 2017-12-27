@@ -719,7 +719,7 @@ int CAppConfig::CanAppOfferService(const string& appID)
         {
             ServiceInfo serv;
 
-            if (CAppConfig::Instance()->GetService(*it, serv) || false == serv.is_available())
+            if (GetService(*it, serv) || false == serv.is_available())
             {
                 continue;
             }
@@ -993,6 +993,12 @@ int CAppConfig::GetTimeoutUsers(long long time_gap, set<string>& userList)
     map<string, UserInfo>::iterator it;
     for (it = _userlist.begin(); it != _userlist.end(); ++it)
     {
+        //只选择YiBot状态的用户
+        if (IN_YIBOT != (it->second).status)
+        {
+            continue;
+        }
+        
         atime = ((it->second).atime / 1000);
         if (nowTime >= atime + time_gap)
         {

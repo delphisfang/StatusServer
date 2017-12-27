@@ -85,14 +85,14 @@ int TransferTimer::on_get_cp_addr()
 {
     if ("user" == m_identity)
     {
-        if (CAppConfig::Instance()->GetUser(m_userID, m_userInfo))
+        if (mGetUser(m_userID, m_userInfo))
         {
             return on_not_online();
         }
     }
     else if ("service" == m_identity)
     {
-        if (CAppConfig::Instance()->GetService(m_serviceID, m_serviceInfo))
+        if (mGetService(m_serviceID, m_serviceInfo))
         {
             return on_not_online();
         }

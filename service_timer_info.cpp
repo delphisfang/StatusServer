@@ -36,28 +36,26 @@ int GetServiceInfoTimer::on_get_serviceinfo()
     Json::Value servJsonList;
     servJsonList.resize(0);
     Json::Value servJson;
-    int i = 0;
-    
-    ServiceInfo serv;
-    string app_serviceID;
     
     LogDebug("==>IN");
 
+    int i = 0;
     for (set<string>::iterator it = m_serviceID_list.begin(); it != m_serviceID_list.end(); it++)
     {
-        app_serviceID = (*it);
-        if (CAppConfig::Instance()->GetService(app_serviceID, serv))
+        m_serviceID = (*it);
+
+        ServiceInfo serv;
+        if (mGetService(m_serviceID, serv))
         {
-            m_raw_serviceID = delappID(app_serviceID);
+            m_raw_serviceID = delappID(m_serviceID);
             on_not_online();
-            return SS_ERROR;
+            continue;
         }
-        //serv.toJson(servInfo);
-        DO_FAIL(get_service_json(m_appID, serv, servJson));
+        get_service_json(m_appID, serv, servJson);
 
         //更新坐席atime
         serv.atime = GetCurTimeStamp();
-        DO_FAIL(UpdateService(app_serviceID, serv));
+        UpdateService(m_serviceID, serv);
         
         servJsonList[i] = servJson;
         ++i;
@@ -97,7 +95,7 @@ int ServiceLoginTimer::on_serviceLogin_reply()
     ServiceInfo serv;
     Json::Value servJson = Json::objectValue;
     
-    DO_FAIL(CAppConfig::Instance()->GetService(m_serviceID, serv));
+    DO_FAIL(mGetService(m_serviceID, serv));
     DO_FAIL(get_service_json(m_appID, serv, servJson));
     return on_send_reply(servJson);
 }
@@ -140,7 +138,7 @@ int ServiceLoginTimer::on_service_login()
 
     LogDebug("==>IN");
     
-    if (SS_OK == CAppConfig::Instance()->GetService(m_serviceID, serv))
+    if (SS_OK == mGetService(m_serviceID, serv))
     {
         LogDebug("Old service: %s, new cpIP: %s, new cpPort: %u", serv.toString().c_str(), m_cpIP.c_str(), m_cpPort);
         if (m_cpIP == serv.cpIP && m_cpPort == serv.cpPort)
@@ -233,7 +231,7 @@ int ServiceChangeStatusTimer::on_service_changestatus()
 
     LogDebug("==>IN");
 
-    if (CAppConfig::Instance()->GetService(m_serviceID, serv))
+    if (mGetService(m_serviceID, serv))
     {
         on_not_online();
         return SS_ERROR;
@@ -347,7 +345,7 @@ int ChangeServiceTimer::on_change_service()
     }
 
     //用户不在源坐席上
-    if (CAppConfig::Instance()->GetService(m_serviceID, m_src_serviceInfo) 
+    if (mGetService(m_serviceID, m_src_serviceInfo) 
         || m_src_serviceInfo.find_user(m_raw_userID))
     {
         on_session_wrong();
@@ -374,7 +372,7 @@ int ChangeServiceTimer::on_change_service()
 int ChangeServiceTimer::on_change_service_by_serviceID(bool need_reply)
 {
     //目标坐席下线
-    if (CAppConfig::Instance()->GetService(m_changeServiceID, m_dst_serviceInfo) 
+    if (mGetService(m_changeServiceID, m_dst_serviceInfo) 
         || "offline" == m_dst_serviceInfo.status)
     {
         if (true == need_reply)
@@ -403,7 +401,7 @@ int ChangeServiceTimer::on_change_service_by_tag()
     //1、熟客优先
     if ("lastServiceID" == m_priority)
     {
-        DO_FAIL(CAppConfig::Instance()->GetUser(m_userID, m_userInfo));
+        DO_FAIL(mGetUser(m_userID, m_userInfo));
         m_raw_changeServiceID = m_userInfo.lastServiceID;
         m_changeServiceID     = m_appID + "_" + m_raw_changeServiceID;
         if (0 == on_change_service_by_serviceID(false))
@@ -447,7 +445,7 @@ int ChangeServiceTimer::on_change_session()
     DO_FAIL(KV_set_session(m_userID, m_session, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT));
     
     //update user
-    GET_USER(CAppConfig::Instance()->GetUser(m_userID, m_userInfo));
+    GET_USER(mGetUser(m_userID, m_userInfo));
     //set lastServiceID
     m_userInfo.lastServiceID = m_raw_serviceID;
     DO_FAIL(UpdateUser(m_userID, m_userInfo));
@@ -600,7 +598,7 @@ int ServicePullNextTimer::on_pull_next()
         return SS_OK;
     }
     
-    GET_SERV(CAppConfig::Instance()->GetService(m_serviceID, m_serviceInfo));
+    GET_SERV(mGetService(m_serviceID, m_serviceInfo));
 
     LogTrace("====> service[%s]", m_serviceID.c_str());
     //拉取一个user
@@ -617,7 +615,7 @@ int ServicePullNextTimer::on_pull_next()
     m_raw_userID = delappID(m_userID);
 
     //找到user
-    GET_USER(CAppConfig::Instance()->GetUser(m_userID, m_userInfo));
+    GET_USER(mGetUser(m_userID, m_userInfo));
     LogTrace("====> user[%s]'s tag: %s", m_userID.c_str(), m_userInfo.tag.c_str());
     
     //user出队

@@ -146,6 +146,22 @@ namespace statsvr
         ServiceInfo m_serviceInfo;
     };
 
+    class RefreshUserTimer:public CTimerInfo
+    {
+        public:
+        RefreshUserTimer(CMCDProc* const proc
+                      , unsigned msg_seq
+                      , const timeval& ccd_time
+                      , string ccd_client_ip
+                      , uint64_t ret_flow
+                      , uint64_t max_time_gap) 
+                      : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
+        {}
+        ~RefreshUserTimer();
+        int  do_next_step(string& req_data);
+        int  on_refresh_user();
+    };
+
 }
 
 #endif
