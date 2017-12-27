@@ -121,6 +121,7 @@
 #define OFFLINE ("offline")
 #define BUSY ("busy")
 #define DEF_SERV_STATUS (OFFLINE)
+#define SUB_LIXIAN ("离线")
 
 /* session fields */
 #define USER_ID ("userID")
@@ -147,6 +148,7 @@
 #define SERV_AVATAR ("serviceAvatar")
 #define MAX_USER_NUM_FIELD ("maxUserNum")
 #define DEF_USER_NUM (CAppConfig::Instance()->getMaxConvNum(m_appID))
+#define SUB_STATUS ("subStatus")
 
 /* end of file */
 #endif /* _MY_DEBUG_H_ */

@@ -72,6 +72,7 @@ int TransferTimer::on_rsp_cp_addr()
     }
 
     Json::Value arr;
+    arr.resize(0);
     arr.append(data);
 
     Json::Value outData;
@@ -103,7 +104,7 @@ int TransferTimer::on_get_cp_addr()
         return SS_ERROR;
     }
 
-    return on_rsp_cp_addr();    
+    return on_rsp_cp_addr();
 }
 
 TransferTimer::~TransferTimer()

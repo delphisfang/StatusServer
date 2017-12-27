@@ -116,6 +116,8 @@ void ServiceLoginTimer::set_service_fields(ServiceInfo &serv)
     serv.serviceName = m_serviceName;
     serv.serviceAvatar = m_serviceAvatar;
     serv.maxUserNum = m_maxUserNum;
+    if ("" != m_subStatus)
+        serv.subStatus = m_subStatus;
     
     Json::Reader reader;
     Json::Value value;
@@ -237,24 +239,28 @@ int ServiceChangeStatusTimer::on_service_changestatus()
         return SS_ERROR;
     }
 
-    if (m_status != serv.status)
+    if (m_status != serv.status || m_subStatus != serv.subStatus)
     {
-        LogTrace("Update service[%s] status to %s", m_serviceID.c_str(), m_status.c_str());
-        serv.status = m_status;
+        bool status_changed = (m_status != serv.status);
+        
+        LogTrace("Update service[%s] to status[%s], subStatus[%s].", m_serviceID.c_str(), m_status.c_str(), m_subStatus.c_str());
+        serv.status    = m_status;
+        serv.subStatus = m_subStatus;
         DO_FAIL(UpdateService(m_serviceID, serv));
-        if ("online" == serv.status)
+
+        if (status_changed)
         {
-            DO_FAIL(AddTagOnlineServNum(m_appID, serv));
+            if ("online" == m_status)
+                DO_FAIL(AddTagOnlineServNum(m_appID, serv));
+            else
+                DO_FAIL(DelTagOnlineServNum(m_appID, serv));
         }
-        else
-        {
-            DO_FAIL(DelTagOnlineServNum(m_appID, serv));
-        }
+        
         return on_resp_cp();
     }
     else
     {
-        LogTrace("service[%s] status[%s] not changed", m_serviceID.c_str(), m_status.c_str());
+        LogTrace("service[%s] status[%s], subStatus[%s] not changed.", m_serviceID.c_str(), m_status.c_str(), m_subStatus.c_str());
         return on_resp_cp();
     }
 }

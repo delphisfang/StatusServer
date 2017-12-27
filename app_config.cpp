@@ -20,6 +20,7 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config_req, bool need_set_
     Json::Value appID_conf;
 
     Json::Value appIDList;
+    appIDList.resize(0);
     for (int i = 0; i < size; ++i)
     {
         appID_conf = configList[i];

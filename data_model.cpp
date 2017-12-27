@@ -231,6 +231,7 @@ ServiceInfo::ServiceInfo()
     serviceName.clear();
     serviceAvatar.clear();
     maxUserNum = 5;
+    subStatus  = SUB_LIXIAN;
     //whereFrom.clear();
 }
 
@@ -245,6 +246,7 @@ ServiceInfo::~ServiceInfo()
     userList.clear();
     serviceName.clear();
     serviceAvatar.clear();
+    subStatus = SUB_LIXIAN;
     //whereFrom.clear();
 }
 
@@ -266,6 +268,7 @@ ServiceInfo::ServiceInfo(const string& strServiceInfo, unsigned dft_user_num)
     serviceName      = get_value_str(value, SERV_NAME);
     serviceAvatar    = get_value_str(value, SERV_AVATAR);
     maxUserNum       = get_value_uint(value, MAX_USER_NUM_FIELD, dft_user_num);
+    subStatus        = get_value_str(value, SUB_STATUS, SUB_LIXIAN);
     //whereFrom      = value["whereFrom"].asString();
 
     parse_tags(value);
@@ -318,6 +321,7 @@ void ServiceInfo::toJson(Json::Value &value) const
     value[SERV_NAME]   = serviceName;
     value[SERV_AVATAR] = serviceAvatar;
     value[MAX_USER_NUM_FIELD] = maxUserNum;
+    value[SUB_STATUS]  = subStatus;
     //value["whereFrom"] = whereFrom;
 
     Json::Value arrayTags;
@@ -452,7 +456,8 @@ string ServiceHeap::toString() const
 {
     Json::Value value;
     Json::Value arrayObj;
-    
+
+    arrayObj.resize(0);
     for (set<string>::iterator it = _servlist.begin(); it != _servlist.end(); it++)
     {
         arrayObj.append(*it);

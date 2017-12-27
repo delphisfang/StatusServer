@@ -114,8 +114,9 @@ int CTimerInfo::init(string req_data, int datalen)
         }
     }
     
-    m_channel = get_value_str(js_data, "channel");
-    m_status  = get_value_str(js_data, "status");
+    m_channel   = get_value_str(js_data, "channel");
+    m_status    = get_value_str(js_data, "status");
+    m_subStatus = get_value_str(js_data, "subStatus");
     
     if (!js_data["extends"].isNull() && js_data["extends"].isObject())
     {

@@ -176,6 +176,7 @@ int AdminConfigTimer::on_admin_ping()
     }
 
     Json::Value appIDlistVer;
+    appIDlistVer.resize(0);
     map<string, bool> appIDMap;
     for (unsigned i = 0; i < size; ++i)
     {

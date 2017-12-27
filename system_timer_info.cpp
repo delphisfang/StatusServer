@@ -213,7 +213,7 @@ int ServiceOutTimer::on_service_timeout()
         ServiceInfo serv;
         DO_FAIL(CAppConfig::Instance()->GetService(servID, serv));
         //若service已经offline，无需再强迫下线
-        if ("offline" == serv.status)
+        if (OFFLINE == serv.status)
         {
             LogTrace("service[%s] is offline already, no need to force-offline.", servID.c_str());
             continue;
@@ -222,7 +222,8 @@ int ServiceOutTimer::on_service_timeout()
         m_appID = getappID(servID);
         DO_FAIL(DelTagOnlineServNum(m_appID, serv));
         //再更新service
-        serv.status = "offline";
+        serv.status    = OFFLINE;
+        serv.subStatus = SUB_LIXIAN;
         DO_FAIL(UpdateService(servID, serv));
         #endif
     }

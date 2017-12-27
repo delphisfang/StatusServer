@@ -105,6 +105,7 @@ namespace statsvr
         string   serviceName;
         string   serviceAvatar;
         unsigned maxUserNum;
+        string subStatus;
         //string     whereFrom;
     };
 

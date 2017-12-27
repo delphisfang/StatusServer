@@ -205,6 +205,7 @@ namespace statsvr
         string          m_search_no;
         string          m_channel;
         string          m_status;
+        string          m_subStatus;
         string          m_extends;
         string          m_serviceName;
         string          m_serviceAvatar;
