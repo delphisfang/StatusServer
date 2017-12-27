@@ -114,11 +114,11 @@ public:
     int DelUser(const string& app_userID);
     int UserListToString(string& strUserIDList);
 
-    int AddService(const string &app_serviceID, ServiceInfo &serv);
-    int GetService(const string& app_serviceID, ServiceInfo &serv);
-    int UpdateService(const string& app_serviceID, const ServiceInfo& serv);
-    //int UpdateService(const string& app_serviceID, const string& value);
-    int DelService(const string& app_serviceID);
+    int AddService(const string &app_servID, ServiceInfo &serv);
+    int GetService(const string& app_servID, ServiceInfo &serv);
+    int UpdateService(const string& app_servID, const ServiceInfo& serv);
+    //int UpdateService(const string& app_servID, const string& value);
+    int DelService(const string& app_servID);
     int CheckServiceList();
     int ServiceListToString(string& strServIDList);
 

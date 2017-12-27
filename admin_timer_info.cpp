@@ -308,15 +308,15 @@ int AdminConfigTimer::on_admin_getServiceStatus()
     Json::Value servInfo;
     int i = 0;
     
-    string app_serviceID;
+    string app_servID;
     
     for (set<string>::iterator it = m_serviceID_list.begin(); it != m_serviceID_list.end(); it++)
     {
-        app_serviceID = (*it);
-        servInfo["serviceID"] = delappID(app_serviceID);
+        app_servID = (*it);
+        servInfo["serviceID"] = delappID(app_servID);
 
         ServiceInfo serv;
-        if (mGetService(app_serviceID, serv))
+        if (mGetService(app_servID, serv))
         {
             servInfo["serviceStatus"] = DEF_SERV_STATUS;
             servInfo["userNum"]       = 0;

@@ -126,9 +126,9 @@ namespace statsvr
         int get_highpri_queue(const string &appID, const string &raw_tag, UserQueue **uq);
 
         int find_random_service_by_tag(const string &appID, const string &app_tag,
-                                const string &old_app_serviceID, ServiceInfo &target_serv);
+                                const string &old_app_servID, ServiceInfo &target_serv);
         int find_least_service_by_tag(const string &appID, const string &app_tag,
-                                    const string &old_app_serviceID, ServiceInfo &target_serv);
+                                    const string &old_app_servID, ServiceInfo &target_serv);
 
         /********************************* KV methods *************************************/
 
@@ -136,14 +136,14 @@ namespace statsvr
         int KV_set_servIDList();
         int KV_set_user(string app_userID, const UserInfo &user, bool isUpdate);
         int KV_del_user(const string &app_userID);
-        int KV_set_service(string app_serviceID, const ServiceInfo &serv, bool isUpdate);
-        int KV_del_service(const string &app_serviceID);
+        int KV_set_service(string app_servID, const ServiceInfo &serv, bool isUpdate);
+        int KV_del_service(const string &app_servID);
         int KV_set_session(string app_userID, const Session &sess, long long gap_warn, long long gap_expire);
         int KV_del_session(string app_userID);
         int KV_set_queue(string appID, string raw_tag, bool highpri);
         int KV_parse_user(string app_userID);
         int KV_parse_session(string app_userID);
-        int KV_parse_service(string app_serviceID);
+        int KV_parse_service(string app_servID);
         int KV_parse_queue(string app_tag, bool highpri);
 
         /************************* wrapper methods **********************/

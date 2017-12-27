@@ -119,9 +119,9 @@ namespace statsvr
         string toString() const;
 
         unsigned size();
-        int find_service(const string &app_serviceID);
-        int add_service(const string &app_serviceID);
-        int delete_service(const string &app_serviceID);
+        int find_service(const string &app_servID);
+        int add_service(const string &app_servID);
+        int delete_service(const string &app_servID);
 
         //按tag对service进行分组，方便转人工时根据user的tag找到service
         set<string> _servlist;

@@ -457,13 +457,13 @@ int CAppConfig::UserListToString(string &strUserIDList)
     return 0;
 }
 
-int CAppConfig::AddService(const string &app_serviceID, ServiceInfo &serv)
+int CAppConfig::AddService(const string &app_servID, ServiceInfo &serv)
 {
     pair<map<string, ServiceInfo>::iterator, bool> ret;
 
-    LogTrace("Add Service[%s]: %s", app_serviceID.c_str(), serv.toString().c_str());
+    LogTrace("Add Service[%s]: %s", app_servID.c_str(), serv.toString().c_str());
 
-    ret = _servicelist.insert(pair<string, ServiceInfo>(app_serviceID, serv));
+    ret = _servicelist.insert(pair<string, ServiceInfo>(app_servID, serv));
     if (ret.second)
     {
         return 0;
@@ -474,11 +474,11 @@ int CAppConfig::AddService(const string &app_serviceID, ServiceInfo &serv)
     }
 }
 
-int CAppConfig::GetService(const string &app_serviceID, ServiceInfo &serv)
+int CAppConfig::GetService(const string &app_servID, ServiceInfo &serv)
 {
     map<string, ServiceInfo>::iterator it;
     
-    it = _servicelist.find(app_serviceID);
+    it = _servicelist.find(app_servID);
     if (it != _servicelist.end())
     {
         serv = it->second;
@@ -487,33 +487,33 @@ int CAppConfig::GetService(const string &app_serviceID, ServiceInfo &serv)
     return -1;
 }
 
-int CAppConfig::UpdateService(const string &app_serviceID, const ServiceInfo &serv)
+int CAppConfig::UpdateService(const string &app_servID, const ServiceInfo &serv)
 {
-    LogTrace("Update Service[%s]: %s", app_serviceID.c_str(), serv.toString().c_str());
+    LogTrace("Update Service[%s]: %s", app_servID.c_str(), serv.toString().c_str());
 
-    _servicelist[app_serviceID] = serv;
+    _servicelist[app_servID] = serv;
     return 0;
 }
 
 #if 0
-int CAppConfig::UpdateService(const string &app_serviceID, const string &value)
+int CAppConfig::UpdateService(const string &app_servID, const string &value)
 {
     ServiceInfo serv(value);
-    LogTrace("Update Service[%s]: %s", app_serviceID.c_str(), serv.toString().c_str());
+    LogTrace("Update Service[%s]: %s", app_servID.c_str(), serv.toString().c_str());
 
-    _servicelist[app_serviceID] = serv;
+    _servicelist[app_servID] = serv;
     return 0;
 }
 #endif
 
-int CAppConfig::DelService(const string &app_serviceID)
+int CAppConfig::DelService(const string &app_servID)
 {
     map<string, ServiceInfo>::iterator it;
     
-    it = _servicelist.find(app_serviceID);
+    it = _servicelist.find(app_servID);
     if (it != _servicelist.end())
     {
-        LogTrace("Delete Service[%s]: %s", app_serviceID.c_str(), it->second.toString().c_str());
+        LogTrace("Delete Service[%s]: %s", app_servID.c_str(), it->second.toString().c_str());
         _servicelist.erase(it);
     }
     return 0;
@@ -630,7 +630,7 @@ int CAppConfig::DelTagServiceHeap(const string& appID) //delete a batch of tag r
 int CAppConfig::AddService2Tags(const string &appID, ServiceInfo &serv)
 {
     ServiceHeap servHeap;
-    string app_serviceID = appID + "_" + serv.serviceID;
+    string app_servID = appID + "_" + serv.serviceID;
 
     for (set<string>::iterator it = serv.tags.begin(); it != serv.tags.end(); it++)
     {
@@ -641,7 +641,7 @@ int CAppConfig::AddService2Tags(const string &appID, ServiceInfo &serv)
             continue;
         }
 
-        servHeap.add_service(app_serviceID);
+        servHeap.add_service(app_servID);
 
         if (CAppConfig::Instance()->UpdateTagServiceHeap(app_tag, servHeap))
         {
@@ -656,7 +656,7 @@ int CAppConfig::AddService2Tags(const string &appID, ServiceInfo &serv)
 int CAppConfig::DelServiceFromTags(const string &appID, ServiceInfo &serv)
 {
     ServiceHeap servHeap;
-    string app_serviceID = appID + "_" + serv.serviceID;
+    string app_servID = appID + "_" + serv.serviceID;
 
     for (set<string>::iterator it = serv.tags.begin(); it != serv.tags.end(); it++)
     {
@@ -667,7 +667,7 @@ int CAppConfig::DelServiceFromTags(const string &appID, ServiceInfo &serv)
             continue;
         }
 
-        servHeap.delete_service(app_serviceID);
+        servHeap.delete_service(app_servID);
 
         if (CAppConfig::Instance()->UpdateTagServiceHeap(app_tag, servHeap))
         {
@@ -742,8 +742,9 @@ int CAppConfig::CheckTagServiceHeapHasOnline(string app_tag)
         LogError("Failed to get ServiceHeap of tag: %s!", app_tag.c_str());
         return -1;
     }
-    
-    for (set<string>::iterator it = servHeap._servlist.begin(); it != servHeap._servlist.end(); ++it)
+
+    set<string>::iterator it;
+    for (it = servHeap._servlist.begin(); it != servHeap._servlist.end(); ++it)
     {
         string app_servID = (*it);
         ServiceInfo serv;
@@ -751,7 +752,7 @@ int CAppConfig::CheckTagServiceHeapHasOnline(string app_tag)
         {
             continue;
         }
-        else if ("offline" != serv.status)
+        else if (OFFLINE != serv.status)
         {
             return 0;
         }

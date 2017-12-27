@@ -472,9 +472,9 @@ unsigned ServiceHeap::size()
     return _servlist.size();
 }
 
-int ServiceHeap::find_service(const string &app_serviceID)
+int ServiceHeap::find_service(const string &app_servID)
 {
-    if (_servlist.end() != _servlist.find(app_serviceID))
+    if (_servlist.end() != _servlist.find(app_servID))
     {
         return 0;
     }
@@ -484,34 +484,34 @@ int ServiceHeap::find_service(const string &app_serviceID)
     }
 }
 
-int ServiceHeap::add_service(const string &app_serviceID)
+int ServiceHeap::add_service(const string &app_servID)
 {
     pair<set<string>::iterator, bool> ret;
     
-    ret = _servlist.insert(app_serviceID);
+    ret = _servlist.insert(app_servID);
     if (true == ret.second)
     {
         return 0;
     }
     else
     {
-        LogError("Failed to add new service[%s]!", app_serviceID.c_str());
+        LogError("Failed to add new service[%s]!", app_servID.c_str());
         return -1;
     }
 }
 
-int ServiceHeap::delete_service(const string &app_serviceID)
+int ServiceHeap::delete_service(const string &app_servID)
 {
     unsigned int ret;
     
-    ret = _servlist.erase(app_serviceID);
+    ret = _servlist.erase(app_servID);
     if (ret > 0)
     {
         return 0;
     }
     else
     {
-        LogError("Failed to delete service[%s]!", app_serviceID.c_str());
+        LogError("Failed to delete service[%s]!", app_servID.c_str());
         return -1;
     }
 }

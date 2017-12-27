@@ -648,7 +648,7 @@ int CTimerInfo::get_highpri_queue(const string &appID, const string &raw_tag, Us
 }
 
 int CTimerInfo::find_random_service_by_tag(const string &appID, const string &app_tag, 
-                                    const string &old_app_serviceID, ServiceInfo &target_serv)
+                                    const string &old_app_servID, ServiceInfo &target_serv)
 {
     ServiceHeap servHeap;
     if (CAppConfig::Instance()->GetTagServiceHeap(app_tag, servHeap))
@@ -670,13 +670,13 @@ int CTimerInfo::find_random_service_by_tag(const string &appID, const string &ap
     
     for (int i = j; ; )
     {
-        //排除old_app_serviceID
+        //排除old_app_servID
         //如果坐席的服务人数已满，就分配下一个坐席
-        if (old_app_serviceID == (*it) || mGetService(*it, target_serv) || !target_serv.is_available())
+        if (old_app_servID == (*it) || mGetService(*it, target_serv) || !target_serv.is_available())
         {
-            if (old_app_serviceID == (*it))
+            if (old_app_servID == (*it))
             {
-                LogWarn("skip old_serviceID: %s", old_app_serviceID.c_str());
+                LogWarn("skip old_serviceID: %s", old_app_servID.c_str());
             }
             else
             {
@@ -707,7 +707,7 @@ int CTimerInfo::find_random_service_by_tag(const string &appID, const string &ap
 }
 
 int CTimerInfo::find_least_service_by_tag(const string &appID, const string &app_tag,
-                                        const string &old_app_serviceID, ServiceInfo &target_serv)
+                                        const string &old_app_servID, ServiceInfo &target_serv)
 {
     ServiceHeap servHeap;
     if (CAppConfig::Instance()->GetTagServiceHeap(app_tag, servHeap))
@@ -723,12 +723,12 @@ int CTimerInfo::find_least_service_by_tag(const string &appID, const string &app
     ServiceInfo serv;
     for (it = servHeap._servlist.begin(); it != servHeap._servlist.end(); ++it)
     {
-        //排除old_app_serviceID
-        if (old_app_serviceID == (*it) || mGetService(*it, serv) || !serv.is_available())
+        //排除old_app_servID
+        if (old_app_servID == (*it) || mGetService(*it, serv) || !serv.is_available())
         {
-            if (old_app_serviceID == (*it))
+            if (old_app_servID == (*it))
             {
-                LogWarn("skip old_serviceID: %s", old_app_serviceID.c_str());
+                LogWarn("skip old_serviceID: %s", old_app_servID.c_str());
             }
             else
             {
@@ -795,9 +795,9 @@ int CTimerInfo::KV_del_user(const string &app_userID)
     return SS_OK;
 }
 
-int CTimerInfo::KV_set_service(string app_serviceID, const ServiceInfo &serv, bool isUpdate)
+int CTimerInfo::KV_set_service(string app_servID, const ServiceInfo &serv, bool isUpdate)
 {
-    DO_FAIL(KVSetKeyValue(KV_CACHE, SERV_PREFIX+app_serviceID, serv.toString()));
+    DO_FAIL(KVSetKeyValue(KV_CACHE, SERV_PREFIX+app_servID, serv.toString()));
 
     if (false == isUpdate)
     {
@@ -806,9 +806,9 @@ int CTimerInfo::KV_set_service(string app_serviceID, const ServiceInfo &serv, bo
     return SS_OK;
 }
 
-int CTimerInfo::KV_del_service(const string &app_serviceID)
+int CTimerInfo::KV_del_service(const string &app_servID)
 {
-    DO_FAIL(KVDelKeyValue(KV_CACHE, SERV_PREFIX+app_serviceID));
+    DO_FAIL(KVDelKeyValue(KV_CACHE, SERV_PREFIX+app_servID));
     DO_FAIL(KV_set_servIDList());
     return SS_OK;
 }
@@ -886,21 +886,21 @@ int CTimerInfo::KV_parse_session(string app_userID)
     return SS_OK;
 }
 
-int CTimerInfo::KV_parse_service(string app_serviceID)
+int CTimerInfo::KV_parse_service(string app_servID)
 {
-    LogTrace("parse serviceID:%s", app_serviceID.c_str());
+    LogTrace("parse serviceID:%s", app_servID.c_str());
     
     /*获取*/
-    string serv_key = SERV_PREFIX + app_serviceID;
+    string serv_key = SERV_PREFIX + app_servID;
     string serv_value;
     DO_FAIL(KVGetKeyValue(KV_CACHE, serv_key, serv_value));
     
     /* 解析每个service的详细信息 */
     ServiceInfo serv(serv_value, DEF_USER_NUM);
-    SET_USER(CAppConfig::Instance()->AddService(app_serviceID, serv));
+    SET_USER(CAppConfig::Instance()->AddService(app_servID, serv));
     
     /* 添加到ServiceHeap */
-    string appID = getappID(app_serviceID);
+    string appID = getappID(app_servID);
     SET_FAIL(CAppConfig::Instance()->AddService2Tags(appID, serv), "service heap");
 
     /* 更新OnlineServiceNum */
