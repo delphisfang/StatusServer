@@ -88,8 +88,8 @@ public:
     int CheckDel(const map<string, bool>& map_now);
 
     int UpdateAppConf(const Json::Value &push_config_req, bool need_set_appIDList);
-    int SetAppIDList(string& value);
-    int GetAppIDList(string& value);
+    int SetAppIDListStr(string& value);
+    int GetAppIDListStr(string& value);
     
     void DelAppID(string appID);
 

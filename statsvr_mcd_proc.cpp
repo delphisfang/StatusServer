@@ -1158,7 +1158,7 @@ void CMCDProc::DispatchUser2Service()
     Json::Value appList;
     string appListString;
 
-    if (CAppConfig::Instance()->GetAppIDList(appListString))
+    if (mGetAppIDListStr(appListString))
     {
         LogError("get appIDlist failed.");
         return;
@@ -1246,7 +1246,7 @@ void CMCDProc::DispatchSessionTimer()
     Json::Value appList;
     string appListString;
 
-    if (CAppConfig::Instance()->GetAppIDList(appListString))
+    if (mGetAppIDListStr(appListString))
     {
         LogError("Failed to get appIDlist!");
         return;
@@ -1254,7 +1254,7 @@ void CMCDProc::DispatchSessionTimer()
 
     if (!reader.parse(appListString, appList))
     {
-        //LogError("Failed to parse appIDListString:%s", appListString.c_str());
+        //LogError("Failed to parse appIDListStr:%s", appIDListStr.c_str());
         return;
     }
 
@@ -1401,7 +1401,6 @@ void CMCDProc::DispatchCheckSession(string appID)
 
         for (int i = 0; i < count; i++)
         {
-            //LogTrace("[%s]: pop session queue...", appID.c_str());
             timeval ntv;
             gettimeofday(&ntv, NULL);
             CTimerInfo* ti = new SessionOutTimer(this, GetMsgSeq(), ntv, "", 0, m_cfg._time_out);

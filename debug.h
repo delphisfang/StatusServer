@@ -151,6 +151,9 @@
 #define DEF_USER_NUM (CAppConfig::Instance()->getMaxConvNum(m_appID))
 #define SUB_STATUS ("subStatus")
 
+#define mGetAppIDListStr(str) CAppConfig::Instance()->GetAppIDListStr(str)
+#define mSetAppIDListStr(str) CAppConfig::Instance()->SetAppIDListStr(str)
+
 /* end of file */
 #endif /* _MY_DEBUG_H_ */
 

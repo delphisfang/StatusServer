@@ -163,8 +163,8 @@ int AdminConfigTimer::on_admin_ping()
         return -1;
     }
 
-    string appIDListString = m_data;
-    LogDebug("appIDListString: %s", appIDListString.c_str());
+    string appIDListStr = m_data;
+    LogDebug("appIDListStr: %s", appIDListStr.c_str());
     
     //参数检查
     unsigned size = ping_req["appIDList"].size();
@@ -202,8 +202,8 @@ int AdminConfigTimer::on_admin_ping()
     }
     
     int delnum = CAppConfig::Instance()->CheckDel(appIDMap);
-    CAppConfig::Instance()->SetAppIDList(appIDListString);
-    LogTrace("[pingConf] SetAppIDList: %s", appIDListString.c_str());
+    mSetAppIDListStr(appIDListStr);
+    LogTrace("[pingConf] SetAppIDListStr: %s", appIDListStr.c_str());
     
     Json::Value data;
     data["appList"] = appIDlistVer;
@@ -221,7 +221,7 @@ int AdminConfigTimer::on_admin_getConf()
     configList.resize(0);
 
     string appListString;
-    if (CAppConfig::Instance()->GetAppIDList(appListString))
+    if (mGetAppIDListStr(appListString))
     {
         LogError("get appIDList failed.");
         m_errno = ERROR_SYSTEM_WRONG;
@@ -460,7 +460,7 @@ int AdminConfigTimer::restore_userList()
     /* 解析userID列表 */
     if (KVGetKeyValue(KV_CACHE, USERLIST_KEY, val_userIDList))
     {
-        LogTrace("userIDlist is empty!");
+        LogTrace("userIDList is empty!");
         return SS_OK;
     }
     userNum = get_id_list(val_userIDList, "userIDList", userIDList);
@@ -540,10 +540,10 @@ int AdminConfigTimer::on_admin_restore()
     string appListString;
 
     /* 获取appID列表 */
-    GET_FAIL(CAppConfig::Instance()->GetAppIDList(appListString), "appIDList");
+    DO_FAIL(mGetAppIDListStr(appListString));
     if (!reader.parse(appListString, appList))
     {
-        LogError("Failed to parse appIDlist:%s!", appListString.c_str());
+        LogError("Failed to parse appIDList:%s!", appListString.c_str());
         ON_ERROR_PARSE_DATA("appIDList");
         return SS_ERROR;
     }
