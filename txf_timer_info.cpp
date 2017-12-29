@@ -59,14 +59,14 @@ int TransferTimer::on_rsp_cp_addr()
     data["identity"] = m_identity;
     if ("user" == m_identity)
     {
-        data["userID"]        = m_userID;
+        data["userID"]        = m_raw_userID;
         data["chatProxyIp"]   = m_userInfo.cpIP;
         data["chatProxyPort"] = m_userInfo.cpPort;
 
     }
     else
     {
-        data["serviceID"]     = m_serviceID;
+        data["serviceID"]     = m_raw_serviceID;
         data["chatProxyIp"]   = m_serviceInfo.cpIP;
         data["chatProxyPort"] = m_serviceInfo.cpPort;
     }

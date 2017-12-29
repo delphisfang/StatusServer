@@ -59,23 +59,6 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config_req, bool need_set_
         SetConf(appID, appID_conf.toStyledString());
 
         //configs sub-fields
-        #if 0
-        if (!appID_conf["autoTransfer"].isNull() && appID_conf["autoTransfer"].isInt())
-        {
-            int autoTransfer = appID_conf["autoTransfer"].asInt();
-            SetValue(appID, "autoTransfer", autoTransfer);
-        }
-        if (!appID_conf["dynamicTransfer"].isNull() && appID_conf["dynamicTransfer"].isObject())
-        {
-            string dynamicTransfer = appID_conf["dynamicTransfer"].toStyledString();
-            SetValue(appID, "dynamicTransfer", dynamicTransfer);
-        }
-        if (!appID_conf["yibotTalk"].isNull() && appID_conf["yibotTalk"].isObject())
-        {
-            string yibotTalk = appID_conf["yibotTalk"].toStyledString();
-            SetValue(appID, "yibotTalk", yibotTalk);
-        }
-        #endif
         if (!appID_conf["max_conv_num"].isNull() && appID_conf["max_conv_num"].isInt())
         {
             int max_conv_num = appID_conf["max_conv_num"].asInt();
@@ -131,18 +114,6 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config_req, bool need_set_
             string timeout_end_hint = appID_conf["timeout_end_hint"].asString();
             SetValue(appID, "timeout_end_hint", timeout_end_hint);
         }
-        #if 0
-        if (!appID_conf["recommendPre"].isNull() && appID_conf["recommendPre"].isString())
-        {
-            string recommendPre = appID_conf["recommendPre"].asString();
-            SetValue(appID, "recommendPre", recommendPre);
-        }
-        if (!appID_conf["recommendEnd"].isNull() && appID_conf["recommendEnd"].isString())
-        {
-            string recommendEnd = appID_conf["recommendEnd"].asString();
-            SetValue(appID, "recommendEnd", recommendEnd);
-        }
-        #endif
         
         //tags
         if (!appID_conf["tags"].isNull() && appID_conf["tags"].isArray())
@@ -154,17 +125,17 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config_req, bool need_set_
             //兼容没收到pingConf只收到updateConf的情况
             if (GetTagQueue(appID, pTagQueues))
             {
-                DO_FAIL(AddTagQueue(appID));
+                AddTagQueue(appID);
                 GetTagQueue(appID, pTagQueues);
             }
             if (GetTagHighPriQueue(appID, pTagHighPriQueues))
             {
-                DO_FAIL(AddTagHighPriQueue(appID));
+                AddTagHighPriQueue(appID);
                 GetTagHighPriQueue(appID, pTagHighPriQueues);
             }
             if (GetSessionQueue(appID, pSessQueue))
             {
-                DO_FAIL(AddSessionQueue(appID));
+                AddSessionQueue(appID);
                 GetSessionQueue(appID, pSessQueue);
             }
 
@@ -174,7 +145,7 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config_req, bool need_set_
             
             int tagsNum = appID_conf["tags"].size();
             string tags = "";
-            for (int j = 0; j < tagsNum; j++)
+            for (int j = 0; j < tagsNum; ++j)
             {
                 string raw_tag;
                 if (get_value_str_safe(appID_conf["tags"][j], raw_tag))
@@ -182,11 +153,12 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config_req, bool need_set_
                     LogError("Error get <tags[%d]>, appID[%s]!", j, appID.c_str());
                     continue;
                 }
+
+                pTagQueues->add_tag(raw_tag);
+                pTagHighPriQueues->add_tag(raw_tag);
                 
                 string app_tag = appID + "_" + raw_tag;
-                DO_FAIL(AddTagServiceHeap(app_tag));
-                DO_FAIL(pTagQueues->add_tag(raw_tag));
-                DO_FAIL(pTagHighPriQueues->add_tag(raw_tag));
+                AddTagServiceHeap(app_tag);
                 
                 tags += app_tag + ";";
             }
@@ -195,14 +167,15 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config_req, bool need_set_
         else
         {
             LogError("Error get <tags>, appID[%s]!", appID.c_str());
+            continue;
         }
     }
 
     if (true == need_set_appIDList)
     {
-        Json::Value arr;
-        arr["appIDList"] = appIDList;
-        string appIDListStr = arr.toStyledString();
+        Json::Value obj;
+        obj["appIDList"] = appIDList;
+        string appIDListStr = obj.toStyledString();
         mSetAppIDListStr(appIDListStr);
         LogTrace("[updateConf] SetAppIDListStr: %s", appIDListStr.c_str());
     }
@@ -227,10 +200,6 @@ void CAppConfig::DelAppID(string appID)
     LogDebug("Delete all Data Structs of appID: %s", appID.c_str());
     DelVersion(appID);
     DelConf(appID);
-    #if 0
-    DelQueueString(appID);
-    DelOfflineHeap(appID);
-    #endif
     DelTagQueue(appID);
     DelTagHighPriQueue(appID);
     DelSessionQueue(appID);

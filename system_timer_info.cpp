@@ -227,7 +227,7 @@ int ServiceOutTimer::on_service_timeout()
         DO_FAIL(DelTagOnlineServNum(m_appID, serv));
 
         #else
-        LogTrace("====>goto force-offline timeout-service[%s]", servID.c_str());
+        LogTrace("Goto force-offline timeout-service[%s]", servID.c_str());
         ServiceInfo serv;
         DO_FAIL(mGetService(servID, serv));
         //若service已经offline，无需再强迫下线
