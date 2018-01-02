@@ -213,7 +213,7 @@ int ServiceOutTimer::on_service_timeout()
         string servID = *it;
 
         #if 0
-        LogTrace("====>going to delete timeout service[%s]", servID.c_str());
+        LogTrace("Goto delete timeout service[%s]", servID.c_str());
         
         //获取service
         ServiceInfo serv;
@@ -307,7 +307,7 @@ int SessionOutTimer::on_session_timeout()
     }
 
     sess = sessTimer.session;
-    LogDebug("==>Choose timeout session: %s", sess.toString().c_str());
+    LogDebug("Choose timeout session: %s", sess.toString().c_str());
     if ("" == sess.serviceID || sessTimer.expire_time >= MAX_INT)
     {
         LogTrace("no need to send timeout");
@@ -346,7 +346,7 @@ int SessionOutTimer::on_session_timeout()
     DO_FAIL(CreateUserSession(m_appID, m_userID, &sess, MAX_INT, MAX_INT));
 
     //4.更新user
-    m_userInfo.status    = "inYiBot";
+    m_userInfo.status    = IN_YIBOT;
     m_userInfo.sessionID = new_sessionID;
     DO_FAIL(UpdateUser(m_userID, m_userInfo));
     
@@ -379,8 +379,6 @@ int SessionWarnTimer::on_send_timewarn_msg()
 {
     Json::Value data;
 
-    LogDebug("==>IN");
-
     //if(m_session.whereFrom == "wx" || m_session.whereFrom == "wxpro")
     //{
         data["des"] = CAppConfig::Instance()->getTimeWarnHint(m_appID);
@@ -398,7 +396,6 @@ int SessionWarnTimer::on_send_timewarn_msg()
     data["identity"]  = "user";
     DO_FAIL(on_send_request("timeoutWarn", m_userInfo.cpIP, m_userInfo.cpPort, data, false));
 
-    LogDebug("==>OUT");
     return SS_OK;
 }
 
@@ -407,34 +404,36 @@ int SessionWarnTimer::on_session_timewarn()
     SessionQueue* pSessQueue = NULL;
     Session sess;
     
-    //LogDebug("==>IN");
-
     if (SS_OK != CAppConfig::Instance()->GetSessionQueue(m_appID, pSessQueue) 
         || pSessQueue->check_warn(sess))
     {
-        //no session timewarn yet
+        //no session timewarn
         return SS_OK;
     }
-    LogDebug("==>session: %s", sess.toString().c_str());
+    LogDebug("Choose timewarn session: %s", sess.toString().c_str());
 
     if ("" == sess.serviceID)
     {
         LogTrace("no need to send timewarn");
         return SS_OK;
     }
-    
+
     m_raw_userID    = sess.userID;
     m_raw_serviceID = sess.serviceID;
     m_userID        = m_appID + "_" + m_raw_userID;
     m_serviceID     = m_appID + "_" + m_raw_serviceID;
     m_sessionID     = sess.sessionID;
 
+    ///important
+    int is_warn = 1;
+    KV_set_session(m_userID, sess, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT, is_warn);
+
     if (mGetService(m_serviceID, m_serviceInfo) 
         || m_serviceInfo.find_user(m_raw_userID))
     {
         ON_ERROR_GET_DATA("user");
         LogTrace("no need to send timewarn");
-        return SS_OK;   //continue check warn
+        return SS_OK;
     }
     //获取user，以便发送timewarn报文
     GET_USER(mGetUser(m_userID, m_userInfo));
@@ -446,9 +445,7 @@ int SessionWarnTimer::on_session_timewarn()
     }
     #endif
 
-    LogDebug("==>OUT");
-
-    //发送超时提醒给用户和坐席
+    //发送超时提醒
     return on_send_timewarn_msg();
 }
 
@@ -517,7 +514,7 @@ int QueueOutTimer::on_queue_timeout(string &req_data)
     DO_FAIL(KV_set_queue(m_appID, m_raw_tag, m_queuePriority));
     
     //update user
-    user.status = "inYiBot";
+    user.status = IN_YIBOT;
     user.qtime  = 0;
     DO_FAIL(UpdateUser(m_userID, user));
     
@@ -721,7 +718,7 @@ int UserServiceTimer::on_dequeue_first_user()
     DO_FAIL(KV_set_queue(m_appID, m_raw_tag, m_queuePriority));
     
     //更新user
-    m_userInfo.status = "inYiBot";
+    m_userInfo.status = IN_YIBOT;
     m_userInfo.qtime  = 0;
     DO_FAIL(UpdateUser(m_userID, m_userInfo));
 
@@ -794,7 +791,7 @@ int UserServiceTimer::on_create_session()
     DO_FAIL(UpdateUserSession(m_appID, m_userID, &m_session));
     
     //更新user
-    m_userInfo.status = "inService";
+    m_userInfo.status = IN_SERVICE;
     m_userInfo.qtime  = 0;
     m_userInfo.atime  = m_session.atime;
     DO_FAIL(UpdateUser(m_userID, m_userInfo));

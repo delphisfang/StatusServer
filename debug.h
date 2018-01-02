@@ -91,8 +91,6 @@
 #define SET_SESS(expr) SET_FAIL(expr, "session")
 #define SET_QUEUE(expr) SET_FAIL(expr, "queue")
 
-#define CI (CAppConfig::Instance())
-
 #define MAX_INT (0x7FFFFFFF)
 #define DEF_SESS_TIMEOUT (CAppConfig::Instance()->getDefaultSessionTimeOut(m_appID))
 #define DEF_SESS_TIMEWARN (CAppConfig::Instance()->getDefaultSessionTimeWarn(m_appID))
@@ -109,8 +107,8 @@
 #define QUEUE_PREFIX ("QUEUE_")
 #define HIGHQ_PREFIX ("HIGHQ_")
 
-#define PROJECT_NAME ("StatSvr")
-#define MODULE_NAME  ("StatSvr")
+#define PROJECT_NAME ("StatusServer")
+#define MODULE_NAME  ("StatusServer")
 
 /* user status */
 #define IN_YIBOT ("inYiBot")
@@ -154,6 +152,5 @@
 #define mGetAppIDListStr(str) CAppConfig::Instance()->GetAppIDListStr(str)
 #define mSetAppIDListStr(str) CAppConfig::Instance()->SetAppIDListStr(str)
 
-/* end of file */
 #endif /* _MY_DEBUG_H_ */
 

@@ -77,12 +77,12 @@ Session::Session(const string& strSession)
 void Session::toJson(Json::Value &value) const
 {
     value[SESSION_ID]  = sessionID;
-    value[USER_ID]       = userID;
-    value[SERV_ID]       = serviceID;
+    value[USER_ID]     = userID;
+    value[SERV_ID]     = serviceID;
     value[ACTIVE_TIME] = atime;
     value[BUILD_TIME]  = btime;
     value[CP_IP]       = cpIP;
-    value[CP_PORT]       = cpPort;
+    value[CP_PORT]     = cpPort;
     value[NOTIFIED]    = notified;
 
     //value["toIM"] = toIM;

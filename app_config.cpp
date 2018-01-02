@@ -881,7 +881,7 @@ unsigned CAppConfig::GetOnlineServiceNum(string appID)
     {
         if (appID == getappID(it->first))
         {
-            if ("offline" != (it->second).status)
+            if (OFFLINE != (it->second).status)
             {
                 ++servNum;
             }
@@ -919,7 +919,7 @@ unsigned CAppConfig::GetTagOnlineServiceNum(string appID, string raw_tag)
         if (appID == getappID(it->first))
         {
             ServiceInfo &serv = it->second;
-            if ("offline" != serv.status)
+            if (OFFLINE != serv.status)
             {
                 set<string>::iterator it2;
                 for (it2 = serv.tags.begin(); it2 != serv.tags.end(); ++it2)

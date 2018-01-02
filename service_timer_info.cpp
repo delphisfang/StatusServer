@@ -248,7 +248,7 @@ int ServiceChangeStatusTimer::on_service_changestatus()
 
         if (status_changed)
         {
-            if ("online" == m_status)
+            if (ONLINE == m_status)
                 DO_FAIL(AddTagOnlineServNum(m_appID, serv));
             else
                 DO_FAIL(DelTagOnlineServNum(m_appID, serv));
@@ -373,7 +373,7 @@ int ChangeServiceTimer::on_change_service_by_serviceID(bool need_reply)
 {
     //目标坐席下线
     if (mGetService(m_changeServiceID, m_dst_serviceInfo) 
-        || "offline" == m_dst_serviceInfo.status)
+        || OFFLINE == m_dst_serviceInfo.status)
     {
         if (true == need_reply)
         {
@@ -440,7 +440,6 @@ int ChangeServiceTimer::on_change_session()
     m_session.serviceID = m_raw_changeServiceID;
     m_session.atime     = GetCurTimeStamp();
     m_sessionID         = m_session.sessionID;
-    //m_channel         = m_session.channel;
     SET_SESS(pSessionQueue->set(m_userID, &m_session, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT));
     DO_FAIL(KV_set_session(m_userID, m_session, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT));
     
@@ -624,7 +623,7 @@ int ServicePullNextTimer::on_pull_next()
     DO_FAIL(KV_set_queue(m_appID, m_userInfo.tag, m_queuePriority));
     
     //update user
-    m_userInfo.status = "inService";
+    m_userInfo.status = IN_SERVICE;
     m_userInfo.qtime  = 0;
     DO_FAIL(UpdateUser(m_userID, m_userInfo));
     

@@ -513,7 +513,7 @@ namespace statsvr
 
         string userID;
         Session session;
-        bool isWarn;
+        int isWarn;
         long long warn_time;
         long long expire_time;
 
@@ -548,7 +548,7 @@ namespace statsvr
         };
         
         int set(string userID, Session* sess, 
-                long long gap_warn = 10 * 60, long long gap_expire = 20 * 60 /* seconds */)
+                long long gap_warn = 10*60, long long gap_expire = 20*60, int is_warn = 0)
         {
             list<SessionTimer>::iterator it;
 
@@ -557,11 +557,10 @@ namespace statsvr
                 if ((*it).userID == userID)
                 {
                     (*it).session     = *sess;
-                    (*it).isWarn      = 0;
+                    (*it).isWarn      = is_warn;
                     (*it).warn_time   = (sess->atime/1000) + gap_warn;
                     (*it).expire_time = (sess->atime/1000) + gap_expire;
-                    //_sess_list.push_back(st);
-                    LogTrace("Success to set session: %s", sess->toString().c_str());
+                    LogTrace("Success to set session: %s.", sess->toString().c_str());
                     return 0;
                 }
             }
@@ -571,19 +570,21 @@ namespace statsvr
         }
 
         int insert(string userID, Session* sess, 
-                    long long gap_warn = 10 * 60, long long gap_expire = 20 * 60 /* seconds */)
+                    long long gap_warn = 10*60, long long gap_expire = 20*60, int is_warn = 0)
         {
             SessionTimer st;
             list<SessionTimer>::iterator it;
             
-            st.userID  = userID;
-            st.session = *sess;
-            st.isWarn  = 0;
+            st.userID      = userID;
+            st.session     = *sess;
+            st.isWarn      = is_warn;
             st.warn_time   = (sess->atime/1000) + gap_warn;
             st.expire_time = (sess->atime/1000) + gap_expire;
 
             LogDebug("Success to insert session: %s", sess->toString().c_str());
-            LogDebug("Session atime: %ld, warn_time: %ld, expire_time: %ld", sess->atime, st.warn_time, st.expire_time);
+            LogDebug("Session atime: %ld, warn_time: %ld, expire_time: %ld, is_warn: %d", 
+                    sess->atime, st.warn_time, st.expire_time, st.isWarn);
+            
             for (it = _sess_list.begin(); it != _sess_list.end(); it++)
             {
                 if (st.expire_time < (*it).expire_time)
@@ -592,11 +593,12 @@ namespace statsvr
                     return 0;
                 }
             }
+            
             _sess_list.push_back(st);
             return 0;
         }
 
-        int pop()
+        /*int pop()
         {
             if (_sess_list.size() > 0)
             {
@@ -604,9 +606,9 @@ namespace statsvr
                 return 0;
             }
             
-            LogError("Failed to pop from SessionQueue, its size <= 0!");
+            LogError("Failed to pop a session, its size <= 0!");
             return -1;
-        }
+        }*/
 
         int get_first_timer(SessionTimer& sessTimer)
         {
@@ -622,7 +624,7 @@ namespace statsvr
                 }
             }
             
-            LogError("Failed to get an expired session from SessionQueue, its size <= 0!");
+            LogError("Failed to get an expired session, its size <= 0!");
             return -1;
         }
 
@@ -640,7 +642,7 @@ namespace statsvr
                 }
             }
             
-            LogError("Failed to get an expired session from SessionQueue, its size <= 0!");
+            LogError("Failed to get an expired session, its size <= 0!");
             return -1;
         }
 
@@ -654,6 +656,21 @@ namespace statsvr
                 if (it->userID == userID)
                 {
                     sess = it->session;
+                    return 0;
+                }
+            }
+            return -1;
+        }
+
+        int get_sess_timer(string userID, SessionTimer& st)
+        {
+            list<SessionTimer>::iterator it;
+            
+            for (it = _sess_list.begin(); it != _sess_list.end(); it++)
+            {
+                if (it->userID == userID)
+                {
+                    st = (*it);
                     return 0;
                 }
             }
@@ -683,7 +700,7 @@ namespace statsvr
 
             for (it = _sess_list.begin(); it != _sess_list.end(); it++)
             {
-                //it->isWarn==1表示之前提醒过，不需要再提醒
+                //isWarn==1表示之前提醒过，不需再提醒
                 if (nowTime >= it->warn_time && it->isWarn == 0)
                 {
                     LogDebug("[nowTime: %ld] Find session timewarn, session:%s", nowTime, it->toString().c_str());
@@ -691,10 +708,6 @@ namespace statsvr
                     it->isWarn = 1;
                     return 0;
                 }
-                /*else if (nowTime < it->warn_time)
-                {
-                    return -1;
-                }*/
             }
             
             return -1;

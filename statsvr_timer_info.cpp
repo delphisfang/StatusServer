@@ -200,7 +200,7 @@ int CTimerInfo::on_error()
     Json::FastWriter writer;
     string rsp = writer.write(error_rsp);
     
-    m_proc->EnququeHttp2CCD(m_ret_flow, (char*)rsp.c_str(), rsp.size());
+    m_proc->EnququeHttp2CCD(m_ret_flow, rsp.c_str(), rsp.size());
 
     if (m_errno < 0)
     {
@@ -208,9 +208,6 @@ int CTimerInfo::on_error()
         Json::Value post_array;
         Json::Value post_err;
         string err_str;
-        string tmp_str;
-        timeval nowTime;
-        gettimeofday(&nowTime, NULL);
 
         post_err["project"] = PROJECT_NAME;
         post_err["module"]  = MODULE_NAME;
@@ -219,7 +216,7 @@ int CTimerInfo::on_error()
         post_err["env"]     = m_proc->m_cfg._env;
         post_err["ip"]      = m_proc->m_cfg._local_ip;
         post_err["appid"]   = m_appID;
-        post_err["timestamp"] = l2str(nowTime.tv_sec*1000 + nowTime.tv_usec / 1000);
+        post_err["timestamp"] = l2str(GetCurTimeStamp());
 
         if (ERROR_NOT_READY == m_errno || ERROR_SESSION_WRONG  == m_errno)
         {
@@ -237,7 +234,7 @@ int CTimerInfo::on_error()
 
         DEBUG_P(LOG_NORMAL, "just test which line\n");
 
-        m_proc->EnququeErrHttp2DCC((char *)err_str.c_str(), err_str.size());
+        m_proc->EnququeErrHttp2DCC(err_str.c_str(), err_str.size());
     }
     
     on_stat();
@@ -473,14 +470,33 @@ int CTimerInfo::get_user_session(const string &appID, const string &app_userID, 
     return SS_OK;
 }
 
-int CTimerInfo::update_user_session(const string &appID, const string &app_userID, Session *sess, long long gap_warn, long long gap_expire)
+int CTimerInfo::get_session_timer(const string &appID, const string &app_userID, SessionTimer *st)
+{
+    if (NULL == st)
+        return SS_ERROR;
+    
+    SessionQueue* pSessQueue = NULL;
+    SessionTimer temp;
+    if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue)
+        || pSessQueue->get_sess_timer(app_userID, temp))
+    {
+        LogError("Failed to get SessionTimer of user[%s]!", app_userID.c_str());
+        return SS_ERROR;
+    }
+
+    (*st) = temp;
+    return SS_OK;
+}
+
+int CTimerInfo::update_user_session(const string &appID, const string &app_userID, Session *sess, 
+                                    long long gap_warn, long long gap_expire, int is_warn)
 {
     if (NULL == sess)
         return SS_ERROR;
     
     SessionQueue* pSessQueue = NULL;
     if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue)
-        || pSessQueue->set(app_userID, sess, gap_warn, gap_expire))
+        || pSessQueue->set(app_userID, sess, gap_warn, gap_expire, is_warn))
     {
         LogError("Failed to update session of user[%s]!", app_userID.c_str());
         return SS_ERROR;
@@ -502,14 +518,14 @@ int CTimerInfo::delete_user_session(const string &appID, const string &app_userI
     return SS_OK;
 }
 
-int CTimerInfo::create_user_session(const string &appID, const string &app_userID, Session *sess, long long gap_warn, long long gap_expire)
+int CTimerInfo::create_user_session(const string &appID, const string &app_userID, Session *sess, long long gap_warn, long long gap_expire, int is_warn)
 {
     if (NULL == sess)
         return SS_ERROR;
     
     SessionQueue* pSessQueue = NULL;
     if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue)
-        || pSessQueue->insert(app_userID, sess, gap_warn, gap_expire))
+        || pSessQueue->insert(app_userID, sess, gap_warn, gap_expire, is_warn))
     {
         LogError("Failed to create session of user[%s]!", app_userID.c_str());
         return SS_ERROR;
@@ -620,7 +636,7 @@ int CTimerInfo::get_service_json(const string &appID, const ServiceInfo &serv, J
     
     if (true == serv.is_busy())
     {
-        servJson["status"] = "busy";
+        servJson["status"] = BUSY;
     }
 }
 
@@ -813,12 +829,15 @@ int CTimerInfo::KV_del_service(const string &app_servID)
     return SS_OK;
 }
 
-int CTimerInfo::KV_set_session(string app_userID, const Session &sess, long long gap_warn, long long gap_expire)
+int CTimerInfo::KV_set_session(string app_userID, const Session &sess, long long gap_warn, long long gap_expire, int is_warn)
 {
     Json::Value sessJson;
     sess.toJson(sessJson);
     sessJson["gap_warn"]   = gap_warn;
     sessJson["gap_expire"] = gap_expire;
+    sessJson["is_warn"]    = is_warn;
+
+    LogTrace("KV set session: %s", sessJson.toStyledString().c_str());
     return KVSetKeyValue(KV_CACHE, SESS_PREFIX+app_userID, sessJson.toStyledString());
 }
 
@@ -832,8 +851,8 @@ int CTimerInfo::KV_set_queue(string appID, string raw_tag, bool highpri)
     TagUserQueue *pTagQueues = NULL;
     UserQueue *uq = NULL;
 
-    string prefix         = (highpri) ? (HIGHQ_PREFIX) : (QUEUE_PREFIX);
-    string key_queueList  = prefix + appID + "_" + raw_tag;
+    string prefix        = (highpri) ? (HIGHQ_PREFIX) : (QUEUE_PREFIX);
+    string key_queueList = prefix + appID + "_" + raw_tag;
 
     if (highpri)
     {
@@ -881,8 +900,12 @@ int CTimerInfo::KV_parse_session(string app_userID)
     
     long long gap_warn   = obj["gap_warn"].asInt64();
     long long gap_expire = obj["gap_expire"].asInt64();
+
+    int is_warn = 0;
+    get_value_int_safe(obj["is_warn"], is_warn);
+    
     string appID = getappID(app_userID);
-    SET_SESS(CreateUserSession(appID, app_userID, &sess, gap_warn, gap_expire));
+    SET_SESS(create_user_session(appID, app_userID, &sess, gap_warn, gap_expire, is_warn));
     return SS_OK;
 }
 
@@ -904,7 +927,7 @@ int CTimerInfo::KV_parse_service(string app_servID)
     SET_FAIL(CAppConfig::Instance()->AddService2Tags(appID, serv), "service heap");
 
     /* 更新OnlineServiceNum */
-    if ("online" == serv.status)
+    if (ONLINE == serv.status)
     {
         DO_FAIL(AddTagOnlineServNum(appID, serv));
     }
@@ -991,7 +1014,6 @@ int CTimerInfo::DeleteUser(string app_userID)
 int CTimerInfo::AddService(string appID, string app_servID, ServiceInfo &serv)
 {
     SET_SERV(CAppConfig::Instance()->AddService(app_servID, serv));
-    //insert service in every tag serviceHeap
     SET_FAIL(CAppConfig::Instance()->AddService2Tags(appID, serv), "service heap");
     DO_FAIL(KV_set_service(app_servID, serv, false));
     return SS_OK;
@@ -1012,28 +1034,29 @@ int CTimerInfo::DeleteService(string app_servID)
     return SS_OK;
 }
 
-int CTimerInfo::UpdateUserSession(string appID, string app_userID, Session *sess)
+int CTimerInfo::UpdateUserSession(string appID, string app_userID, Session *sess, int is_warn)
 {
-    if (NULL == sess)
+    if (NULL == sess) 
         return SS_ERROR;
     
     long long gap_warn   = ("" != sess->serviceID) ? (DEF_SESS_TIMEWARN) : (MAX_INT);
     long long gap_expire = ("" != sess->serviceID) ? (DEF_SESS_TIMEOUT) : (MAX_INT);
     
-    SET_SESS(update_user_session(appID, app_userID, sess, gap_warn, gap_expire));
-    DO_FAIL(KV_set_session(app_userID, *sess, gap_warn, gap_expire));
+    SET_SESS(update_user_session(appID, app_userID, sess, gap_warn, gap_expire, is_warn));
+    DO_FAIL(KV_set_session(app_userID, *sess, gap_warn, gap_expire, is_warn));
     return SS_OK;
 }
 
 int CTimerInfo::UpdateSessionNotified(const string &appID, const string &app_userID)
 {
-    Session sess;
-    GET_SESS(get_user_session(appID, app_userID, &sess));
-
+    SessionTimer st;
+    GET_SESS(get_session_timer(appID, app_userID, &st));
+    Session &sess = st.session;
+    
     if (0 == sess.notified)
     {
         sess.notified = 1;
-        DO_FAIL(UpdateUserSession(appID, app_userID, &sess));
+        DO_FAIL(UpdateUserSession(appID, app_userID, &sess, st.isWarn));
     }
     return SS_OK;
 }
@@ -1057,7 +1080,7 @@ int CTimerInfo::CreateUserSession(string appID, string app_userID, Session *sess
 
 int CTimerInfo::AddTagOnlineServNum(string appID, const ServiceInfo &serv)
 {
-    if ("online" != serv.status)
+    if (ONLINE != serv.status)
     {
         string app_servID = appID + "_" + serv.serviceID;
         LogWarn("Service[%s] is not online, just return.", app_servID.c_str());
@@ -1073,7 +1096,7 @@ int CTimerInfo::AddTagOnlineServNum(string appID, const ServiceInfo &serv)
 
 int CTimerInfo::DelTagOnlineServNum(string appID, const ServiceInfo &serv)
 {
-    if ("online" != serv.status)
+    if (ONLINE != serv.status)
     {
         string app_servID = appID + "_" + serv.serviceID;
         LogWarn("Service[%s] is not online, just return.", app_servID.c_str());

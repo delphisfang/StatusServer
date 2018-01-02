@@ -120,7 +120,7 @@ int GetUserInfoTimer::on_get_userinfo()
         {
             LogTrace("user[%s] is on HighPriQueue", m_userID.c_str());
             get_user_json(m_appID, m_userID, user, userJson);
-            userJson["status"] = "onQueue";
+            userJson["status"] = ON_QUEUE;
             userJson["queueRank"] = queueRank;
         }
         else if (SS_OK == CAppConfig::Instance()->GetTagQueue(m_appID, pTagQueues)
@@ -129,7 +129,7 @@ int GetUserInfoTimer::on_get_userinfo()
         {
             LogTrace("user[%s] is on NormalQueue", m_userID.c_str());
             get_user_json(m_appID, m_userID, user, userJson);
-            userJson["status"] = "onQueue";
+            userJson["status"] = ON_QUEUE;
             userJson["queueRank"] = queueRank;
         }
         else if (SS_OK == CAppConfig::Instance()->GetSessionQueue(m_appID, pSessQueue)
@@ -138,14 +138,14 @@ int GetUserInfoTimer::on_get_userinfo()
         {
             LogTrace("user[%s] is inService", m_userID.c_str());
             construct_user_json(user, sess, userJson);
-            userJson["status"]    = "inService";
+            userJson["status"]    = IN_SERVICE;
             userJson["queueRank"] = 0;
         }
         else
         {
             LogTrace("user[%s] is inYiBot", m_userID.c_str());
             get_user_json(m_appID, m_userID, user, userJson);
-            userJson["status"]      = "inYiBot";
+            userJson["status"]      = IN_YIBOT;
             userJson["queueRank"] = 0;
         }
         
@@ -262,7 +262,7 @@ int UserOnlineTimer::on_user_online()
         //create user
         LogDebug("Add new user: %s", m_userID.c_str());
         user = UserInfo(m_data);
-        user.status    = "inYiBot";
+        user.status    = IN_YIBOT;
         user.sessionID = gen_sessionID(m_userID);
         DO_FAIL(AddUser(m_userID, user));
         
@@ -356,7 +356,7 @@ int ConnectServiceTimer::on_already_inservice()
 {
     Json::Value data;
     
-    data["status"] = "inService";
+    data["status"] = IN_SERVICE;
     set_data(data);
     return on_send_error_reply(WARN_ALREADY_INSERVICE, "Already inService", data);
 }
@@ -442,7 +442,7 @@ int ConnectServiceTimer::on_appoint_service()
     //无需判定坐席的服务上限，直接服务
     ServiceInfo serv;
     if (mGetService(m_appointServiceID, serv)
-        || "offline" == serv.status)
+        || OFFLINE == serv.status)
     {
         LogTrace("[%s]: appointService[%s] is offline!", m_appID.c_str(), m_appointServiceID.c_str());
         return on_appoint_service_offline();
@@ -461,7 +461,7 @@ int ConnectServiceTimer::on_appoint_service()
     //更新user
     UserInfo user;
     GET_USER(mGetUser(m_userID, user));
-    user.status = "inService";
+    user.status = IN_SERVICE;
     user.qtime  = 0;
     user.atime  = sess.atime;
     DO_FAIL(UpdateUser(m_userID, user));
@@ -593,7 +593,7 @@ int ConnectServiceTimer::on_queue()
     }
     
     //更新user
-    user.status = "onQueue";
+    user.status = ON_QUEUE;
     DO_FAIL(UpdateUser(m_userID, user));
     
     LogDebug("==>OUT");
@@ -679,7 +679,7 @@ int CancelQueueTimer::on_cancel_queue()
     
     GET_USER(mGetUser(m_userID, user));
 
-    if (user.status != "onQueue")
+    if (user.status != ON_QUEUE)
     {
         on_not_onqueue();
         return SS_ERROR;
@@ -705,8 +705,8 @@ int CancelQueueTimer::on_cancel_queue()
     SET_USER(pTagQueues->del_user(m_raw_tag, m_userID));
     DO_FAIL(KV_set_queue(m_appID, m_raw_tag, m_queuePriority));
     
-    //set user.status = "inYiBot"
-    user.status = "inYiBot";
+    //set user.status
+    user.status = IN_YIBOT;
     user.qtime  = 0;
     DO_FAIL(UpdateUser(m_userID, user));
 
@@ -776,7 +776,7 @@ int CloseSessionTimer::on_close_session()
 
     LogDebug("==>IN");    
 
-    if (CI->GetUser(m_userID, user) || user.status != "inService")
+    if (mGetUser(m_userID, user) || user.status != IN_SERVICE)
     {
         on_not_inservice();
         return SS_ERROR;
@@ -804,12 +804,12 @@ int CloseSessionTimer::on_close_session()
     DO_FAIL(CreateUserSession(m_appID, m_userID, &m_session, MAX_INT, MAX_INT));
 
     //update service.userList
-    GET_SERV(CI->GetService(m_serviceID, m_serviceInfo));
+    GET_SERV(mGetService(m_serviceID, m_serviceInfo));
     SET_SERV(m_serviceInfo.delete_user(m_raw_userID));
     DO_FAIL(UpdateService(m_serviceID, m_serviceInfo));
     
     //update user
-    user.status        = "inYiBot";
+    user.status        = IN_YIBOT;
     //set lastServiceID
     user.lastServiceID = m_raw_lastServiceID;
     DO_FAIL(UpdateUser(m_userID, user));
