@@ -387,10 +387,11 @@ void CMCDProc::DispatchCCD()
 {
     int32_t ret = 0;
     int32_t deal_count = 0;
-    unsigned data_len = 0;
+    unsigned data_len  = 0;
     unsigned long long flow = 0;
-    TCCDHeader* ccdheader = (TCCDHeader*)m_recv_buf;
+    TCCDHeader* ccdheader   = (TCCDHeader*)m_recv_buf;
     timeval ccd_time;
+    long long curTime = time(NULL);
     
     while (deal_count < 1000)
     {
@@ -403,11 +404,17 @@ void CMCDProc::DispatchCCD()
             continue;
         }
 
-        //LogDebug("CCD receive a packet");
-
-        uint32_t client_ip     = ccdheader->_ip;
+        uint32_t client_ip  = ccdheader->_ip;
         ccd_time.tv_sec     = ccdheader->_timestamp;
-        ccd_time.tv_usec     = ccdheader->_timestamp_msec * 1000;
+        ccd_time.tv_usec    = ccdheader->_timestamp_msec * 1000;
+
+        if (curTime > (ccd_time.tv_sec + m_cfg._ccd_time_gap))
+        {
+            LogError("Drop old packet! curTime: %ld, pktTime: %ld, client_ip: %s, flow: %lu.", 
+                        curTime, ccd_time.tv_sec, INET_ntoa(client_ip).c_str(), flow);
+            ++deal_count;
+            continue;
+        }
 
         if (ccd_rsp_data != ccdheader->_type)
         {
@@ -799,7 +806,7 @@ int32_t CMCDProc::HandleResponse(const char *data,
     LogTrace("====>seq: %u", msg_seq);
     #endif
 
-    timeval ccd_time = {0, 0};    
+    timeval ccd_time = {0, 0};
     CTimerInfo *ti   = new AdminConfigTimer(this, 0, ccd_time, "127.0.0.1", 0, m_cfg._time_out);
 
     Json::Value configList = root["data"];
@@ -1080,7 +1087,7 @@ void CMCDProc::DispatchUserTimeout()
 {
     static struct timeval user_last_check_time = {0, 0};
 
-    if (m_workMode == statsvr::WORKMODE_READY)
+    if (statsvr::WORKMODE_READY == m_workMode)
     {
         return;
     }
@@ -1115,7 +1122,7 @@ void CMCDProc::DispatchServiceTimeout()
 {
     static struct timeval last_check_time = {0, 0};
 
-    if (m_workMode == statsvr::WORKMODE_READY)
+    if (statsvr::WORKMODE_READY == m_workMode)
     {
         return;
     }
@@ -1149,7 +1156,7 @@ void CMCDProc::DispatchServiceTimeout()
 
 void CMCDProc::DispatchUser2Service()
 {
-    if (m_workMode == statsvr::WORKMODE_READY)
+    if (statsvr::WORKMODE_READY == m_workMode)
     {
         return;
     }
@@ -1237,7 +1244,7 @@ void CMCDProc::DispatchUser2Service()
 
 void CMCDProc::DispatchSessionTimer()
 {
-    if (m_workMode == statsvr::WORKMODE_READY)
+    if (statsvr::WORKMODE_READY == m_workMode)
     {
         return;
     }

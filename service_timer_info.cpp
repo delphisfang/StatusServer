@@ -49,7 +49,7 @@ int GetServiceInfoTimer::on_get_serviceinfo()
         {
             m_raw_serviceID = delappID(m_serviceID);
             on_not_online();
-            continue;
+            return SS_ERROR;
         }
         get_service_json(m_appID, serv, servJson);
 

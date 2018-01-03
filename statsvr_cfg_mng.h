@@ -71,8 +71,8 @@ public:
     time_t    _user_time_gap;
     time_t    _service_time_gap;
     time_t    _yibot_time_gap;
-    
-    //string    _handler_so_path;
+
+    unsigned  _ccd_time_gap;
 
     // add end
 private:

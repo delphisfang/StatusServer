@@ -49,7 +49,7 @@ int YiBotOutTimer::on_yibot_timeout()
     {
         m_userID = (*it);
         m_appID  = getappID(m_userID);
-        LogTrace("====> appID: %s, userID: %s", m_appID.c_str(), m_userID.c_str());
+        LogTrace("[yibot_timeout] appID: %s, userID: %s", m_appID.c_str(), m_userID.c_str());
 
         SessionQueue* pSessQueue = NULL;
         DO_FAIL(CAppConfig::Instance()->GetSessionQueue(m_appID, pSessQueue));
@@ -62,6 +62,8 @@ int YiBotOutTimer::on_yibot_timeout()
         {
             continue;
         }
+        LogTrace("[yibot_timeout] sessionID: %s", sess.sessionID.c_str());
+        
         //delete old, create new session
         DO_FAIL(DeleteUserSession(m_appID, m_userID));
         if (sess.has_refreshed())
@@ -241,7 +243,8 @@ int ServiceOutTimer::on_service_timeout()
         DO_FAIL(DelTagOnlineServNum(m_appID, serv));
         //再更新service
         serv.status    = OFFLINE;
-        serv.subStatus = SUB_LIXIAN;
+        //subStatus保持原值
+        //serv.subStatus = SUB_LIXIAN;
         DO_FAIL(UpdateService(servID, serv));
         #endif
     }

@@ -110,7 +110,7 @@ int GetUserInfoTimer::on_get_userinfo()
         if (mGetUser(m_userID, user))
         {
             on_not_online();
-            continue;
+            return SS_ERROR;
         }
 
         // get user queueRank

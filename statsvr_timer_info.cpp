@@ -392,7 +392,7 @@ int CTimerInfo::on_send_reply(const Json::Value &data)
 {
     Json::Value rsp;
     rsp["appID"]    = m_appID;
-    rsp["method"]    = m_cmd + "-reply";
+    rsp["method"]   = m_cmd + "-reply";
     rsp["innerSeq"] = m_seq;
     rsp["code"]     = 0;
     rsp["data"]     = data;
