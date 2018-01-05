@@ -152,7 +152,7 @@ int AdminConfigTimer::on_admin_ping()
     
     if (!reader.parse(m_data, ping_req))
     {
-        LogError("Failed to parse ping request! data: [%s]", m_data.c_str());
+        LogError("Failed to parse ping data: [%s]", m_data.c_str());
         return -1;
     }
 
@@ -163,9 +163,6 @@ int AdminConfigTimer::on_admin_ping()
         return -1;
     }
 
-    string appIDListStr = m_data;
-    LogDebug("appIDListStr: %s", appIDListStr.c_str());
-    
     //参数检查
     unsigned size = ping_req["appIDList"].size();
     if (size > MAXSIZE)
@@ -181,18 +178,20 @@ int AdminConfigTimer::on_admin_ping()
     for (unsigned i = 0; i < size; ++i)
     {
         string appID = ping_req["appIDList"][i].asString();
-        
-        unsigned version = CAppConfig::Instance()->GetVersion(appID);
+
+        //若appID不存在，则version返回0
+        int version = 0;
+        if (CAppConfig::Instance()->GetVersion(appID, version))
+        {
+            CAppConfig::Instance()->SetVersion(appID, 0);
+        }
 
         Json::Value items;
         items["appID"]   = atoi(appID.c_str());
         items["version"] = version;
         appIDlistVer.append(items);
 
-        /* 核心代码，为appIDList里的每一个appID创建各种数据结构 */
-        #if 0
-        CAppConfig::Instance()->AddOfflineHeap(appID);
-        #endif
+        /* 为appIDList里的每一个appID创建各种数据结构 */
         CAppConfig::Instance()->AddTagQueue(appID);
         CAppConfig::Instance()->AddTagHighPriQueue(appID);
         CAppConfig::Instance()->AddSessionQueue(appID);
@@ -202,8 +201,9 @@ int AdminConfigTimer::on_admin_ping()
     }
     
     int delnum = CAppConfig::Instance()->CheckDel(appIDMap);
-    mSetAppIDListStr(appIDListStr);
-    LogTrace("[pingConf] SetAppIDListStr: %s", appIDListStr.c_str());
+
+    mSetAppIDListStr(m_data);
+    LogTrace("[pingConf] SetAppIDListStr: %s", m_data.c_str());
     
     Json::Value data;
     data["appList"] = appIDlistVer;
@@ -220,20 +220,13 @@ int AdminConfigTimer::on_admin_getConf()
     Json::Value configList;
     configList.resize(0);
 
-    string appListString;
-    if (mGetAppIDListStr(appListString))
-    {
-        LogError("get appIDList failed.");
-        m_errno = ERROR_SYSTEM_WRONG;
-        m_errmsg = "Error get appIDList";
-        on_error();
-        return -1;
-    }
+    string appListStr;
+    mGetAppIDListStr(appListStr);
     
-    if (!reader.parse(appListString, appList))
+    if (!reader.parse(appListStr, appList))
     {
-        LogError("parse appIDlist to JSON failed:%s", appListString.c_str());
-        m_errno = ERROR_SYSTEM_WRONG;
+        LogError("Failed to parse appListStr: %s", appListStr.c_str());
+        m_errno  = ERROR_SYSTEM_WRONG;
         m_errmsg = "Error parse appIDList";
         on_error();
         return -1;
@@ -251,7 +244,9 @@ int AdminConfigTimer::on_admin_getConf()
             appID = ui2str(appList["appIDList"][i].asUInt());
         }
         
-        int version = CAppConfig::Instance()->GetVersion(appID);
+        int version = 0;
+        CAppConfig::Instance()->GetVersion(appID, version);
+        
         Json::Value data_rsp;
         data_rsp["appID"]   = atoi(appID.c_str());
         data_rsp["version"] = version;
@@ -280,17 +275,17 @@ int AdminConfigTimer::on_admin_config(bool isUpdateConf)
     LogDebug("Receive a updateConf request.");
 
     Json::Reader reader;
-    Json::Value push_config_req;
-    if (!reader.parse(m_data, push_config_req))
+    Json::Value push_config;
+    if (!reader.parse(m_data, push_config))
     {
-        LogError("Failed to parse updateConf request. data: [%s]", m_data.c_str());
+        LogError("Failed to parse updateConf data: [%s]", m_data.c_str());
         ON_ERROR_PARSE_PACKET();
         return -1;
     }
 
-    CAppConfig::Instance()->UpdateAppConf(push_config_req, !isUpdateConf);
+    CAppConfig::Instance()->UpdateAppConf(push_config);
 
-    if (true == isUpdateConf)
+    if (isUpdateConf)
     {
         Json::Value data = Json::objectValue;
         return on_admin_send_reply(data);
@@ -537,13 +532,13 @@ int AdminConfigTimer::on_admin_restore()
 {
     Json::Reader reader;
     Json::Value appList;
-    string appListString;
+    string appListStr;
 
     /* 获取appID列表 */
-    DO_FAIL(mGetAppIDListStr(appListString));
-    if (!reader.parse(appListString, appList))
+    DO_FAIL(mGetAppIDListStr(appListStr));
+    if (!reader.parse(appListStr, appList))
     {
-        LogError("Failed to parse appIDList:%s!", appListString.c_str());
+        LogError("Failed to parse appListStr: %s!", appListStr.c_str());
         ON_ERROR_PARSE_DATA("appIDList");
         return SS_ERROR;
     }
@@ -575,8 +570,6 @@ int AdminConfigTimer::on_admin_restore()
     m_proc->m_workMode = statsvr::WORKMODE_WORK;
     LogTrace(">>>>>>>>>>>>>>>>>>>>[%s] enter workmode<<<<<<<<<<<<<<<<<<<<", MODULE_NAME);
 
-    //CAppConfig::Instance()->CheckServiceList();
-    
     return SS_OK;
 }
 

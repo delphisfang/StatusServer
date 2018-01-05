@@ -151,6 +151,7 @@
 
 #define mGetAppIDListStr(str) CAppConfig::Instance()->GetAppIDListStr(str)
 #define mSetAppIDListStr(str) CAppConfig::Instance()->SetAppIDListStr(str)
+#define mGetAppList(appList) CAppConfig::Instance()->GetAppList(appList)
 
 #endif /* _MY_DEBUG_H_ */
 

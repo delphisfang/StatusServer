@@ -37,11 +37,11 @@ CWaterLog::~CWaterLog()
 void CWaterLog::WriteLog(timeval& op_time, int op, const char *ip, unsigned port, int ret, const char *data)
 {
     string opString;
-    if (op == 0)
+    if (0 == op)
     {
         opString = string("Recv");
     }
-    else if (op == 1)
+    else if (1 == op)
     {
         opString = string("Send");
     }

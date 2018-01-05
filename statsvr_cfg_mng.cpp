@@ -68,8 +68,10 @@ int CStatSvrCfgMng::loadConfig()
     _log_para.max_file_no_   = tfc::base::from_str<int>(page["root\\log\\max_file_no"]);
 
     // import stat log config
-    /*_stat_log_para.log_level_ = tfc::base::from_str<int>(page["root\\stat\\log_level"]);
-    _stat_log_para.log_type_    = tfc::base::from_str<int>(page["root\\stat\\log_type"]);*/
+    /*
+    _stat_log_para.log_level_     = tfc::base::from_str<int>(page["root\\stat\\log_level"]);
+    _stat_log_para.log_type_      = tfc::base::from_str<int>(page["root\\stat\\log_type"]);
+    */
     _stat_log_para.path_          = page["root\\stat\\path"];
     _stat_log_para.name_prefix_   = page["root\\stat\\name_prefix"];
     _stat_log_para.max_file_size_ = tfc::base::from_str<int>(page["root\\stat\\max_file_size"]);
@@ -108,20 +110,20 @@ int CStatSvrCfgMng::loadConfig()
             _err_push_ip.assign(inet_ntoa(*((struct in_addr *)hptr->h_addr)));
         }
     }
-    _err_push_port = GetDefault(page, "root\\err_push_port", 80);
-    _env           = GetDefault(page, "root\\env", "test");
-    _local_ip      = GetDefault(page, "root\\local_ip", "127.0.0.1");
-    _local_port    = GetDefault(page, "root\\local_port", 80);
+    _err_push_port    = GetDefault(page, "root\\err_push_port", 80);
+    _env              = GetDefault(page, "root\\env", "test");
+    _local_ip         = GetDefault(page, "root\\local_ip", "127.0.0.1");
+    _local_port       = GetDefault(page, "root\\local_port", 80);
 
     _user_time_gap    = GetDefault(page, "root\\user_time_gap", 10000000);
-    _service_time_gap = GetDefault(page, "root\\service_time_gap", 1800); //30min
+    _service_time_gap = GetDefault(page, "root\\service_time_gap", 1800);
     _yibot_time_gap   = GetDefault(page, "root\\yibot_time_gap", 10000000);
     _queue_rate       = GetDefault(page, "root\\operation\\queue_rate", 10000);
-    _yibot_time       = GetDefault(page, "root\\operation\\yibot_time", 480); //min
+    _yibot_time       = GetDefault(page, "root\\operation\\yibot_time", 480);
+    _ccd_time_gap     = GetDefault(page, "root\\ccd_time_gap", 10);
+
     LogTrace("yibot_time_gap: %d, user_time_gap: %d, service_time_gap: %d, queue_rate: %d", 
                 _yibot_time_gap, _user_time_gap, _service_time_gap, _queue_rate);
-
-    _ccd_time_gap     = GetDefault(page, "root\\ccd_time_gap", 10);
     LogTrace("ccd_time_gap: %d", _ccd_time_gap);
     
     LoadCacheConfig(page);

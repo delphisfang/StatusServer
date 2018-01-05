@@ -13,14 +13,27 @@ CAppConfig* CAppConfig::m_instance = NULL;
 
 /************************************************************************************************/
 
-int CAppConfig::UpdateAppConf(const Json::Value &push_config_req, bool need_set_appIDList)
+int CAppConfig::UpdateAppConf(const Json::Value &push_config)
 {
-    Json::Value configList = push_config_req["appList"];
+    Json::Value appList;
+    Json::Value appIDList;
+
+    //Get old appIDList
+    if (mGetAppList(appList))
+    {
+        //old appIDList is empty
+        appIDList.resize(0);
+    }
+    else
+    {
+        appIDList = appList["appIDList"];
+    }
+
+
+    Json::Value configList = push_config["appList"];
     int size = configList.size();
     Json::Value appID_conf;
 
-    Json::Value appIDList;
-    appIDList.resize(0);
     for (int i = 0; i < size; ++i)
     {
         appID_conf = configList[i];
@@ -32,7 +45,6 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config_req, bool need_set_
             LogError("Error get <appID>, i:%d!", i);
             continue;
         }
-        appIDList.append(appID);
 
         //version
         unsigned version;
@@ -41,7 +53,8 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config_req, bool need_set_
             LogError("Error get <version>, appID[%s]!", appID.c_str());
             continue;
         }
-        int myVersion = GetVersion(appID);
+        int myVersion = 0;
+        int appIDExist = GetVersion(appID, myVersion);
         if (myVersion >= version)
         {
             LogWarn("appID: %s, version:%d <= myVersion:%d!", appID.c_str(), version, myVersion);
@@ -49,6 +62,13 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config_req, bool need_set_
         }
         SetVersion(appID, version);
 
+        //添加新appID到appIDList
+        if (-1 == appIDExist)
+        {
+            LogTrace("====> add new appID: %s", appID.c_str());
+            appIDList.append(appID);
+        }
+        
         //configs
         if (appID_conf["configs"].isNull() || !appID_conf["configs"].isObject())
         {
@@ -171,14 +191,10 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config_req, bool need_set_
         }
     }
 
-    if (true == need_set_appIDList)
-    {
-        Json::Value obj;
-        obj["appIDList"] = appIDList;
-        string appIDListStr = obj.toStyledString();
-        mSetAppIDListStr(appIDListStr);
-        LogTrace("[updateConf] SetAppIDListStr: %s", appIDListStr.c_str());
-    }
+    appList["appIDList"] = appIDList;
+    string appListStr = appList.toStyledString();
+    mSetAppIDListStr(appListStr);
+    LogTrace("[updateConf] SetAppIDListStr: %s", appListStr.c_str());
     
     return 0;
 }
@@ -191,8 +207,27 @@ int CAppConfig::SetAppIDListStr(string& value)
 
 int CAppConfig::GetAppIDListStr(string& value)
 {
-    GetValue("0", "appIDListStr", value);
-    return 0;
+    return GetValue("0", "appIDListStr", value);
+}
+
+int CAppConfig::GetAppList(Json::Value &appList)
+{
+    Json::Reader reader;
+    string appListStr;
+
+    if (GetAppIDListStr(appListStr))
+    {
+        LogError("Failed to get appListStr!");
+        return SS_ERROR;
+    }
+
+    if (!reader.parse(appListStr, appList))
+    {
+        //LogError("Failed to parse appIDListStr:%s", appIDListStr.c_str());
+        return SS_ERROR;
+    }
+
+    return SS_OK;
 }
 
 void CAppConfig::DelAppID(string appID)
@@ -234,11 +269,10 @@ int CAppConfig::CheckDel(const map<string, bool>& appIDMap)
     return (int)delList.size();
 }
 
-int CAppConfig::GetVersion(string appID)
+//若appID不存在，则返回-1
+int CAppConfig::GetVersion(string appID, int &version)
 {
-    int version;
-    GetValue(appID, "version", version);
-    return version;
+    return GetValue(appID, "version", version);
 }
 
 int CAppConfig::SetVersion(string appID, uint32_t version)
@@ -1005,13 +1039,13 @@ int CAppConfig::checkAppIDExist(string appID)
     if (GetAppIDListStr(appListString))
     {
         LogError("get appIDlist failed.");
-           return -1;
+        return -1;
     }
 
     if (!reader.parse(appListString, appList))
     {
         LogError("parse appIDlist to JSON failed:%s", appListString.c_str());
-           return -1;
+        return -1;
     }
 
     for (int i = 0; i < appList["appIDList"].size(); i++)

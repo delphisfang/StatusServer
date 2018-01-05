@@ -419,7 +419,7 @@ namespace statsvr
             long long temp_expire;
             long long expire;
 
-            LogTrace("====>direct = %d", direct);
+            LogTrace("====> direct = %d", direct);
             
             map<string, UserQueue*>::iterator it;
             for (it = _tag_queue.begin(); it != _tag_queue.end(); it++)
@@ -465,7 +465,7 @@ namespace statsvr
             }
             else
             {
-                LogError("====> not matched user!");
+                LogError("====> no matched user!");
                 return -1;
             }
         }

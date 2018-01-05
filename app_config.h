@@ -87,13 +87,14 @@ public:
     int CheckDel(const map<unsigned, bool>& map_now);
     int CheckDel(const map<string, bool>& map_now);
 
-    int UpdateAppConf(const Json::Value &push_config_req, bool need_set_appIDList);
+    int UpdateAppConf(const Json::Value &push_config);
     int SetAppIDListStr(string& value);
     int GetAppIDListStr(string& value);
+    int GetAppList(Json::Value &appList);
     
     void DelAppID(string appID);
 
-    int GetVersion(string appID);
+    int GetVersion(string appID, int &version);
     int SetVersion(string appID, uint32_t version);
     int DelVersion(string appID);
     

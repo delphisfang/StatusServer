@@ -95,7 +95,6 @@ void CMCDProc::run(const std::string& conf_file)
         DispatchSessionTimer();
         DispatchUserTimeout();
         DispatchServiceTimeout();
-        //CAppConfig::Instance()->CheckServiceList();
         run_epoll_4_mq();
         CheckFlag(true);
     }
@@ -218,15 +217,15 @@ int32_t CMCDProc::InitLog()
     TLogPara *log_para = &(m_cfg._log_para);
 
     int32_t ret = DEBUG_OPEN(log_para->log_level_, log_para->log_type_,
-        log_para->path_, log_para->name_prefix_,
-        log_para->max_file_size_, log_para->max_file_no_);
+                            log_para->path_, log_para->name_prefix_,
+                            log_para->max_file_size_, log_para->max_file_no_);
 
     if (ret < 0)
         return ret;
 
     log_para = &(m_cfg._water_log);
-    ret = CWaterLog::Instance()->Init(log_para->path_, log_para->name_prefix_
-                                    , log_para->max_file_size_, log_para->max_file_no_);
+    ret = CWaterLog::Instance()->Init(log_para->path_, log_para->name_prefix_, 
+                                    log_para->max_file_size_, log_para->max_file_no_);
 
     return ret;
 }
@@ -783,6 +782,7 @@ int32_t CMCDProc::HandleResponse(const char *data,
     if (!reader.parse(outdata, root))
     {
         LogError("Failed to parse data: %s!", outdata.c_str());
+        ///TODO: load App Config from local file
         return -1;
     }
     
@@ -1163,16 +1163,16 @@ void CMCDProc::DispatchUser2Service()
     
     Json::Reader reader;
     Json::Value appList;
-    string appListString;
+    string appListStr;
 
-    if (mGetAppIDListStr(appListString))
+    if (mGetAppIDListStr(appListStr))
     {
-        LogError("get appIDlist failed.");
+        LogError("Failed to get appListStr!");
         return;
     }
-    if (!reader.parse(appListString, appList))
+    if (!reader.parse(appListStr, appList))
     {
-        //LogError("parse appIDlist to JSON failed: %s", appListString.c_str());
+        //LogError("Failed to parse appListStr: %s!", appListStr.c_str());
         return;
     }
 
@@ -1251,15 +1251,15 @@ void CMCDProc::DispatchSessionTimer()
 
     Json::Reader reader;
     Json::Value appList;
-    string appListString;
+    string appListStr;
 
-    if (mGetAppIDListStr(appListString))
+    if (mGetAppIDListStr(appListStr))
     {
-        LogError("Failed to get appIDlist!");
+        LogError("Failed to get appListStr!");
         return;
     }
 
-    if (!reader.parse(appListString, appList))
+    if (!reader.parse(appListStr, appList))
     {
         //LogError("Failed to parse appIDListStr:%s", appIDListStr.c_str());
         return;
