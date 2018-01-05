@@ -482,7 +482,7 @@ int32_t CMCDProc::HttpParseCmd(const char *data, unsigned data_len, string& outd
     string request_url = string(http_parse.HttpUri());
     
     unsigned long pos = request_url.find("?");
-    if (pos != string::npos)
+    if (string::npos != pos)
     {
         string path = request_url.substr (0, pos);
         if (path.find("../") != string::npos)
@@ -654,7 +654,7 @@ int32_t CMCDProc::HandleRequest(const char *data, unsigned data_len,
             LogError("Unknown cmd[%d] from IP[%s]!", cmd, str_client_ip.c_str());
             Json::Value resp;
             resp["method"] = "-reply";
-            if (cmd == -2)
+            if (-2 == cmd)
             {
                 resp["code"] = -61001;
                 resp["msg"]  = "System not ready";
@@ -1161,21 +1161,8 @@ void CMCDProc::DispatchUser2Service()
         return;
     }
     
-    Json::Reader reader;
     Json::Value appList;
-    string appListStr;
-
-    if (mGetAppIDListStr(appListStr))
-    {
-        LogError("Failed to get appListStr!");
-        return;
-    }
-    if (!reader.parse(appListStr, appList))
-    {
-        //LogError("Failed to parse appListStr: %s!", appListStr.c_str());
-        return;
-    }
-
+    mGetAppList(appList);
     for (int i = 0; i < appList["appIDList"].size(); i++)
     {
         string appID = appList["appIDList"][i].asString();
@@ -1249,22 +1236,8 @@ void CMCDProc::DispatchSessionTimer()
         return;
     }
 
-    Json::Reader reader;
     Json::Value appList;
-    string appListStr;
-
-    if (mGetAppIDListStr(appListStr))
-    {
-        LogError("Failed to get appListStr!");
-        return;
-    }
-
-    if (!reader.parse(appListStr, appList))
-    {
-        //LogError("Failed to parse appIDListStr:%s", appIDListStr.c_str());
-        return;
-    }
-
+    mGetAppList(appList);
     for (int i = 0; i < appList["appIDList"].size(); i++)
     {
         string appID = appList["appIDList"][i].asString();

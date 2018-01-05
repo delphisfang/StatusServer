@@ -17,11 +17,9 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config)
 {
     Json::Value appList;
     Json::Value appIDList;
-
     //Get old appIDList
     if (mGetAppList(appList))
     {
-        //old appIDList is empty
         appIDList.resize(0);
     }
     else

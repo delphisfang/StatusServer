@@ -51,7 +51,7 @@ int AdminConfigTimer::do_next_step(string& req_data)
                 on_stat();
 
                 //防止重复重建
-                if (m_proc->m_workMode == statsvr::WORKMODE_WORK)
+                if (statsvr::WORKMODE_WORK == m_proc->m_workMode)
                 {
                     LogTrace(">>>>>>>>>>>>>>>>>>>Already in workmode, need not restore.");
                     m_cur_step = STATE_END;
@@ -214,24 +214,11 @@ int AdminConfigTimer::on_admin_getConf()
 {
     LogDebug("Receive a getConf request.");
 
-    Json::Reader reader;
-    Json::Value appList;
-    Json::Value data;
     Json::Value configList;
     configList.resize(0);
 
-    string appListStr;
-    mGetAppIDListStr(appListStr);
-    
-    if (!reader.parse(appListStr, appList))
-    {
-        LogError("Failed to parse appListStr: %s", appListStr.c_str());
-        m_errno  = ERROR_SYSTEM_WRONG;
-        m_errmsg = "Error parse appIDList";
-        on_error();
-        return -1;
-    }
-
+    Json::Value appList;
+    mGetAppList(appList);
     for (int i = 0; i < appList["appIDList"].size(); i++)
     {
         string appID;
@@ -253,6 +240,7 @@ int AdminConfigTimer::on_admin_getConf()
 
         string appConf;
         CAppConfig::Instance()->GetConf(appID, appConf);
+        Json::Reader reader;
         Json::Value js_appConf;
         if (!reader.parse(appConf, js_appConf))
         {
@@ -265,8 +253,9 @@ int AdminConfigTimer::on_admin_getConf()
         
         configList.append(data_rsp);
     }
-    data["appList"] = configList;
 
+    Json::Value data;
+    data["appList"] = configList;
     return on_admin_send_reply(data);
 }
 
@@ -530,27 +519,16 @@ HIGHQ_<appID>_<tag> -> highqList  = [{userID='u1', expire_time=}, ...]
 */
 int AdminConfigTimer::on_admin_restore()
 {
-    Json::Reader reader;
-    Json::Value appList;
-    string appListStr;
-
-    /* 获取appID列表 */
-    DO_FAIL(mGetAppIDListStr(appListStr));
-    if (!reader.parse(appListStr, appList))
-    {
-        LogError("Failed to parse appListStr: %s!", appListStr.c_str());
-        ON_ERROR_PARSE_DATA("appIDList");
-        return SS_ERROR;
-    }
-
     /* 重建userList */
     restore_userList();
     
     /* 重建serviceList,   添加到ServiceHeap */
     restore_serviceList();
 
-    /* 遍历appID列表 */
-    for (int i = 0; i < appList["appIDList"].size(); i++)
+    /* 重建排队队列 */
+    Json::Value appList;
+    mGetAppList(appList);
+    for (int i = 0; i < appList["appIDList"].size(); ++i)
     {
         string appID = appList["appIDList"][i].asString();
         LogTrace("appID: %s", appID.c_str());
