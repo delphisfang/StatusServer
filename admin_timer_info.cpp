@@ -2,9 +2,7 @@
 #include "statsvr_mcd_proc.h"
 #include <algorithm>
 
-//extern char BUF[DATA_BUF_SIZE];
-
-#define MAXSIZE (1024*sizeof(unsigned))
+#define MAX_APP_NUM (1024)
 
 int AdminConfigTimer::do_next_step(string& req_data)
 {
@@ -20,7 +18,7 @@ int AdminConfigTimer::do_next_step(string& req_data)
             
             if (m_cmd == "pingConf")
             {
-                if (on_admin_ping())
+                if (on_admin_pingConf())
                 {
                     m_cur_step = STATE_END; 
                     return -1;
@@ -43,7 +41,7 @@ int AdminConfigTimer::do_next_step(string& req_data)
             else if (m_cmd == "updateConf" || m_cmd == "getConfigForIM-reply")
             {
                 bool isUpdateConf = (m_cmd == "updateConf") ? (true) : (false); 
-                if (on_admin_config(isUpdateConf))
+                if (on_admin_updateConf(isUpdateConf))
                 {
                     m_cur_step = STATE_END;
                     return -1;
@@ -97,7 +95,7 @@ int AdminConfigTimer::do_next_step(string& req_data)
                     return -1;
                 }
                 
-                if (on_admin_get_today_status())
+                if (on_admin_getTodayStatus())
                 {
                     m_cur_step = STATE_END;
                     return -1;
@@ -134,7 +132,7 @@ int AdminConfigTimer::on_admin_send_reply(const Json::Value &data)
     Json::FastWriter writer;
     string strRsp = writer.write(rsp);
     //LogTrace("Admin send reply: %s", strRsp.c_str());
-    if (m_proc->EnququeHttp2CCD(m_ret_flow, (char *)strRsp.c_str(), strRsp.size()))
+    if (m_proc->EnququeHttp2CCD(m_ret_flow, strRsp.c_str(), strRsp.size()))
     {
         LogError("Failed to enqueue to CCD!");
         m_errno = ERROR_SYSTEM_WRONG;
@@ -145,7 +143,7 @@ int AdminConfigTimer::on_admin_send_reply(const Json::Value &data)
     return 0;
 }
 
-int AdminConfigTimer::on_admin_ping()
+int AdminConfigTimer::on_admin_pingConf()
 {
     Json::Reader reader;
     Json::Value ping_req;
@@ -165,9 +163,9 @@ int AdminConfigTimer::on_admin_ping()
 
     //参数检查
     unsigned size = ping_req["appIDList"].size();
-    if (size > MAXSIZE)
+    if (size > MAX_APP_NUM)
     {
-        LogError("size:%d > MAXSIZE:%d", size, MAXSIZE);
+        LogError("size:%d > MAX_APP_NUM:%d", size, MAX_APP_NUM);
         on_error_parse_packet("Error appIDList too long");
         return -1;
     }
@@ -219,7 +217,7 @@ int AdminConfigTimer::on_admin_getConf()
 
     Json::Value appList;
     mGetAppList(appList);
-    for (int i = 0; i < appList["appIDList"].size(); i++)
+    for (int i = 0; i < appList["appIDList"].size(); ++i)
     {
         string appID;
         if (appList["appIDList"][i].isString())
@@ -244,6 +242,7 @@ int AdminConfigTimer::on_admin_getConf()
         Json::Value js_appConf;
         if (!reader.parse(appConf, js_appConf))
         {
+            //解析失败，直接返回字符串
             data_rsp["configs"] = appConf;
         }
         else
@@ -259,7 +258,7 @@ int AdminConfigTimer::on_admin_getConf()
     return on_admin_send_reply(data);
 }
 
-int AdminConfigTimer::on_admin_config(bool isUpdateConf)
+int AdminConfigTimer::on_admin_updateConf(bool isUpdateConf)
 {
     LogDebug("Receive a updateConf request.");
 
@@ -294,7 +293,7 @@ int AdminConfigTimer::on_admin_getServiceStatus()
     
     string app_servID;
     
-    for (set<string>::iterator it = m_serviceID_list.begin(); it != m_serviceID_list.end(); it++)
+    for (set<string>::iterator it = m_serviceID_list.begin(); it != m_serviceID_list.end(); ++it)
     {
         app_servID = (*it);
         servInfo["serviceID"] = delappID(app_servID);
@@ -370,7 +369,7 @@ int AdminConfigTimer::get_app_today_status(string appID, Json::Value &appList)
 }
 
 /* 获取某个appID下的 (会话用户数，排队用户数，在线客服数) */
-int AdminConfigTimer::on_admin_get_today_status()
+int AdminConfigTimer::on_admin_getTodayStatus()
 {
     Json::Reader reader;
     Json::Value req;
@@ -382,16 +381,16 @@ int AdminConfigTimer::on_admin_get_today_status()
     
     if (req["appIDList"].isNull() || !req["appIDList"].isArray())
     {
-        LogError("Failed to parse appIDlist. data: [%s]", m_data.c_str());
+        LogError("Failed to parse appIDList. data: [%s]", m_data.c_str());
         on_error_parse_packet("Error parse appIDList");
         return -1;
     }
 
     //参数检查
     unsigned size = req["appIDList"].size();
-    if (size > MAXSIZE)
+    if (size > MAX_APP_NUM)
     {
-        LogError("size:%d > MAXSIZE:%d", size, MAXSIZE);
+        LogError("size:%d > MAX_APP_NUM:%d", size, MAX_APP_NUM);
         on_error_parse_packet("Error appIDList too long");
         return -1;
     }
@@ -532,7 +531,8 @@ int AdminConfigTimer::on_admin_restore()
     {
         string appID = appList["appIDList"][i].asString();
         LogTrace("appID: %s", appID.c_str());
-        
+
+        /* 允许tags为空数组 */        
         string str_appID_tags;
         CAppConfig::Instance()->GetValue(appID, "tags", str_appID_tags);
         vector<string> appID_tags;

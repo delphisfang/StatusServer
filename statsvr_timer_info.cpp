@@ -274,7 +274,7 @@ void CTimerInfo::on_expire()
 
     Json::FastWriter writer;
     string strRsp = writer.write(error_rsp);
-    m_proc->EnququeHttp2CCD(m_ret_flow, (char*)strRsp.c_str(), strRsp.size());
+    m_proc->EnququeHttp2CCD(m_ret_flow, strRsp.c_str(), strRsp.size());
     return;
 }
 
@@ -380,7 +380,7 @@ int CTimerInfo::on_send_request(string cmd, string ip, unsigned short port, cons
     string strReq = writer.write(req);
     LogTrace("send request to <%s, %d>: %s", ip.c_str(), port, strReq.c_str());
 
-    if (m_proc->EnququeHttp2DCC((char *)strReq.c_str(), strReq.size(), ip, port))
+    if (m_proc->EnququeHttp2DCC(strReq.c_str(), strReq.size(), ip, port))
     {
         LogError("[%s]: Failed to send request <%s>!", m_appID.c_str(), cmd.c_str());
         return -1;
@@ -401,7 +401,7 @@ int CTimerInfo::on_send_reply(const Json::Value &data)
     string strRsp = writer.write(rsp);
     LogTrace("send response: %s", strRsp.c_str());
 
-    if (m_proc->EnququeHttp2CCD(m_ret_flow, (char *)strRsp.c_str(), strRsp.size()))
+    if (m_proc->EnququeHttp2CCD(m_ret_flow, strRsp.c_str(), strRsp.size()))
     {
         LogError("searchid[%s]: Failed to SendReply <%s>", m_search_no.c_str(), m_cmd.c_str());
         m_errno  = ERROR_SYSTEM_WRONG;
@@ -430,7 +430,7 @@ int CTimerInfo::on_send_error_reply(ERROR_TYPE code, string msg, const Json::Val
     string strRsp = writer.write(rsp);
     LogTrace("send ERROR response: %s", strRsp.c_str());
     
-    if (m_proc->EnququeHttp2CCD(m_ret_flow, (char *)strRsp.c_str(), strRsp.size()))
+    if (m_proc->EnququeHttp2CCD(m_ret_flow, strRsp.c_str(), strRsp.size()))
     {
         LogError("searchid[%s]: Failed to SendErrorReply <%s>", m_search_no.c_str(), msg.c_str());
         m_errno  = ERROR_SYSTEM_WRONG;
@@ -948,19 +948,21 @@ int CTimerInfo::KV_parse_queue(string app_tag, bool highpri)
     {
         if (CAppConfig::Instance()->GetTagHighPriQueue(appID, pTagQueues))
         {
-            LogError("Failed to GetTagHighPriQueue(appID: %s)! But we force KV Restore continues...", appID.c_str());
+            LogError("Failed to GetTagHighPriQueue(appID: %s)!"
+                        " But we force KV Restore continues...", appID.c_str());
             return SS_OK;
         }
-        key_queueList  = HIGHQ_PREFIX + app_tag;
+        key_queueList = HIGHQ_PREFIX + app_tag;
     }
     else
     {
         if (CAppConfig::Instance()->GetTagQueue(appID, pTagQueues))
         {
-            LogError("Failed to GetTagQueue(appID: %s)! But we force KV Restore continues...", appID.c_str());
+            LogError("Failed to GetTagQueue(appID: %s)!"
+                        " But we force KV Restore continues...", appID.c_str());
             return SS_OK;
         }
-        key_queueList  = QUEUE_PREFIX + app_tag;
+        key_queueList = QUEUE_PREFIX + app_tag;
     }
 
     /*获取*/
@@ -978,7 +980,7 @@ int CTimerInfo::KV_parse_queue(string app_tag, bool highpri)
         return SS_ERROR;
     }
     int queueNum = obj["queueList"].size();
-    for (int i = 0; i < queueNum; i++)
+    for (int i = 0; i < queueNum; ++i)
     {
         queueNode = obj["queueList"][i];
         string userID         = queueNode["userID"].asString();

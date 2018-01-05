@@ -667,7 +667,7 @@ int32_t CMCDProc::HandleRequest(const char *data, unsigned data_len,
 
             Json::FastWriter writer;
             string strRsp = writer.write(resp);
-            EnququeHttp2CCD(flow, (char *)strRsp.c_str(), strRsp.size());
+            EnququeHttp2CCD(flow, strRsp.c_str(), strRsp.size());
             return -1;
     }
 

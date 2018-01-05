@@ -33,12 +33,12 @@ namespace statsvr
         ~AdminConfigTimer();
         int  do_next_step(string& req_data);
         int  on_admin_send_reply(const Json::Value &rsp);
-        int  on_admin_ping();
+        int  on_admin_pingConf();
         int  on_admin_getConf();
-        int  on_admin_config(bool isUpdateConf);
+        int  on_admin_updateConf(bool isUpdateConf);
         int  on_admin_getServiceStatus();
         int  get_app_today_status(string appID, Json::Value &appList);
-        int  on_admin_get_today_status();
+        int  on_admin_getTodayStatus();
         
         int  get_id_list(string value, string idListName, vector<string> &idList);
         int  restore_userList();

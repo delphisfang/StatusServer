@@ -13,6 +13,68 @@ CAppConfig* CAppConfig::m_instance = NULL;
 
 /************************************************************************************************/
 
+int CAppConfig::UpdateSubConf(const string &appID, const Json::Value &appID_conf)
+{
+    if (!appID_conf["max_conv_num"].isNull() && appID_conf["max_conv_num"].isInt())
+    {
+        int max_conv_num = appID_conf["max_conv_num"].asInt();
+        SetValue(appID, "max_conv_num", max_conv_num);
+    }
+    if (!appID_conf["check_user_queue_dir"].isNull() && appID_conf["check_user_queue_dir"].isInt())
+    {
+        int check_user_queue_dir = appID_conf["check_user_queue_dir"].asInt();
+        SetValue(appID, "check_user_queue_dir", check_user_queue_dir);
+    }
+    if (!appID_conf["check_user_queue_num"].isNull() && appID_conf["check_user_queue_num"].isInt())
+    {
+        int check_user_queue_num = appID_conf["check_user_queue_num"].asInt();
+        SetValue(appID, "check_user_queue_num", check_user_queue_num);
+    }
+    if (!appID_conf["session_timeout"].isNull() && appID_conf["session_timeout"].isInt())
+    {
+        int session_timeout = appID_conf["session_timeout"].asInt();
+        SetValue(appID, "session_timeout", session_timeout);
+    }
+    if (!appID_conf["session_timewarn"].isNull() && appID_conf["session_timewarn"].isInt())
+    {
+        int session_timewarn = appID_conf["session_timewarn"].asInt();
+        SetValue(appID, "session_timewarn", session_timewarn);
+    }
+    if (!appID_conf["queue_timeout"].isNull() && appID_conf["queue_timeout"].isInt())
+    {
+        int queue_timeout = appID_conf["queue_timeout"].asInt();
+        SetValue(appID, "queue_timeout", queue_timeout);
+    }
+    if (!appID_conf["no_service_online_hint"].isNull() && appID_conf["no_service_online_hint"].isString())
+    {
+        string no_service_online_hint = appID_conf["no_service_online_hint"].asString();
+        SetValue(appID, "no_service_online_hint", no_service_online_hint);
+    }
+    if (!appID_conf["queue_timeout_hint"].isNull() && appID_conf["queue_timeout_hint"].isString())
+    {
+        string queue_timeout_hint = appID_conf["queue_timeout_hint"].asString();
+        SetValue(appID, "queue_timeout_hint", queue_timeout_hint);
+    }
+    if (!appID_conf["queue_upper_limit_hint"].isNull() && appID_conf["queue_upper_limit_hint"].isString())
+    {
+        string queue_upper_limit_hint = appID_conf["queue_upper_limit_hint"].asString();
+        SetValue(appID, "queue_upper_limit_hint", queue_upper_limit_hint);
+    }
+    if (!appID_conf["timeout_warn_hint"].isNull() && appID_conf["timeout_warn_hint"].isString())
+    {
+        string timeout_warn_hint = appID_conf["timeout_warn_hint"].asString();
+        SetValue(appID, "timeout_warn_hint", timeout_warn_hint);
+    }
+    if (!appID_conf["timeout_end_hint"].isNull() && appID_conf["timeout_end_hint"].isString())
+    {
+        string timeout_end_hint = appID_conf["timeout_end_hint"].asString();
+        SetValue(appID, "timeout_end_hint", timeout_end_hint);
+    }
+
+    return 0;
+}
+
+
 int CAppConfig::UpdateAppConf(const Json::Value &push_config)
 {
     Json::Value appList;
@@ -36,7 +98,7 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config)
     {
         appID_conf = configList[i];
 
-        //appID
+        //check appID
         string appID;
         if (get_value_str_safe(appID_conf["appID"], appID))
         {
@@ -44,7 +106,7 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config)
             continue;
         }
 
-        //version
+        //check version
         unsigned version;
         if (get_value_uint_safe(appID_conf["version"], version))
         {
@@ -58,139 +120,91 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config)
             LogWarn("appID: %s, version:%d <= myVersion:%d!", appID.c_str(), version, myVersion);
             continue;
         }
-        SetVersion(appID, version);
 
-        //添加新appID到appIDList
-        if (-1 == appIDExist)
-        {
-            LogTrace("====> add new appID: %s", appID.c_str());
-            appIDList.append(appID);
-        }
-        
-        //configs
+        //check configs
         if (appID_conf["configs"].isNull() || !appID_conf["configs"].isObject())
         {
             LogError("Error get <configs>, appID[%s]!", appID.c_str());
             continue;
         }
         appID_conf = appID_conf["configs"];
-        SetConf(appID, appID_conf.toStyledString());
 
-        //configs sub-fields
-        if (!appID_conf["max_conv_num"].isNull() && appID_conf["max_conv_num"].isInt())
-        {
-            int max_conv_num = appID_conf["max_conv_num"].asInt();
-            SetValue(appID, "max_conv_num", max_conv_num);
-        }
-        if (!appID_conf["check_user_queue_dir"].isNull() && appID_conf["check_user_queue_dir"].isInt())
-        {
-            int check_user_queue_dir = appID_conf["check_user_queue_dir"].asInt();
-            SetValue(appID, "check_user_queue_dir", check_user_queue_dir);
-        }
-        if (!appID_conf["check_user_queue_num"].isNull() && appID_conf["check_user_queue_num"].isInt())
-        {
-            int check_user_queue_num = appID_conf["check_user_queue_num"].asInt();
-            SetValue(appID, "check_user_queue_num", check_user_queue_num);
-        }
-        if (!appID_conf["session_timeout"].isNull() && appID_conf["session_timeout"].isInt())
-        {
-            int session_timeout = appID_conf["session_timeout"].asInt();
-            SetValue(appID, "session_timeout", session_timeout);
-        }
-        if (!appID_conf["session_timewarn"].isNull() && appID_conf["session_timewarn"].isInt())
-        {
-            int session_timewarn = appID_conf["session_timewarn"].asInt();
-            SetValue(appID, "session_timewarn", session_timewarn);
-        }
-        if (!appID_conf["queue_timeout"].isNull() && appID_conf["queue_timeout"].isInt())
-        {
-            int queue_timeout = appID_conf["queue_timeout"].asInt();
-            SetValue(appID, "queue_timeout", queue_timeout);
-        }
-        if (!appID_conf["no_service_online_hint"].isNull() && appID_conf["no_service_online_hint"].isString())
-        {
-            string no_service_online_hint = appID_conf["no_service_online_hint"].asString();
-            SetValue(appID, "no_service_online_hint", no_service_online_hint);
-        }
-        if (!appID_conf["queue_timeout_hint"].isNull() && appID_conf["queue_timeout_hint"].isString())
-        {
-            string queue_timeout_hint = appID_conf["queue_timeout_hint"].asString();
-            SetValue(appID, "queue_timeout_hint", queue_timeout_hint);
-        }
-        if (!appID_conf["queue_upper_limit_hint"].isNull() && appID_conf["queue_upper_limit_hint"].isString())
-        {
-            string queue_upper_limit_hint = appID_conf["queue_upper_limit_hint"].asString();
-            SetValue(appID, "queue_upper_limit_hint", queue_upper_limit_hint);
-        }
-        if (!appID_conf["timeout_warn_hint"].isNull() && appID_conf["timeout_warn_hint"].isString())
-        {
-            string timeout_warn_hint = appID_conf["timeout_warn_hint"].asString();
-            SetValue(appID, "timeout_warn_hint", timeout_warn_hint);
-        }
-        if (!appID_conf["timeout_end_hint"].isNull() && appID_conf["timeout_end_hint"].isString())
-        {
-            string timeout_end_hint = appID_conf["timeout_end_hint"].asString();
-            SetValue(appID, "timeout_end_hint", timeout_end_hint);
-        }
-        
-        //tags
-        if (!appID_conf["tags"].isNull() && appID_conf["tags"].isArray())
-        {
-            TagUserQueue *pTagQueues = NULL;
-            TagUserQueue *pTagHighPriQueues = NULL;
-            SessionQueue *pSessQueue = NULL;
-            
-            //兼容没收到pingConf只收到updateConf的情况
-            if (GetTagQueue(appID, pTagQueues))
-            {
-                AddTagQueue(appID);
-                GetTagQueue(appID, pTagQueues);
-            }
-            if (GetTagHighPriQueue(appID, pTagHighPriQueues))
-            {
-                AddTagHighPriQueue(appID);
-                GetTagHighPriQueue(appID, pTagHighPriQueues);
-            }
-            if (GetSessionQueue(appID, pSessQueue))
-            {
-                AddSessionQueue(appID);
-                GetSessionQueue(appID, pSessQueue);
-            }
-
-            assert(pTagQueues != NULL);
-            assert(pTagHighPriQueues != NULL);
-            assert(pSessQueue != NULL);
-            
-            int tagsNum = appID_conf["tags"].size();
-            string tags = "";
-            for (int j = 0; j < tagsNum; ++j)
-            {
-                string raw_tag;
-                if (get_value_str_safe(appID_conf["tags"][j], raw_tag))
-                {
-                    LogError("Error get <tags[%d]>, appID[%s]!", j, appID.c_str());
-                    continue;
-                }
-
-                pTagQueues->add_tag(raw_tag);
-                pTagHighPriQueues->add_tag(raw_tag);
-                
-                string app_tag = appID + "_" + raw_tag;
-                AddTagServiceHeap(app_tag);
-                
-                tags += app_tag + ";";
-            }
-            SetValue(appID, "tags", tags);
-        }
-        else
+        //check configs["tags"]
+        if (appID_conf["tags"].isNull() || !appID_conf["tags"].isArray())
         {
             LogError("Error get <tags>, appID[%s]!", appID.c_str());
             continue;
         }
+        
+        //add appID
+        if (-1 == appIDExist)
+        {
+            LogTrace("====> add new appID: %s", appID.c_str());
+            appIDList.append(appID);
+        }
+
+        //add appID datastructs
+        //兼容没收到pingConf只收到updateConf的情况
+        TagUserQueue *pTagQueues = NULL;
+        TagUserQueue *pTagHighPriQueues = NULL;
+        SessionQueue *pSessQueue = NULL;
+        if (GetTagQueue(appID, pTagQueues))
+        {
+            AddTagQueue(appID);
+            GetTagQueue(appID, pTagQueues);
+        }
+        if (GetTagHighPriQueue(appID, pTagHighPriQueues))
+        {
+            AddTagHighPriQueue(appID);
+            GetTagHighPriQueue(appID, pTagHighPriQueues);
+        }
+        if (GetSessionQueue(appID, pSessQueue))
+        {
+            AddSessionQueue(appID);
+            GetSessionQueue(appID, pSessQueue);
+        }
+        assert(pTagQueues != NULL);
+        assert(pTagHighPriQueues != NULL);
+        assert(pSessQueue != NULL);
+
+        //set version
+        SetVersion(appID, version);
+
+        //set configs
+        SetConf(appID, appID_conf.toStyledString());
+
+        //set configs["sub-fields"]
+        UpdateSubConf(appID, appID_conf);
+
+        //add new tag datastructs
+        int tagsNum = appID_conf["tags"].size();
+        string tags = "";
+        //allow tags be empty
+        for (int j = 0; j < tagsNum; ++j)
+        {
+            string raw_tag;
+            if (get_value_str_safe(appID_conf["tags"][j], raw_tag))
+            {
+                LogError("Error get <tags[%d]>, appID[%s]!", j, appID.c_str());
+                continue;
+            }
+
+            pTagQueues->add_tag(raw_tag);
+            pTagHighPriQueues->add_tag(raw_tag);
+            
+            string app_tag = appID + "_" + raw_tag;
+            AddTagServiceHeap(app_tag);
+            
+            tags += app_tag + ";";
+        }
+
+        //set configs["tags"]
+        SetValue(appID, "tags", tags);
     }
 
     appList["appIDList"] = appIDList;
-    string appListStr = appList.toStyledString();
+    Json::FastWriter writer;
+    string appListStr = writer.write(appList);
     mSetAppIDListStr(appListStr);
     LogTrace("[updateConf] SetAppIDListStr: %s", appListStr.c_str());
     
@@ -233,22 +247,19 @@ void CAppConfig::DelAppID(string appID)
     LogDebug("Delete all Data Structs of appID: %s", appID.c_str());
     DelVersion(appID);
     DelConf(appID);
+    
     DelTagQueue(appID);
     DelTagHighPriQueue(appID);
     DelSessionQueue(appID);
-    DelTagServiceHeap(appID);
+    DelAppServiceHeaps(appID);
 }
 
 int CAppConfig::CheckDel(const map<string, bool>& appIDMap)
 {
-    Json::Reader reader;
-    Json::Value appList;
-    string appListString;
-    
-    GetAppIDListStr(appListString);
-    reader.parse(appListString, appList);
-
     vector<string> delList;
+
+    Json::Value appList;
+    GetAppList(appList);
     for (int i = 0; i < appList["appIDList"].size(); i++)
     {
         string appID = appList["appIDList"][i].asString();
@@ -259,7 +270,7 @@ int CAppConfig::CheckDel(const map<string, bool>& appIDMap)
     }
     LogDebug("Deleted app count: %u", delList.size());
     
-    for (uint32_t i = 0; i < delList.size(); i++)
+    for (int i = 0; i < delList.size(); ++i)
     {
         DelAppID(delList[i]);
     }
@@ -299,8 +310,7 @@ int CAppConfig::DelConf(string appID)
 
 int CAppConfig::GetConf(string appID, string& conf)
 {
-    GetValue(appID, "config", conf);
-    return 0;
+    return GetValue(appID, "config", conf);
 }
 
 int CAppConfig::DelValue(string appID, const string &key)
@@ -574,13 +584,14 @@ int CAppConfig::AddTagServiceHeap(const string& app_tag)
     it = tagServiceHeap.find(app_tag);
     if (it == tagServiceHeap.end())
     {
-        LogDebug("Add TagServiceHeap[%s]", app_tag.c_str());
         ServiceHeap serviceHeap;
         tagServiceHeap[app_tag] = serviceHeap;
+        LogDebug("Add TagServiceHeap[%s]", app_tag.c_str());
     }
     return 0;
 }
 
+#if 0
 int CAppConfig::UpdateTagServiceHeap(const string& app_tag, const string& value)
 {
     ServiceHeap serviceHeap(value);
@@ -588,6 +599,7 @@ int CAppConfig::UpdateTagServiceHeap(const string& app_tag, const string& value)
     tagServiceHeap[app_tag] = serviceHeap;
     return 0;
 }
+#endif
 
 int CAppConfig::UpdateTagServiceHeap(const string& app_tag, const ServiceHeap& serviceHeap)
 {
@@ -608,11 +620,24 @@ int CAppConfig::GetTagServiceHeap(const string& app_tag, ServiceHeap& serviceHea
     return -1;
 }
 
-int CAppConfig::DelTagServiceHeap(const string& appID) //delete a batch of tag related to appID
+int CAppConfig::DelTagServiceHeap(const string &app_tag)
+{
+    map<string, ServiceHeap>::iterator it;
+    it = tagServiceHeap.find(app_tag);
+    if (it != tagServiceHeap.end())
+    {
+        tagServiceHeap.erase(it);
+        return 0;
+    }
+    return -1;
+}
+
+//delete a batch of tag related to appID
+int CAppConfig::DelAppServiceHeaps(const string& appID)
 {
     map<string, ServiceHeap>::iterator it;
 
-    LogTrace("Delete all TagServiceHeaps of appID[%s]", appID.c_str());
+    //迭代过程中删除元素
     for (it = tagServiceHeap.begin(); it != tagServiceHeap.end();)
     {
         if (string::npos != (it->first).find(appID))
@@ -621,9 +646,11 @@ int CAppConfig::DelTagServiceHeap(const string& appID) //delete a batch of tag r
         }
         else
         {
-            it++;
+            ++it;
         }
     }
+
+    LogTrace("Delete all TagServiceHeaps of appID[%s]", appID.c_str());
     return 0;
 }
 
@@ -636,17 +663,17 @@ int CAppConfig::AddService2Tags(const string &appID, ServiceInfo &serv)
     for (set<string>::iterator it = serv.tags.begin(); it != serv.tags.end(); it++)
     {
         string app_tag = appID + "_" + (*it);
-        if (CAppConfig::Instance()->GetTagServiceHeap(app_tag, servHeap))
+        if (GetTagServiceHeap(app_tag, servHeap))
         {
-            LogError("Fail to get ServiceHeap of tag: %s!", app_tag.c_str());
+            LogError("Fail to get TagServiceHeap[%s]!", app_tag.c_str());
             continue;
         }
 
         servHeap.add_service(app_servID);
 
-        if (CAppConfig::Instance()->UpdateTagServiceHeap(app_tag, servHeap))
+        if (UpdateTagServiceHeap(app_tag, servHeap))
         {
-            LogError("Fail to update ServiceHeap of tag: %s!", app_tag.c_str());
+            LogError("Fail to update TagServiceHeap[%s]!", app_tag.c_str());
             continue;
         }
     }
@@ -662,17 +689,17 @@ int CAppConfig::DelServiceFromTags(const string &appID, ServiceInfo &serv)
     for (set<string>::iterator it = serv.tags.begin(); it != serv.tags.end(); it++)
     {
         string app_tag = appID + "_" + (*it);
-        if (CAppConfig::Instance()->GetTagServiceHeap(app_tag, servHeap))
+        if (GetTagServiceHeap(app_tag, servHeap))
         {
-            LogError("Fail to find ServiceHeap of tag: %s", app_tag.c_str());
+            LogError("Fail to find TagServiceHeap[%s]!", app_tag.c_str());
             continue;
         }
 
         servHeap.delete_service(app_servID);
 
-        if (CAppConfig::Instance()->UpdateTagServiceHeap(app_tag, servHeap))
+        if (UpdateTagServiceHeap(app_tag, servHeap))
         {
-            LogError("Fail to update ServiceHeap of tag: %s", app_tag.c_str());
+            LogError("Fail to update TagServiceHeap[%s]!", app_tag.c_str());
             continue;
         }
     }
@@ -704,15 +731,15 @@ int CAppConfig::CanAppOfferService(const string& appID)
     string strTags;
     vector<string> tags;
     
-    CAppConfig::Instance()->GetValue(appID, "tags", strTags);
+    GetValue(appID, "tags", strTags);
     MySplitTag((char *)strTags.c_str(), ";", tags);
 
     for (int i = 0; i < tags.size(); ++i)
     {
         ServiceHeap servHeap;
-        if (CAppConfig::Instance()->GetTagServiceHeap(tags[i], servHeap))
+        if (GetTagServiceHeap(tags[i], servHeap))
         {
-            LogWarn("Failed to get ServiceHeap of tag: %s, find next ServiceHeap!", tags[i].c_str());
+            LogWarn("Failed to get TagServiceHeap[%s], find next ServiceHeap!", tags[i].c_str());
             continue;
         }
 
@@ -738,9 +765,9 @@ int CAppConfig::CanAppOfferService(const string& appID)
 int CAppConfig::CheckTagServiceHeapHasOnline(string app_tag)
 {
     ServiceHeap servHeap;
-    if (CAppConfig::Instance()->GetTagServiceHeap(app_tag, servHeap))
+    if (GetTagServiceHeap(app_tag, servHeap))
     {
-        LogError("Failed to get ServiceHeap of tag: %s!", app_tag.c_str());
+        LogError("Failed to get TagServiceHeap[%s]!", app_tag.c_str());
         return -1;
     }
 
@@ -783,6 +810,7 @@ int CAppConfig::DelTagQueue(string appID)
     {
         delete it->second;
         appTagQueues.erase(it);
+        LogTrace("Delete NormalQueue[appID:%s].", appID.c_str());
         return 0;
     }
     return -1;
@@ -823,6 +851,7 @@ int CAppConfig::DelTagHighPriQueue(string appID)
     {
         delete it->second;
         appTagHighPriQueues.erase(it);
+        LogTrace("Delete HighPriQueue[%s].", appID.c_str());
         return 0;
     }
     return -1;
@@ -876,7 +905,9 @@ int CAppConfig::DelSessionQueue(string appID)
     {
         delete it->second;
         appSessionQueue.erase(it);
+        LogTrace("Delete SessionQueue[%s].", appID.c_str());
     }
+    
     return 0;
 }
 
@@ -1083,7 +1114,7 @@ long long CAppConfig::getDefaultSessionTimeWarn(string appID)
 {
     int session_timewarn = 0;
     
-    if (CAppConfig::Instance()->GetValue(appID, "session_timewarn", session_timewarn) 
+    if (GetValue(appID, "session_timewarn", session_timewarn) 
         || 0 == session_timewarn)
     {
         session_timewarn = 10 * 60;
@@ -1100,7 +1131,7 @@ long long CAppConfig::getDefaultSessionTimeOut(string appID)
 {
     int session_timeout = 0;
     
-    if (CAppConfig::Instance()->GetValue(appID, "session_timeout", session_timeout) 
+    if (GetValue(appID, "session_timeout", session_timeout) 
         || 0 == session_timeout)
     {
         session_timeout = 15 * 60;
@@ -1116,7 +1147,7 @@ long long CAppConfig::getDefaultQueueTimeout(string appID)
 {
     int queue_timeout = 0;
     
-    if (CAppConfig::Instance()->GetValue(appID, "queue_timeout", queue_timeout) 
+    if (GetValue(appID, "queue_timeout", queue_timeout) 
         || 0 == queue_timeout)
     {
         queue_timeout = 30 * 60;
@@ -1132,7 +1163,7 @@ int CAppConfig::getMaxConvNum(string appID)
 {
     int max_conv_num = 0;
     
-    if (CAppConfig::Instance()->GetValue(appID, "max_conv_num", max_conv_num) 
+    if (GetValue(appID, "max_conv_num", max_conv_num) 
         || 0 == max_conv_num)
     {
         max_conv_num = 5;
@@ -1145,7 +1176,7 @@ int CAppConfig::getUserQueueNum(string appID)
 {
     int user_queue_num = 1;
 
-    if (CAppConfig::Instance()->GetValue(appID, "check_user_queue_num", user_queue_num) 
+    if (GetValue(appID, "check_user_queue_num", user_queue_num) 
         || 0 == user_queue_num)
     {
         user_queue_num = 1;
@@ -1158,7 +1189,7 @@ int CAppConfig::getUserQueueDir(string appID)
 {
     int user_queue_dir = 1; //默认从队尾拉取
 
-    if (CAppConfig::Instance()->GetValue(appID, "check_user_queue_dir", user_queue_dir))
+    if (GetValue(appID, "check_user_queue_dir", user_queue_dir))
     {
         user_queue_dir = 1;
     }
@@ -1169,35 +1200,35 @@ int CAppConfig::getUserQueueDir(string appID)
 string CAppConfig::getTimeOutHint(string appID)
 {
     string hint;
-    CAppConfig::Instance()->GetValue(appID, "timeout_end_hint", hint);
+    GetValue(appID, "timeout_end_hint", hint);
     return hint;
 }
 
 string CAppConfig::getTimeWarnHint(string appID)
 {
     string hint;
-    CAppConfig::Instance()->GetValue(appID, "timeout_warn_hint", hint);
+    GetValue(appID, "timeout_warn_hint", hint);
     return hint;
 }
 
 string CAppConfig::getNoServiceOnlineHint(string appID)
 {
     string hint;
-    CAppConfig::Instance()->GetValue(appID, "no_service_online_hint", hint);
+    GetValue(appID, "no_service_online_hint", hint);
     return hint;
 }
 
 string CAppConfig::getQueueTimeoutHint(string appID)
 {
     string hint;
-    CAppConfig::Instance()->GetValue(appID, "queue_timeout_hint", hint);
+    GetValue(appID, "queue_timeout_hint", hint);
     return hint;
 }
 
 string CAppConfig::getQueueUpperLimitHint(string appID)
 {
     string hint;
-    CAppConfig::Instance()->GetValue(appID, "queue_upper_limit_hint", hint);
+    GetValue(appID, "queue_upper_limit_hint", hint);
     return hint;
 }
 

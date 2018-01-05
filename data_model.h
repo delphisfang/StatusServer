@@ -253,11 +253,11 @@ namespace statsvr
         {
             list<UserTimer>::iterator it;
 
-            for (it = _user_list.begin(); it != _user_list.end(); it++)
+            for (it = _user_list.begin(); it != _user_list.end(); ++it)
             {
                 if (it->userID == userID)
                 {
-                    it = _user_list.erase(it);
+                    _user_list.erase(it);
                     return 0;
                 }
             }
@@ -302,9 +302,17 @@ namespace statsvr
 
         ~TagUserQueue()
         {
+            //important
+            map<string, UserQueue*>::iterator it;
+            for (it = _tag_queue.begin(); it != _tag_queue.end(); ++it)
+            {
+                delete it->second;
+                LogTrace("Delete queue[%s].", (it->first).c_str());
+            }
+            
             _tag_queue.clear();
         }
-        
+
         int add_tag(string tag)
         {
             map<string, UserQueue*>::iterator it;
@@ -541,7 +549,8 @@ namespace statsvr
         {
             _sess_list.clear();    
         };
-        
+
+        //important: free all elements
         ~SessionQueue()
         {
             _sess_list.clear();
@@ -681,11 +690,11 @@ namespace statsvr
         {
             list<SessionTimer>::iterator it;
             
-            for (it = _sess_list.begin(); it != _sess_list.end(); it++)
+            for (it = _sess_list.begin(); it != _sess_list.end(); ++it)
             {
                 if (it->userID == userID)
                 {
-                    it = _sess_list.erase(it);
+                    _sess_list.erase(it);
                     LogDebug("Success to delete session of user[%s]", userID.c_str());
                     return 0;
                 }

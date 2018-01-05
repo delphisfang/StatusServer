@@ -87,6 +87,7 @@ public:
     int CheckDel(const map<unsigned, bool>& map_now);
     int CheckDel(const map<string, bool>& map_now);
 
+    int UpdateSubConf(const string &appID, const Json::Value &appID_conf);
     int UpdateAppConf(const Json::Value &push_config);
     int SetAppIDListStr(string& value);
     int GetAppIDListStr(string& value);
@@ -124,10 +125,11 @@ public:
     int ServiceListToString(string& strServIDList);
 
     int AddTagServiceHeap(const string& app_tag);
-    int UpdateTagServiceHeap(const string& app_tag, const string& value);
+    //int UpdateTagServiceHeap(const string& app_tag, const string& value);
     int UpdateTagServiceHeap(const string& app_tag, const ServiceHeap& serviceHeap);
     int GetTagServiceHeap(const string& app_tag, ServiceHeap& serviceHeap);
-    int DelTagServiceHeap(const string& appID);
+    int DelTagServiceHeap(const string& app_tag);
+    int DelAppServiceHeaps(const string& appID);
     int AddService2Tags(const string& appID, ServiceInfo &serv);
     int DelServiceFromTags(const string &appID, ServiceInfo &serv);
     int CanOfferService(const ServiceHeap& servHeap);
