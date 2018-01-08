@@ -324,7 +324,7 @@ int ChangeServiceTimer::on_service_offline()
     return on_send_error_reply(ERROR_SERVICE_OFFLINE, "Change Service offline", data);
 }
 
-int ChangeServiceTimer::on_no_tag_service()
+int ChangeServiceTimer::on_no_service_avail()
 {
     Json::Value data;
     set_change_service_data(data);
@@ -333,12 +333,12 @@ int ChangeServiceTimer::on_no_tag_service()
 }
 
 /*
-input: m_userID, m_serviceID, m_changeServiceID, m_tag
+input: m_userID, m_serviceID, m_changeServiceID, m_tag, m_changeServiceID_list
 */
 int ChangeServiceTimer::on_change_service()
 {
     //参数检查
-    if ("" == m_raw_changeServiceID && "" == m_raw_tag)
+    if ("" == m_raw_changeServiceID && "" == m_raw_tag && 0 == m_changeServiceID_list.size())
     {
         ON_ERROR_PARSE_PACKET();
         return SS_ERROR;
@@ -356,9 +356,13 @@ int ChangeServiceTimer::on_change_service()
     {
         DO_FAIL(on_change_service_by_serviceID(true));
     }
-    else
+    else if ("" != m_raw_tag)
     {
         DO_FAIL(on_change_service_by_tag());
+    }
+    else
+    {
+        DO_FAIL(on_change_service_by_list());
     }
 
     //回复给src_service
@@ -395,7 +399,6 @@ int ChangeServiceTimer::on_change_service_by_serviceID(bool need_reply)
     return SS_OK;
 }
 
-
 int ChangeServiceTimer::on_change_service_by_tag()
 {
     //1、熟客优先
@@ -412,10 +415,11 @@ int ChangeServiceTimer::on_change_service_by_tag()
     }
     
     //2、tag内分配
-    if (find_least_service_by_tag(m_appID, m_tag, m_serviceID, m_dst_serviceInfo))//不能转给自己
+    //不能转给自己
+    if (find_least_service_by_tag(m_tag, m_serviceID, m_dst_serviceInfo))
     {
         //tag内未找到可用的目标坐席
-        on_no_tag_service();
+        on_no_service_avail();
         return SS_ERROR;
     }
 
@@ -425,6 +429,19 @@ int ChangeServiceTimer::on_change_service_by_tag()
     return SS_OK;
 }
 
+int ChangeServiceTimer::on_change_service_by_list()
+{
+    if (find_least_service_by_list(m_changeServiceID_list, m_serviceID, m_dst_serviceInfo))
+    {
+        on_no_service_avail();
+        return SS_ERROR;
+    }
+
+    m_raw_changeServiceID = m_dst_serviceInfo.serviceID;
+    m_changeServiceID     = m_appID + "_" + m_raw_changeServiceID;
+    LogTrace("[ChangeService] userID:%s <-----> list serviceID:%s", m_userID.c_str(), m_changeServiceID.c_str());
+    return SS_OK;
+}
 
 int ChangeServiceTimer::on_change_session()
 {

@@ -132,6 +132,14 @@ int CTimerInfo::init(string req_data, int datalen)
         m_raw_changeServiceID = js_data["changeServiceID"].asString();
         m_changeServiceID = m_appID + "_" + m_raw_changeServiceID;
     }
+    if (!js_data["changeServiceIDs"].isNull() && js_data["changeServiceIDs"].isArray())
+    {
+        Json::Value changeServiceID_list = js_data["changeServiceIDs"];
+        for (int i = 0; i < changeServiceID_list.size(); i++)
+        {
+            m_changeServiceID_list.insert(m_appID + "_" + changeServiceID_list[i].asString());
+        }
+    }
     
     if (!js_data["lastServiceID"].isNull() && js_data["lastServiceID"].isString())
     {
@@ -663,8 +671,8 @@ int CTimerInfo::get_highpri_queue(const string &appID, const string &raw_tag, Us
     return SS_OK;
 }
 
-int CTimerInfo::find_random_service_by_tag(const string &appID, const string &app_tag, 
-                                    const string &old_app_servID, ServiceInfo &target_serv)
+int CTimerInfo::find_random_service_by_tag(const string &app_tag, 
+                                        const string &old_app_servID, ServiceInfo &target_serv)
 {
     ServiceHeap servHeap;
     if (CAppConfig::Instance()->GetTagServiceHeap(app_tag, servHeap))
@@ -696,7 +704,7 @@ int CTimerInfo::find_random_service_by_tag(const string &appID, const string &ap
             }
             else
             {
-                LogWarn("service[%s]: user_count[%d], maxConvNum[%d]", target_serv.serviceID.c_str(), target_serv.user_count(), target_serv.maxUserNum);
+                LogWarn("service[%s]: user_count[%d], maxUserNum[%d]", target_serv.serviceID.c_str(), target_serv.user_count(), target_serv.maxUserNum);
             }
 
             ++it;
@@ -713,16 +721,16 @@ int CTimerInfo::find_random_service_by_tag(const string &appID, const string &ap
         }
         else
         {
-            LogTrace("[%s] Find tag serviceID: %s.", appID.c_str(), target_serv.serviceID.c_str());
+            LogTrace("Find tag serviceID: %s.", target_serv.serviceID.c_str());
             return SS_OK;
         }
     }
 
-    LogError("[%s] Failed to find tag service!", appID.c_str());
+    LogError("Failed to find tag service!");
     return SS_ERROR;
 }
 
-int CTimerInfo::find_least_service_by_tag(const string &appID, const string &app_tag,
+int CTimerInfo::find_least_service_by_tag(const string &app_tag,
                                         const string &old_app_servID, ServiceInfo &target_serv)
 {
     ServiceHeap servHeap;
@@ -732,12 +740,17 @@ int CTimerInfo::find_least_service_by_tag(const string &appID, const string &app
         return SS_ERROR;
     }
 
+    return find_least_service_by_list(servHeap._servlist, old_app_servID, target_serv);
+}
+
+int CTimerInfo::find_least_service_by_list(const set<string> &app_servID_list, const string &old_app_servID, ServiceInfo &target_serv)
+{
     double service_load = 0.0, min_load = 1.0; //important
-    set<string>::iterator target_it = servHeap._servlist.end();
+    set<string>::iterator target_it = app_servID_list.end();
     
     set<string>::iterator it;
     ServiceInfo serv;
-    for (it = servHeap._servlist.begin(); it != servHeap._servlist.end(); ++it)
+    for (it = app_servID_list.begin(); it != app_servID_list.end(); ++it)
     {
         //排除old_app_servID
         if (old_app_servID == (*it) || mGetService(*it, serv) || !serv.is_available())
@@ -748,7 +761,7 @@ int CTimerInfo::find_least_service_by_tag(const string &appID, const string &app
             }
             else
             {
-                LogWarn("service[%s]: user_count[%d], maxConvNum[%d]", serv.serviceID.c_str(), serv.user_count(), serv.maxUserNum);
+                LogWarn("service[%s]: user_count[%d], maxUserNum[%d]", serv.serviceID.c_str(), serv.user_count(), serv.maxUserNum);
             }
             
             continue;
@@ -765,14 +778,14 @@ int CTimerInfo::find_least_service_by_tag(const string &appID, const string &app
         }
     }
 
-    if (target_it != servHeap._servlist.end())
+    if (target_it != app_servID_list.end())
     {
-        LogTrace("[%s] Find tag serviceID: %s.", appID.c_str(), target_serv.serviceID.c_str());
+        LogTrace("Find list serviceID: %s.", target_serv.serviceID.c_str());
         return SS_OK;
     }
     else
     {
-        LogError("[%s] Failed to find tag service!", appID.c_str());
+        LogError("Failed to find list service!");
         return SS_ERROR;
     }
 }

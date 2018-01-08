@@ -286,26 +286,22 @@ int CAppConfig::GetVersion(string appID, int &version)
 
 int CAppConfig::SetVersion(string appID, uint32_t version)
 {
-    SetValue(appID, "version", (int)version);
-    return 0;
+    return SetValue(appID, "version", (int)version);
 }
 
 int CAppConfig::DelVersion(string appID)
 {
-    DelValue(appID, "version");
-    return 0;
+    return DelValue(appID, "version");
 }
 
 int CAppConfig::SetConf(string appID, const string& conf)
 {
-    SetValue(appID, "config", conf);
-    return 0;
+    return SetValue(appID, "config", conf);
 }
 
 int CAppConfig::DelConf(string appID)
 {
-    DelValue(appID, "config");
-    return 0;
+    return DelValue(appID, "config");
 }
 
 int CAppConfig::GetConf(string appID, string& conf)

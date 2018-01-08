@@ -75,6 +75,10 @@ namespace statsvr
 
             //m_tags.clear();
             m_queuePriority = 0;
+
+            m_userID_list.clear();
+            m_serviceID_list.clear();
+            m_changeServiceID_list.clear();
         }
 
         virtual ~CTimerInfo()
@@ -126,11 +130,12 @@ namespace statsvr
         int get_normal_queue(const string &appID, const string &raw_tag, UserQueue **uq);
         int get_highpri_queue(const string &appID, const string &raw_tag, UserQueue **uq);
 
-        int find_random_service_by_tag(const string &appID, const string &app_tag,
-                                const string &old_app_servID, ServiceInfo &target_serv);
-        int find_least_service_by_tag(const string &appID, const string &app_tag,
+        int find_random_service_by_tag(const string &app_tag,
                                     const string &old_app_servID, ServiceInfo &target_serv);
-
+        int find_least_service_by_tag(const string &app_tag,
+                                    const string &old_app_servID, ServiceInfo &target_serv);
+        int find_least_service_by_list(const set<string> &app_servID_list, 
+                                    const string &old_app_servID, ServiceInfo &target_serv);
         /********************************* KV methods *************************************/
 
         int KV_set_userIDList();
@@ -221,6 +226,7 @@ namespace statsvr
 
         set<string> m_userID_list;
         set<string> m_serviceID_list;
+        set<string> m_changeServiceID_list;
     };
 }
 #endif

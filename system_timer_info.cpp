@@ -581,7 +581,7 @@ int UserServiceTimer::on_user_tag()
     #endif
 
     //使用最小负载策略
-    if (find_least_service_by_tag(m_appID, m_tag, "", m_serviceInfo))
+    if (find_least_service_by_tag(m_tag, "", m_serviceInfo))
     {
         return SS_ERROR;
     }
