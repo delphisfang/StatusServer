@@ -73,6 +73,7 @@ public:
     time_t    _yibot_time_gap;
 
     unsigned  _ccd_time_gap;
+    string    web_conf_file;
 
     // add end
 private:

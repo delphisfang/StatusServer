@@ -202,6 +202,8 @@ int AdminConfigTimer::on_admin_pingConf()
 
     mSetAppIDListStr(m_data);
     LogTrace("[pingConf] SetAppIDListStr: %s", m_data.c_str());
+
+    CAppConfig::Instance()->WriteAppConf(m_proc->m_cfg.web_conf_file);
     
     Json::Value data;
     data["appList"] = appIDlistVer;
@@ -212,49 +214,8 @@ int AdminConfigTimer::on_admin_getConf()
 {
     LogDebug("Receive a getConf request.");
 
-    Json::Value configList;
-    configList.resize(0);
-
-    Json::Value appList;
-    mGetAppList(appList);
-    for (int i = 0; i < appList["appIDList"].size(); ++i)
-    {
-        string appID;
-        if (appList["appIDList"][i].isString())
-        {
-            appID = appList["appIDList"][i].asString();
-        }
-        else
-        {
-            appID = ui2str(appList["appIDList"][i].asUInt());
-        }
-        
-        int version = 0;
-        CAppConfig::Instance()->GetVersion(appID, version);
-        
-        Json::Value data_rsp;
-        data_rsp["appID"]   = atoi(appID.c_str());
-        data_rsp["version"] = version;
-
-        string appConf;
-        CAppConfig::Instance()->GetConf(appID, appConf);
-        Json::Reader reader;
-        Json::Value js_appConf;
-        if (!reader.parse(appConf, js_appConf))
-        {
-            //解析失败，直接返回字符串
-            data_rsp["configs"] = appConf;
-        }
-        else
-        {
-            data_rsp["configs"] = js_appConf;
-        }
-        
-        configList.append(data_rsp);
-    }
-
     Json::Value data;
-    data["appList"] = configList;
+    CAppConfig::Instance()->GetAppConf(data);
     return on_admin_send_reply(data);
 }
 
@@ -273,6 +234,9 @@ int AdminConfigTimer::on_admin_updateConf(bool isUpdateConf)
 
     CAppConfig::Instance()->UpdateAppConf(push_config);
 
+    //store config into file
+    CAppConfig::Instance()->WriteAppConf(m_proc->m_cfg.web_conf_file);
+    
     if (isUpdateConf)
     {
         Json::Value data = Json::objectValue;
@@ -301,12 +265,14 @@ int AdminConfigTimer::on_admin_getServiceStatus()
         ServiceInfo serv;
         if (mGetService(app_servID, serv))
         {
-            servInfo["serviceStatus"] = DEF_SERV_STATUS;
-            servInfo["userNum"]       = 0;
+            servInfo["serviceStatus"]    = DEF_SERV_STATUS;
+            servInfo["serviceSubStatus"] = SUB_LIXIAN;
+            servInfo["userNum"]          = 0;
         }
         else
         {
             servInfo["serviceStatus"]    = serv.status;
+            servInfo["serviceSubStatus"] = serv.subStatus;
             //当前服务人数>=最大会话人数时，返回busy
             if (true == serv.is_busy())
             {

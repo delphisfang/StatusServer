@@ -39,8 +39,6 @@ using namespace statsvr;
 static char r_code_200[]   = "200";
 static char r_reason_200[] = "OK";
 
-//char BUF[BUFF_SIZE] = {0};
-
 extern "C"
 {
     static void disp_ccd(void *papp)
@@ -779,37 +777,43 @@ int32_t CMCDProc::HandleResponse(const char *data,
 
     Json::Reader reader;
     Json::Value  root;
-    if (!reader.parse(outdata, root))
+    Json::Value  js_data;
+    if (reader.parse(outdata, root))
     {
-        LogError("Failed to parse data: %s!", outdata.c_str());
-        ///TODO: load App Config from local file
-        return -1;
-    }
-    
-    if (!root["innerSeq"].isNull() && root["innerSeq"].isUInt())
-    {
-        //don't handle inner reponse packet
-        return 0;
-    }
-
-    #if 0
-    uint32_t msg_seq = 0;
-    if (!root["seq"].isNull() && root["seq"].isString())
-    {
-        msg_seq = atoi(root["seq"].asString().c_str());
+        if (!root["innerSeq"].isNull() && root["innerSeq"].isUInt())
+        {
+            //get rsp from CP, just return
+            return 0;
+        }
+        else
+        {
+            LogTrace("Success to get rsp from web, update app config.");
+            js_data = root["data"];
+        }
     }
     else
     {
-        LogError("Failed to parse seq!");
-        return -1;
+        LogError("Failed to parse data: %s!", outdata.c_str());
+        
+        if (statsvr::WORKMODE_WORK == m_workMode)
+        {
+            //parse fail, but do nothing
+            return -1;
+        }
+        else
+        {
+            LogTrace("Failed to parse rsp from web, load app config from file!");
+            if (CAppConfig::Instance()->LoadAppConf(m_cfg.web_conf_file, js_data))
+            {
+                return -1;
+            }
+        }
     }
-    LogTrace("====>seq: %u", msg_seq);
-    #endif
 
     timeval ccd_time = {0, 0};
     CTimerInfo *ti   = new AdminConfigTimer(this, 0, ccd_time, "127.0.0.1", 0, m_cfg._time_out);
 
-    Json::Value configList = root["data"];
+    Json::Value configList = js_data;
     Json::Value req_data;
     req_data["method"] = "getConfigForIM-reply";
     req_data["data"]   = configList;
@@ -825,25 +829,6 @@ int32_t CMCDProc::HandleResponse(const char *data,
         delete ti;
     }
     
-    #if 0
-    CTimerInfo *ti = NULL;
-    if (m_timer_queue.get(msg_seq, (CFastTimerInfo**)&ti))
-    {
-        LogError("Failed to m_timer_queue.get()! seq[%u], IP[%s], port[%u], dcc_time[%s]."
-               , msg_seq, INET_ntoa(down_ip).c_str(), down_port, GetFormatTime(dcc_time).c_str());
-        return -1;
-    }
-
-    if (ti->do_next_step(outdata) == 0)
-    {
-        m_timer_queue.set(ti->GetMsgSeq(), ti, ti->GetTimeGap());
-    }
-    else
-    {
-        delete ti;
-    }
-    #endif
-
     return 0;
 }
 

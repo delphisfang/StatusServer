@@ -211,6 +211,98 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config)
     return 0;
 }
 
+int CAppConfig::GetAppConf(Json::Value &data)
+{
+    Json::Value configList;
+    configList.resize(0);
+
+    Json::Value appList;
+    GetAppList(appList);
+    for (int i = 0; i < appList["appIDList"].size(); ++i)
+    {
+        string appID;
+        if (appList["appIDList"][i].isString())
+        {
+            appID = appList["appIDList"][i].asString();
+        }
+        else
+        {
+            appID = ui2str(appList["appIDList"][i].asUInt());
+        }
+        
+        int version = 0;
+        GetVersion(appID, version);
+        
+        Json::Value data_rsp;
+        data_rsp["appID"]   = atoi(appID.c_str());
+        data_rsp["version"] = version;
+
+        string appConf;
+        GetConf(appID, appConf);
+        Json::Reader reader;
+        Json::Value js_appConf;
+        if (!reader.parse(appConf, js_appConf))
+        {
+            //解析失败，直接返回字符串
+            data_rsp["configs"] = appConf;
+        }
+        else
+        {
+            data_rsp["configs"] = js_appConf;
+        }
+        
+        configList.append(data_rsp);
+    }
+
+    data["appList"] = configList;
+    return 0;
+}
+
+int CAppConfig::WriteAppConf(const string &conf_file)
+{
+    Json::Value data;
+    GetAppConf(data);
+
+    Json::FastWriter writer;
+    string strConf;
+    strConf = writer.write(data);
+
+    //write to file
+    ofstream out(conf_file.c_str(), ios::out);
+    if (!out.is_open())
+    {
+        return -1;
+    }
+    
+    out << strConf;
+    out.close();
+    LogTrace("Success to write app config: %s.", strConf.c_str());
+    return 0;
+}
+
+int CAppConfig::LoadAppConf(const string &conf_file, Json::Value &data)
+{
+    ifstream in(conf_file.c_str(), ios::in);
+    if (!in.is_open())
+    {
+        return -1;
+    }
+    
+    istreambuf_iterator<char> begin(in), end;
+    string strConf(begin, end);
+    in.close();
+
+    Json::Reader reader;
+    if (!reader.parse(strConf, data))
+    {
+        return -1;
+    }
+
+    LogTrace("Success to load app config: %s.", strConf.c_str());
+    return 0;
+}
+
+
 int CAppConfig::SetAppIDListStr(string& value)
 {
     SetValue("0", "appIDListStr", value);

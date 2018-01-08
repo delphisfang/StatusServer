@@ -89,6 +89,10 @@ public:
 
     int UpdateSubConf(const string &appID, const Json::Value &appID_conf);
     int UpdateAppConf(const Json::Value &push_config);
+    int GetAppConf(Json::Value &data);
+    int WriteAppConf(const string &conf_file);
+    int LoadAppConf(const string &conf_file, Json::Value &data);
+    
     int SetAppIDListStr(string& value);
     int GetAppIDListStr(string& value);
     int GetAppList(Json::Value &appList);
