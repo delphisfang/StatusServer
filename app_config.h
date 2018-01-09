@@ -87,7 +87,7 @@ public:
     int CheckDel(const map<unsigned, bool>& map_now);
     int CheckDel(const map<string, bool>& map_now);
 
-    int UpdateSubConf(const string &appID, const Json::Value &appID_conf);
+    int UpdateSubConf(const string &appID, const Json::Value &appID_conf, Json::Value &real_conf);
     int UpdateAppConf(const Json::Value &push_config);
     int GetAppConf(Json::Value &data);
     int WriteAppConf(const string &conf_file);

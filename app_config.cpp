@@ -13,62 +13,83 @@ CAppConfig* CAppConfig::m_instance = NULL;
 
 /************************************************************************************************/
 
-int CAppConfig::UpdateSubConf(const string &appID, const Json::Value &appID_conf)
+int CAppConfig::UpdateSubConf(const string &appID, const Json::Value &appID_conf, Json::Value &real_conf)
 {
     if (!appID_conf["max_conv_num"].isNull() && appID_conf["max_conv_num"].isInt())
     {
         int max_conv_num = appID_conf["max_conv_num"].asInt();
         SetValue(appID, "max_conv_num", max_conv_num);
+        real_conf["max_conv_num"] = max_conv_num;
     }
+    
     if (!appID_conf["check_user_queue_dir"].isNull() && appID_conf["check_user_queue_dir"].isInt())
     {
         int check_user_queue_dir = appID_conf["check_user_queue_dir"].asInt();
         SetValue(appID, "check_user_queue_dir", check_user_queue_dir);
+        real_conf["check_user_queue_dir"] = check_user_queue_dir;
     }
+
     if (!appID_conf["check_user_queue_num"].isNull() && appID_conf["check_user_queue_num"].isInt())
     {
         int check_user_queue_num = appID_conf["check_user_queue_num"].asInt();
         SetValue(appID, "check_user_queue_num", check_user_queue_num);
+        real_conf["check_user_queue_num"] = check_user_queue_num;
     }
+
     if (!appID_conf["session_timeout"].isNull() && appID_conf["session_timeout"].isInt())
     {
         int session_timeout = appID_conf["session_timeout"].asInt();
         SetValue(appID, "session_timeout", session_timeout);
+        real_conf["session_timeout"] = session_timeout;
     }
+    
     if (!appID_conf["session_timewarn"].isNull() && appID_conf["session_timewarn"].isInt())
     {
         int session_timewarn = appID_conf["session_timewarn"].asInt();
         SetValue(appID, "session_timewarn", session_timewarn);
+        real_conf["session_timewarn"] = session_timewarn;
     }
+    
     if (!appID_conf["queue_timeout"].isNull() && appID_conf["queue_timeout"].isInt())
     {
         int queue_timeout = appID_conf["queue_timeout"].asInt();
         SetValue(appID, "queue_timeout", queue_timeout);
+        real_conf["queue_timeout"] = queue_timeout;
     }
+    
     if (!appID_conf["no_service_online_hint"].isNull() && appID_conf["no_service_online_hint"].isString())
     {
         string no_service_online_hint = appID_conf["no_service_online_hint"].asString();
         SetValue(appID, "no_service_online_hint", no_service_online_hint);
+        real_conf["no_service_online_hint"] = no_service_online_hint;
     }
+    
     if (!appID_conf["queue_timeout_hint"].isNull() && appID_conf["queue_timeout_hint"].isString())
     {
         string queue_timeout_hint = appID_conf["queue_timeout_hint"].asString();
         SetValue(appID, "queue_timeout_hint", queue_timeout_hint);
+        real_conf["queue_timeout_hint"] = queue_timeout_hint;
     }
+    
     if (!appID_conf["queue_upper_limit_hint"].isNull() && appID_conf["queue_upper_limit_hint"].isString())
     {
         string queue_upper_limit_hint = appID_conf["queue_upper_limit_hint"].asString();
         SetValue(appID, "queue_upper_limit_hint", queue_upper_limit_hint);
+        real_conf["queue_upper_limit_hint"] = queue_upper_limit_hint;
     }
+    
     if (!appID_conf["timeout_warn_hint"].isNull() && appID_conf["timeout_warn_hint"].isString())
     {
         string timeout_warn_hint = appID_conf["timeout_warn_hint"].asString();
         SetValue(appID, "timeout_warn_hint", timeout_warn_hint);
+        real_conf["timeout_warn_hint"] = timeout_warn_hint;
     }
+    
     if (!appID_conf["timeout_end_hint"].isNull() && appID_conf["timeout_end_hint"].isString())
     {
         string timeout_end_hint = appID_conf["timeout_end_hint"].asString();
         SetValue(appID, "timeout_end_hint", timeout_end_hint);
+        real_conf["timeout_end_hint"] = timeout_end_hint;
     }
 
     return 0;
@@ -97,7 +118,7 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config)
     for (int i = 0; i < size; ++i)
     {
         appID_conf = configList[i];
-
+            
         //check appID
         string appID;
         if (get_value_str_safe(appID_conf["appID"], appID))
@@ -170,11 +191,15 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config)
         //set version
         SetVersion(appID, version);
 
-        //set configs
-        SetConf(appID, appID_conf.toStyledString());
+        //get old config
+        string real_conf_str = "";
+        GetConf(appID, real_conf_str);
+        Json::Reader reader;
+        Json::Value real_conf = Json::objectValue;
+        reader.parse(real_conf_str, real_conf);
 
         //set configs["sub-fields"]
-        UpdateSubConf(appID, appID_conf);
+        UpdateSubConf(appID, appID_conf, real_conf);
 
         //add new tag datastructs
         int tagsNum = appID_conf["tags"].size();
@@ -196,10 +221,15 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config)
             AddTagServiceHeap(app_tag);
             
             tags += app_tag + ";";
+
+            real_conf["tags"].append(raw_tag);
         }
 
-        //set configs["tags"]
+        //set configs["tags"]: app_tag1;app_tag2;app_tag3...
         SetValue(appID, "tags", tags);
+
+        //Finally, set configs
+        SetConf(appID, real_conf.toStyledString());
     }
 
     appList["appIDList"] = appIDList;
@@ -271,6 +301,7 @@ int CAppConfig::WriteAppConf(const string &conf_file)
     ofstream out(conf_file.c_str(), ios::out);
     if (!out.is_open())
     {
+        LogError("Failed to open file: %s!", conf_file.c_str());
         return -1;
     }
     
@@ -285,6 +316,7 @@ int CAppConfig::LoadAppConf(const string &conf_file, Json::Value &data)
     ifstream in(conf_file.c_str(), ios::in);
     if (!in.is_open())
     {
+        LogError("Failed to open file: %s!", conf_file.c_str());
         return -1;
     }
     
@@ -295,9 +327,16 @@ int CAppConfig::LoadAppConf(const string &conf_file, Json::Value &data)
     Json::Reader reader;
     if (!reader.parse(strConf, data))
     {
+        LogError("Failed to parse app config!");
         return -1;
     }
 
+    if (data["appList"].isNull() || !data["appList"].isArray())
+    {
+        LogError("Failed to parse <appList>!");
+        return -1;
+    }
+    
     LogTrace("Success to load app config: %s.", strConf.c_str());
     return 0;
 }
