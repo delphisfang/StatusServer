@@ -243,8 +243,7 @@ int ServiceOutTimer::on_service_timeout()
         DO_FAIL(DelTagOnlineServNum(m_appID, serv));
         //再更新service
         serv.status    = OFFLINE;
-        //subStatus保持原值
-        //serv.subStatus = SUB_LIXIAN;
+        serv.subStatus = SUB_LIXIAN;
         DO_FAIL(UpdateService(servID, serv));
         #endif
     }
