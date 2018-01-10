@@ -457,7 +457,7 @@ int CTimerInfo::on_send_error_reply(ERROR_TYPE code, string msg, const Json::Val
 
 string CTimerInfo::gen_sessionID(const string &app_userID)
 {
-    return app_userID + "_" + l2str(time(NULL));
+    return app_userID + "_" + l2str(GetCurTimeStamp());
 }
 
 int CTimerInfo::get_user_session(const string &appID, const string &app_userID, Session *sess)
