@@ -536,21 +536,22 @@ int32_t CMCDProc::HttpParseCmd(const char *data, unsigned data_len, string& outd
         }
         
         //LogDebug("==>parse seq");
-        if (root["seq"].isNull() 
-            || (!root["seq"].isUInt() && !root["seq"].isString())
-            )
+        if (!root["seq"].isNull())
         {
-            LogError("Invalid root[seq]!");
-            return -1;
-        }
-        if (root["seq"].isUInt())
-        {
-            unsigned int seq_num = root["seq"].asUInt();
-            m_seq = ui2str(seq_num);
-        }
-        else
-        {
-            m_seq = root["seq"].asString();
+            if (!root["seq"].isUInt() && !root["seq"].isString())
+            {
+                LogError("Invalid root[seq]!");
+                return -1;
+            }
+            if (root["seq"].isUInt())
+            {
+                unsigned int seq_num = root["seq"].asUInt();
+                m_seq = ui2str(seq_num);
+            }
+            else
+            {
+                m_seq = root["seq"].asString();
+            }
         }
 
         //LogDebug("==>parse method");
