@@ -107,11 +107,12 @@ int UserOutTimer::do_next_step(string& req_data)
 int UserOutTimer::on_user_timeout()
 {
     CAppConfig::Instance()->GetTimeoutUsers(m_user_time_gap, m_userList);
-    if (m_userList.size() == 0)
+    if (m_userList.size() <= 0)
     {
         LogTrace("no user timeout, do nothing!");
         return 0;
     }
+    LogTrace("Num of timeout users: %d", m_userList.size());
 
     set<string>::iterator it;
     for (it = m_userList.begin(); it != m_userList.end(); it++)
@@ -203,11 +204,12 @@ int ServiceOutTimer::do_next_step(string& req_data)
 int ServiceOutTimer::on_service_timeout()
 {
     CAppConfig::Instance()->GetTimeoutServices(m_service_time_gap, m_serviceList);
-    if (m_serviceList.size() == 0)
+    if (m_serviceList.size() <= 0)
     {
         LogTrace("no service timeout, do nothing!");
         return 0;
     }
+    LogTrace("Num of timeout services: %d", m_serviceList.size());
 
     set<string>::iterator it;
     for (it = m_serviceList.begin(); it != m_serviceList.end(); it++)

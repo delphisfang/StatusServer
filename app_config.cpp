@@ -184,7 +184,6 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config, string &err_msg)
         string appID;
         if (get_value_str_safe(appID_conf["appID"], appID))
         {
-            LogError("Err get appID[%d]", i);
             ostr <<  "Err get appID["<<i<<"];";
             continue;
         }
@@ -193,7 +192,6 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config, string &err_msg)
         unsigned version;
         if (get_value_uint_safe(appID_conf["version"], version))
         {
-            LogError("Err get app[%s] version", appID.c_str());
             ostr <<  "Err get app["<<appID<<"] version;";
             continue;
         }
@@ -209,7 +207,6 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config, string &err_msg)
         //check configs
         if (appID_conf["configs"].isNull() || !appID_conf["configs"].isObject())
         {
-            LogError("Err get app[%s] configs", appID.c_str());
             ostr <<  "Err get app["<<appID<<"] configs;";
             continue;
         }
@@ -218,7 +215,6 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config, string &err_msg)
         //check configs["tags"]
         if (appID_conf["tags"].isNull() || !appID_conf["tags"].isArray())
         {
-            LogError("Err get app[%s] tags", appID.c_str());
             ostr <<  "Err get app["<<appID<<"] tags;";
             continue;
         }
@@ -231,7 +227,6 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config, string &err_msg)
             string temp;
             if (get_value_str_safe(appID_conf["tags"][j], temp))
             {
-                LogError("Err get app[%s] tags[%d]", appID.c_str(), j);
                 ostr <<  "Err get app["<<appID<<"] tags["<<j<<"];";
                 check_tag = false;
                 break;
@@ -252,7 +247,6 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config, string &err_msg)
         //check and set configs["sub-fields"]
         if (UpdateSubConf(appID, appID_conf, real_conf, ostr))
         {
-            LogError("Err get app[%s] configs[xxx]", appID.c_str());
             continue;
         }
 
@@ -1240,10 +1234,16 @@ int CAppConfig::GetTimeoutUsers(long long time_gap, set<string>& userList)
 {
     long long nowTime = time(NULL);
     long long atime;
+    int userCnt = 0;
     
     map<string, UserInfo>::iterator it;
     for (it = _userlist.begin(); it != _userlist.end(); ++it)
     {
+        if (userCnt >= 500)
+        {
+            break;
+        }
+        
         //只选择YiBot状态的用户
         if (IN_YIBOT != (it->second).status)
         {
@@ -1254,6 +1254,7 @@ int CAppConfig::GetTimeoutUsers(long long time_gap, set<string>& userList)
         if (nowTime >= atime + time_gap)
         {
             userList.insert(it->first);
+            ++userCnt;
         }
     }
     return 0;
@@ -1263,14 +1264,21 @@ int CAppConfig::GetTimeoutServices(long long time_gap, set<string>& serviceList)
 {
     long long nowTime = time(NULL);
     long long atime;
+    int servCnt;
     
     map<string, ServiceInfo>::iterator it;
     for (it = _servicelist.begin(); it != _servicelist.end(); ++it)
     {
+        if (servCnt >= 500)
+        {
+            break;
+        }
+        
         atime = ((it->second).atime / 1000);
         if (nowTime >= atime + time_gap)
         {
             serviceList.insert(it->first);
+            ++servCnt;
         }
     }
     return 0;

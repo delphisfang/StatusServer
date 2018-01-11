@@ -200,6 +200,7 @@ int CTimerInfo::init(string req_data, int datalen)
 int CTimerInfo::on_error()
 {
     Json::Value error_rsp;
+    error_rsp["appID"]    = m_appID;
     error_rsp["method"]   = m_cmd + "-reply";
     error_rsp["innerSeq"] = m_seq;
     error_rsp["code"]     = m_errno;
