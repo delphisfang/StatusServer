@@ -232,8 +232,14 @@ int AdminConfigTimer::on_admin_updateConf(bool isUpdateConf)
         return -1;
     }
 
-    CAppConfig::Instance()->UpdateAppConf(push_config);
-
+    CAppConfig::Instance()->UpdateAppConf(push_config, m_errmsg);
+    if (m_errmsg.size() > 0)
+    {
+        LogError("Send config errmsg: %s!", m_errmsg.c_str());
+        m_errno = ERROR_SYSTEM_WRONG;
+        on_admin_error();
+    }
+    
     //store config into file
     CAppConfig::Instance()->WriteAppConf(m_proc->m_cfg.web_conf_file);
     
@@ -461,10 +467,15 @@ int AdminConfigTimer::restore_serviceList()
 }
 
 
-int AdminConfigTimer::restore_queue(string appID, vector<string> appID_tags, bool highpri)
+int AdminConfigTimer::restore_queue(string appID, const vector<string> &appID_tags, bool highpri)
 {
-    for (unsigned i = 0; i < appID_tags.size(); i++)
+    for (unsigned i = 0; i < appID_tags.size(); ++i)
     {
+        if (appID_tags[i].size() <= 0)
+        {
+            continue;
+        }
+            
         if (KV_parse_queue(appID_tags[i], highpri))
         {
             continue;
@@ -501,6 +512,7 @@ int AdminConfigTimer::on_admin_restore()
         /* 允许tags为空数组 */        
         string str_appID_tags;
         CAppConfig::Instance()->GetValue(appID, "tags", str_appID_tags);
+        
         vector<string> appID_tags;
         MySplitTag((char *)str_appID_tags.c_str(), ";", appID_tags);
 

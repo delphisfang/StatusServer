@@ -269,6 +269,21 @@ int CTimerInfo::on_stat()
     }
 }
 
+int CTimerInfo::on_admin_error()
+{
+    Json::Value error_rsp;
+    error_rsp["cmd"]   = m_cmd + "-reply";
+    error_rsp["seq"]   = m_seq;
+    error_rsp["code"]  = m_errno;
+    error_rsp["msg"]   = m_errmsg;
+
+    Json::FastWriter writer;
+    string rsp = writer.write(error_rsp);
+    
+    m_proc->EnququeHttp2CCD(m_ret_flow, rsp.c_str(), rsp.size());
+    return 0;
+}
+
 void CTimerInfo::on_expire()
 {
     Json::Value error_rsp;

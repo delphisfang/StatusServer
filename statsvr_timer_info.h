@@ -89,7 +89,8 @@ namespace statsvr
         virtual int  init(string req_data, int datalen);
         virtual int  on_error();
         virtual int  on_stat();
-
+        virtual int  on_admin_error();
+        
         virtual void AddStatInfo(const char* itemName, timeval* begin, timeval* end, int retcode);
         virtual void FinishStat(const char* itemName);
 

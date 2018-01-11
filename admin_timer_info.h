@@ -43,7 +43,7 @@ namespace statsvr
         int  get_id_list(string value, string idListName, vector<string> &idList);
         int  restore_userList();
         int  restore_serviceList();
-        int  restore_queue(string appID, vector<string> appID_tags, bool highpri);
+        int  restore_queue(string appID, const vector<string> &appID_tags, bool highpri);
         int  on_admin_restore();
     };
 }
