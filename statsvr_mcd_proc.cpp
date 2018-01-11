@@ -477,7 +477,23 @@ int32_t CMCDProc::HttpParseCmd(const char *data, unsigned data_len, string& outd
         return -1;
     }
 
-    string request_url = string(http_parse.HttpUri());
+    const char *uri = http_parse.HttpUri();
+    if (NULL == uri)
+    {
+        LogError("Failed to parse http uri!");
+        return -1;
+    }
+
+    string request_url;
+    try
+    {
+        request_url = string(uri);
+    }
+    catch(...)
+    {
+        LogError("uri string coredump...");
+        return -1;
+    }
     
     unsigned long pos = request_url.find("?");
     if (string::npos != pos)
@@ -505,49 +521,86 @@ int32_t CMCDProc::HttpParseCmd(const char *data, unsigned data_len, string& outd
 
         Json::Reader reader;
         Json::Value root;
-        Json::Value rootdata;
+        Json::Value js_data;
+        
         //LogDebug("==>parse root");
         if (!reader.parse(req_params, root))
         {
-            LogError("Failed to parse params: %s!", req_params.c_str());
+            LogError("Failed to parse req_params: %s!", req_params.c_str());
             return -1;
         }
-       
-        //LogDebug("==>parse seq");
-        if (!root["seq"].isNull())
+        if (!root.isObject())
         {
-            if (root["seq"].isUInt())
-            {
-                unsigned int seq_num = root["seq"].asUInt();
-                m_seq = ui2str(seq_num);
-            }
-            else
-            {
-                m_seq = root["seq"].asString();
-            }
+            LogError("root is not object!");
+            return -1;
+        }
+        
+        //LogDebug("==>parse seq");
+        if (root["seq"].isNull() 
+            || (!root["seq"].isUInt() && !root["seq"].isString())
+            )
+        {
+            LogError("Invalid root[seq]!");
+            return -1;
+        }
+        if (root["seq"].isUInt())
+        {
+            unsigned int seq_num = root["seq"].asUInt();
+            m_seq = ui2str(seq_num);
+        }
+        else
+        {
+            m_seq = root["seq"].asString();
         }
 
         //LogDebug("==>parse method");
+        if (root["method"].isNull() && root["cmd"].isNull())
+        {
+            LogError("Invalid root[method/cmd]!");
+            return -1;
+        }
         if (!root["method"].isNull())
         {
+            if (!root["method"].isString())
+            {
+                LogError("Invalid root[method]!");
+                return -1;
+            }
             cmd  = root["method"].asString();
         }
         else
         {
+            if (!root["cmd"].isString())
+            {
+                LogError("Invalid root[cmd]!");
+                return -1;
+            }
             cmd  = root["cmd"].asString();
         }
         LogWarn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         LogWarn("==>method: %s", cmd.c_str());
-        
+
+        //LogDebug("==>parse data");
         if (!root["data"].isNull())
         {
-             rootdata = root["data"];
-            if (!rootdata["identity"].isNull())
+            js_data = root["data"];
+            if (!js_data.isObject())
             {
-                identity = rootdata["identity"].asString();
+                LogError("Invalid root[data]!");
+                return -1;
+            }
+
+            //LogDebug("==>parse identity");
+            if (!js_data["identity"].isNull())
+            {
+                if (!js_data["identity"].isString())
+                {
+                    LogError("Invalid data[identity]!");
+                    return -1;
+                }
+                identity = js_data["identity"].asString();
             }
         }
-        //LogDebug("===>parse data finish");
     }
     else
     {
@@ -555,8 +608,7 @@ int32_t CMCDProc::HttpParseCmd(const char *data, unsigned data_len, string& outd
     }
 
     //LogDebug("==>identity: %s", identity.c_str());
-
-    if (identity == "admin")
+    if ("admin" == identity)
     {
         return 0;
     }
