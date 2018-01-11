@@ -103,6 +103,8 @@ namespace statsvr
         int on_appoint_service();
         int on_queue();
         int on_connect_service();
+
+        UserInfo m_userInfo;
     };
 
     class CancelQueueTimer:public CTimerInfo

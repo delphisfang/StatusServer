@@ -807,25 +807,24 @@ int UserServiceTimer::on_create_session()
 
 int UserServiceTimer::on_send_connect_success()
 {
-    LogDebug("==>IN");
-
     //connectSuccess消息的data字段包含的是service的信息
     Json::Value sessData;
     sessData["userID"]    = m_session.userID;
     sessData["serviceID"] = m_raw_serviceID;
     sessData["sessionID"] = m_sessionID;
     sessData["channel"]   = m_channel;
-
+    sessData["tag"]       = m_userInfo.tag;
+        
     //解析extends
     Json::Reader reader;
     Json::Value json_extends;
     if (!reader.parse(m_userInfo.extends, json_extends))
     {
-        sessData["extends"]   = Json::objectValue;
+        sessData["extends"] = Json::objectValue;
     }
     else
     {
-        sessData["extends"]   = json_extends;
+        sessData["extends"] = json_extends;
     }
     
     sessData["serviceName"]   = m_serviceInfo.serviceName;
@@ -846,7 +845,6 @@ int UserServiceTimer::on_send_connect_success()
     sessData["identity"] = "service";
     DO_FAIL(on_send_request("connectSuccess", m_serviceInfo.cpIP, m_serviceInfo.cpPort, sessData, true));
 
-    LogDebug("==>OUT");
     return SS_OK;
 }
 

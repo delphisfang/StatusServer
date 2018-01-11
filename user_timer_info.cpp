@@ -398,19 +398,22 @@ int ConnectServiceTimer::on_send_connect_success(const Session &sess, const Serv
     sessData["serviceID"] = sess.serviceID;
     sessData["sessionID"] = sess.sessionID;
     sessData["channel"]   = m_channel;
-    #if 0
+    sessData["tag"]       = m_userInfo.tag;
+
+    //解析extends
+    Json::Reader reader;
     Json::Value json_extends;
-    reader.parse(m_extends, json_extends);
-    sessData["extends"]   = json_extends;
-    #else
-    sessData["extends"]   = Json::objectValue;
-    #endif
-    
+    if (!reader.parse(m_userInfo.extends, json_extends))
+    {
+        sessData["extends"] = Json::objectValue;
+    }
+    else
+    {
+        sessData["extends"] = json_extends;
+    }
+
     sessData["serviceName"]   = serv.serviceName;
     sessData["serviceAvatar"] = serv.serviceAvatar;
-    //Json::Reader reader;
-    //reader.parse(m_userInfo, userInfo);
-    //serviceData["userInfo"] = userInfo;
 
     //发送connectSuccess消息给user
     sessData["identity"] = "user";
@@ -459,12 +462,11 @@ int ConnectServiceTimer::on_appoint_service()
     DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess));
 
     //更新user
-    UserInfo user;
-    GET_USER(mGetUser(m_userID, user));
-    user.status = IN_SERVICE;
-    user.qtime  = 0;
-    user.atime  = sess.atime;
-    DO_FAIL(UpdateUser(m_userID, user));
+    GET_USER(mGetUser(m_userID, m_userInfo));
+    m_userInfo.status = IN_SERVICE;
+    m_userInfo.qtime  = 0;
+    m_userInfo.atime  = sess.atime;
+    DO_FAIL(UpdateUser(m_userID, m_userInfo));
 
     //更新service
     SET_SERV(serv.add_user(m_raw_userID));

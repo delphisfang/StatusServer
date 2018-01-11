@@ -485,7 +485,8 @@ int ChangeServiceTimer::on_send_change_success()
     //sessData["channel"]       = m_channel;
     sessData["serviceName"]   = m_dst_serviceInfo.serviceName;
     sessData["serviceAvatar"] = m_dst_serviceInfo.serviceAvatar;
-
+    sessData["tag"]           = m_userInfo.tag;
+        
     //解析extends
     Json::Reader reader;
     Json::Value json_extends;
@@ -538,35 +539,32 @@ int ServicePullNextTimer::do_next_step(string& req_data)
 
 int ServicePullNextTimer::on_send_connect_success()
 {
-    Json::Value serviceData;
+    Json::Value sessData;
 
-    serviceData["userID"]    = m_raw_userID;
-    serviceData["serviceID"] = m_raw_serviceID;
-    serviceData["sessionID"] = m_sessionID;
-    //serviceData["channel"]   = m_userInfo.channel;
-
-    //解析extends
+    sessData["userID"]    = m_raw_userID;
+    sessData["serviceID"] = m_raw_serviceID;
+    sessData["sessionID"] = m_sessionID;
+    //sessData["channel"]   = m_userInfo.channel;
+    sessData["tag"]       = m_userInfo.tag;
     
+    //解析extends
     Json::Reader reader;
     Json::Value json_extends;
     if (!reader.parse(m_userInfo.extends, json_extends))
     {
-        serviceData["extends"] = Json::objectValue;
+        sessData["extends"] = Json::objectValue;
     }
     else
     {
-        serviceData["extends"] = json_extends;
+        sessData["extends"] = json_extends;
     }
 
-    serviceData["serviceName"]   = m_serviceInfo.serviceName;
-    serviceData["serviceAvatar"] = m_serviceInfo.serviceAvatar;
+    sessData["serviceName"]   = m_serviceInfo.serviceName;
+    sessData["serviceAvatar"] = m_serviceInfo.serviceAvatar;
     
-    //reader.parse(m_userInfo.userInfo, userInfo);
-    //serviceData["userInfo"] = userInfo;
-
     //发送给user端
-    serviceData["identity"]      = "user";
-    DO_FAIL(on_send_request("connectSuccess", m_session.cpIP, m_session.cpPort, serviceData, true));
+    sessData["identity"]      = "user";
+    DO_FAIL(on_send_request("connectSuccess", m_session.cpIP, m_session.cpPort, sessData, true));
 
 #if 0
     if (m_whereFrom == "websocket" || m_session.whereFrom == "iOS" || m_session.whereFrom == "Android")
@@ -576,8 +574,8 @@ int ServicePullNextTimer::on_send_connect_success()
 #endif
     
     //发送给service端
-    serviceData["identity"]      = "service";
-    DO_FAIL(on_send_request("connectSuccess", m_serviceInfo.cpIP, m_serviceInfo.cpPort, serviceData, true));
+    sessData["identity"]      = "service";
+    DO_FAIL(on_send_request("connectSuccess", m_serviceInfo.cpIP, m_serviceInfo.cpPort, sessData, true));
 
     return SS_OK;
 }
