@@ -1239,12 +1239,12 @@ int CAppConfig::checkTagExist(string appID, string app_tag)
 
 long long CAppConfig::getDefaultSessionTimeWarn(string appID)
 {
-    int session_timewarn = 0;
+    int session_timewarn = -1;
     
     if (GetValue(appID, "session_timewarn", session_timewarn) 
-        || 0 == session_timewarn)
+        || session_timewarn < 0)
     {
-        session_timewarn = 10 * 60;
+        session_timewarn = 10*60;
     }
     else
     {
@@ -1256,12 +1256,12 @@ long long CAppConfig::getDefaultSessionTimeWarn(string appID)
 
 long long CAppConfig::getDefaultSessionTimeOut(string appID)
 {
-    int session_timeout = 0;
+    int session_timeout = -1;
     
     if (GetValue(appID, "session_timeout", session_timeout) 
-        || 0 == session_timeout)
+        || session_timeout < 0)
     {
-        session_timeout = 15 * 60;
+        session_timeout = 15*60;
     }
     else
     {
@@ -1272,12 +1272,12 @@ long long CAppConfig::getDefaultSessionTimeOut(string appID)
 
 long long CAppConfig::getDefaultQueueTimeout(string appID)
 {
-    int queue_timeout = 0;
+    int queue_timeout = -1;
     
     if (GetValue(appID, "queue_timeout", queue_timeout) 
-        || 0 == queue_timeout)
+        || queue_timeout < 0)
     {
-        queue_timeout = 30 * 60;
+        queue_timeout = 30*60;
     }
     else
     {
@@ -1288,10 +1288,10 @@ long long CAppConfig::getDefaultQueueTimeout(string appID)
 
 int CAppConfig::getMaxConvNum(string appID)
 {
-    int max_conv_num = 0;
+    int max_conv_num = -1;
     
     if (GetValue(appID, "max_conv_num", max_conv_num) 
-        || 0 == max_conv_num)
+        || max_conv_num < 0)
     {
         max_conv_num = 5;
     }
