@@ -146,23 +146,16 @@ int AdminConfigTimer::on_admin_send_reply(const Json::Value &data)
 int AdminConfigTimer::on_admin_pingConf()
 {
     Json::Reader reader;
-    Json::Value ping_req;
+    Json::Value  req;
     
-    if (!reader.parse(m_data, ping_req))
+    if (!reader.parse(m_data, req) || !req.isObject() || !req["appIDList"].isArray())
     {
-        LogError("Failed to parse ping data: [%s]", m_data.c_str());
-        return -1;
-    }
-
-    if (ping_req["appIDList"].isNull() || !ping_req["appIDList"].isArray())
-    {
-        LogError("Failed to parse appIDlist! data: [%s]", m_data.c_str());
-        on_error_parse_packet("Error parse appIDList");
+        LogError("Failed to parse appIDList! data: [%s]", m_data.c_str());
         return -1;
     }
 
     //参数检查
-    unsigned size = ping_req["appIDList"].size();
+    unsigned size = req["appIDList"].size();
     if (size > MAX_APP_NUM)
     {
         LogError("size:%d > MAX_APP_NUM:%d", size, MAX_APP_NUM);
@@ -175,7 +168,7 @@ int AdminConfigTimer::on_admin_pingConf()
     map<string, bool> appIDMap;
     for (unsigned i = 0; i < size; ++i)
     {
-        string appID = ping_req["appIDList"][i].asString();
+        string appID = req["appIDList"][i].asString();
 
         //若appID不存在，则version返回0
         int version = 0;
@@ -224,15 +217,15 @@ int AdminConfigTimer::on_admin_updateConf(bool isUpdateConf)
     LogDebug("Receive a updateConf request.");
 
     Json::Reader reader;
-    Json::Value push_config;
-    if (!reader.parse(m_data, push_config))
+    Json::Value  req;
+    if (!reader.parse(m_data, req) || !req.isObject() || !req["appList"].isArray())
     {
-        LogError("Failed to parse updateConf data: [%s]", m_data.c_str());
+        LogError("Failed to parse appList! data: [%s]", m_data.c_str());
         ON_ERROR_PARSE_PACKET();
         return -1;
     }
-
-    CAppConfig::Instance()->UpdateAppConf(push_config, m_errmsg);
+    
+    CAppConfig::Instance()->UpdateAppConf(req, m_errmsg);
     if (m_errmsg.size() > 0)
     {
         LogError("Send config errmsg: %s!", m_errmsg.c_str());
@@ -345,19 +338,12 @@ int AdminConfigTimer::on_admin_getTodayStatus()
 {
     Json::Reader reader;
     Json::Value req;
-    if (!reader.parse(m_data, req))
+    if (!reader.parse(m_data, req) || !req.isObject() || !req["appIDList"].isArray())
     {
-        LogError("Failed to parse request data. data: [%s]", m_data.c_str());
+        LogError("Failed to parse appIDList! data: [%s]", m_data.c_str());
         return -1;
     }
     
-    if (req["appIDList"].isNull() || !req["appIDList"].isArray())
-    {
-        LogError("Failed to parse appIDList. data: [%s]", m_data.c_str());
-        on_error_parse_packet("Error parse appIDList");
-        return -1;
-    }
-
     //参数检查
     unsigned size = req["appIDList"].size();
     if (size > MAX_APP_NUM)
@@ -389,7 +375,7 @@ int AdminConfigTimer::get_id_list(string value, string idListName, vector<string
     Json::Value obj;
     int idNum = 0;
     
-    if (!reader.parse(value, obj))
+    if (!reader.parse(value, obj) || !obj.isObject())
     {
         LogError("Failed to parse value:%s!", value.c_str());
         return 0;

@@ -524,14 +524,9 @@ int32_t CMCDProc::HttpParseCmd(const char *data, unsigned data_len, string& outd
         Json::Value js_data;
         
         //LogDebug("==>parse root");
-        if (!reader.parse(req_params, root))
+        if (!reader.parse(req_params, root) || !root.isObject())
         {
             LogError("Failed to parse req_params: %s!", req_params.c_str());
-            return -1;
-        }
-        if (!root.isObject())
-        {
-            LogError("root is not object!");
             return -1;
         }
         
@@ -831,7 +826,7 @@ int32_t CMCDProc::HandleResponse(const char *data,
     Json::Reader reader;
     Json::Value  root;
     Json::Value  js_data;
-    if (reader.parse(outdata, root))
+    if (reader.parse(outdata, root) && root.isObject())
     {
         if (!root["innerSeq"].isNull() && root["innerSeq"].isUInt())
         {

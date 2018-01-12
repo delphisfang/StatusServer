@@ -13,14 +13,9 @@ int YiBotOutTimer::do_next_step(string& req_data)
     Json::Value data;
 
     //LogDebug("req_data: %s", req_data.c_str());
-    if (!reader.parse(req_data, data))
+    if (!reader.parse(req_data, data) || !data.isObject() || !data["userID"].isArray())
     {
         LogError("Failed to parse req_data!");
-        return -1;
-    }
-
-    if (data["userID"].isNull() || !data["userID"].isArray())
-    {
         return -1;
     }
 
@@ -465,7 +460,7 @@ int QueueOutTimer::do_next_step(string& req_data)
     Json::Value  data;
     
     LogDebug("req_data: %s", req_data.c_str());
-    if (!reader.parse(req_data, data))
+    if (!reader.parse(req_data, data) || !data.isObject())
     {
         LogError("Failed to parse req_data!");
         return -1;

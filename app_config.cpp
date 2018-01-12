@@ -410,18 +410,12 @@ int CAppConfig::LoadAppConf(const string &conf_file, Json::Value &data)
     in.close();
 
     Json::Reader reader;
-    if (!reader.parse(strConf, data))
+    if (!reader.parse(strConf, data) || !data.isObject() || !data["appList"].isArray())
     {
-        LogError("Failed to parse app config!");
+        LogError("Failed to parse appList!");
         return -1;
     }
 
-    if (data["appList"].isNull() || !data["appList"].isArray())
-    {
-        LogError("Failed to parse <appList>!");
-        return -1;
-    }
-    
     LogTrace("Success to load app config: %s.", strConf.c_str());
     return 0;
 }
@@ -1289,17 +1283,17 @@ int CAppConfig::checkAppIDExist(string appID)
 {
     Json::Reader reader;
     Json::Value appList;
-    string appListString;
+    string appListStr;
     
-    if (GetAppIDListStr(appListString))
+    if (GetAppIDListStr(appListStr))
     {
-        LogError("get appIDlist failed.");
+        LogError("Failed to get appListStr!");
         return -1;
     }
 
-    if (!reader.parse(appListString, appList))
+    if (!reader.parse(appListStr, appList) || !appList.isObject() || !appList["appIDList"].isArray())
     {
-        LogError("parse appIDlist to JSON failed:%s", appListString.c_str());
+        LogError("Failed to parse appIDList: %s!", appListStr.c_str());
         return -1;
     }
 

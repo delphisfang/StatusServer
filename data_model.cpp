@@ -13,11 +13,6 @@ Session::Session()
     cpIP.clear();
     cpPort = 0;
     notified = 0;
-    /*toIM = 0;
-    whereFrom.clear();
-    channel.clear();
-    userCount = 0;
-    */
 }
 
 Session::~Session()
@@ -30,11 +25,6 @@ Session::~Session()
     cpIP.clear();
     cpPort = 0;
     notified = 0;
-    /*toIM = 0;
-    whereFrom.clear();
-    channel.clear();
-    userCount = 0;
-    */
 }
 
 Session::Session(const string& strSession)
@@ -42,7 +32,7 @@ Session::Session(const string& strSession)
     Json::Reader reader;
     Json::Value value;
     
-    if (!reader.parse(strSession, value))
+    if (!reader.parse(strSession, value) || !value.isObject())
     {
         return;
     }
@@ -55,23 +45,6 @@ Session::Session(const string& strSession)
     cpIP      = get_value_str(value, CP_IP);
     cpPort    = get_value_uint(value, CP_PORT);
     notified  = get_value_int(value, NOTIFIED, 0);
-    
-    /*if (!value["toIM"].isNull() && (value["toIM"].isBool() || value["toIM"].isInt()))
-    {
-        toIM = value["toIM"].asBool();
-    }
-    if (!value["whereFrom"].isNull() && value["whereFrom"].isString())
-    {
-        whereFrom = value["whereFrom"].asString();
-    }
-    if (!value["channel"].isNull() && value["channel"].isString())
-    {
-        channel = value["channel"].asString();
-    }
-    if(!value["userCount"].isNull() && value["userCount"].isUInt())
-    {
-        userCount = value["userCount"].asUInt();
-    }*/
 }
 
 void Session::toJson(Json::Value &value) const
@@ -84,11 +57,6 @@ void Session::toJson(Json::Value &value) const
     value[CP_IP]       = cpIP;
     value[CP_PORT]     = cpPort;
     value[NOTIFIED]    = notified;
-
-    //value["toIM"] = toIM;
-    //value["whereFrom"] = whereFrom;
-    //value["channel"] = channel;
-    //value["userCount"] = userCount;
 }
 
 string Session::toString() const
@@ -127,7 +95,6 @@ UserInfo::UserInfo()
     queuePriority = 0;
     channel.clear();
     extends.clear();
-    //userInfo.clear();
 }
 
 UserInfo::~UserInfo()
@@ -145,7 +112,6 @@ UserInfo::~UserInfo()
     queuePriority = 0;
     channel.clear();
     extends.clear();
-    //userInfo.clear();
 }
 
 UserInfo::UserInfo(const string& strUserInfo)
@@ -154,7 +120,7 @@ UserInfo::UserInfo(const string& strUserInfo)
     Json::Value value;
     timeval nowTime;
     
-    if (!reader.parse(strUserInfo, value))
+    if (!reader.parse(strUserInfo, value) || !value.isObject())
     {
         return;
     }
@@ -193,7 +159,6 @@ void UserInfo::toJson(Json::Value &value) const
     value[PRIO]         = priority;
     value[QUEUE_PRIO]    = queuePriority;
     value[CHANNEL]        = channel;
-    //value["userInfo"] = userInfo;
 
     #if 0
     Json::Reader reader;
@@ -255,7 +220,7 @@ ServiceInfo::ServiceInfo(const string& strServiceInfo, unsigned dft_user_num)
     Json::Reader reader;
     Json::Value value;
     
-    if (!reader.parse(strServiceInfo, value))
+    if (!reader.parse(strServiceInfo, value) || !value.isObject())
     {
         return;
     }
@@ -277,6 +242,11 @@ ServiceInfo::ServiceInfo(const string& strServiceInfo, unsigned dft_user_num)
 
 void ServiceInfo::parse_tags(const Json::Value &value)
 {
+    if (!value.isObject() || !value["tags"].isArray())
+    {
+        return;
+    }
+    
     unsigned tagsLen = value["tags"].size();
     for (unsigned i = 0; i < tagsLen; i++)
     {
@@ -440,7 +410,7 @@ ServiceHeap::ServiceHeap(const string& strServiceHeap)
     Json::Reader reader;
     Json::Value value;
     
-    if (!reader.parse(strServiceHeap, value))
+    if (!reader.parse(strServiceHeap, value) || !value.isObject() || !value["tagServiceList"].isArray())
     {
         return;
     }

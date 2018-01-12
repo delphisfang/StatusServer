@@ -119,7 +119,7 @@ void ServiceLoginTimer::set_service_fields(ServiceInfo &serv)
     
     Json::Reader reader;
     Json::Value value;
-    if (!reader.parse(m_data, value))
+    if (!reader.parse(m_data, value) || !value.isObject())
     {
         return;
     }

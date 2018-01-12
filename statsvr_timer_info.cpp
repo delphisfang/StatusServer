@@ -10,7 +10,7 @@ int CTimerInfo::init(string req_data, int datalen)
     Json::Reader reader;
     Json::Value js_root;
     
-    if (!reader.parse(req_data, js_root))
+    if (!reader.parse(req_data, js_root) || !js_root.isObject())
     {
         LogError("Failed to parse req_data: %s!", req_data.c_str());
         return -1;
@@ -922,7 +922,7 @@ int CTimerInfo::KV_parse_session(string app_userID)
     
     Session sess(sess_value);
     Json::Value obj;
-    if (!reader.parse(sess_value, obj))
+    if (!reader.parse(sess_value, obj) || !obj.isObject())
     {
         return SS_ERROR;
     }
@@ -1004,7 +1004,7 @@ int CTimerInfo::KV_parse_queue(string app_tag, bool highpri)
     /*解析*/
     Json::Reader reader;
     Json::Value obj, queueNode;
-    if (!reader.parse(val_queueList, obj))
+    if (!reader.parse(val_queueList, obj) || !obj.isObject() || !obj["queueList"].isArray())
     {
         return SS_ERROR;
     }
