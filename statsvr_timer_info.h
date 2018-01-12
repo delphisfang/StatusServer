@@ -71,7 +71,7 @@ namespace statsvr
 
             //m_ret_code.clear();
             //m_ret_msg.clear();
-            m_search_no.clear();
+            //m_search_no.clear();
 
             //m_tags.clear();
             m_queuePriority = 0;
@@ -212,7 +212,7 @@ namespace statsvr
         string          m_priority;
         //string          m_ret_code;
         //string          m_ret_msg;
-        string          m_search_no;
+        //string          m_search_no;
         string          m_channel;
         string          m_status;
         string          m_subStatus;

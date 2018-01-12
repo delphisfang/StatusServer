@@ -477,6 +477,7 @@ int32_t CMCDProc::HttpParseCmd(const char *data, unsigned data_len, string& outd
         return -1;
     }
 
+    #if 0
     const char *uri = http_parse.HttpUri();
     if (NULL == uri)
     {
@@ -505,10 +506,11 @@ int32_t CMCDProc::HttpParseCmd(const char *data, unsigned data_len, string& outd
             return -1;
         }
     }
-
-    string m_business_name;
+    #endif
+    
+    //string m_business_name;
     string req_params;
-    HttpGetBu(request_url.c_str(), m_business_name, req_params);
+    //HttpGetBu(request_url.c_str(), m_business_name, req_params);
     int m_http_method = http_parse.HttpMethod();
     string identity = "";
     string cmd;
@@ -529,7 +531,8 @@ int32_t CMCDProc::HttpParseCmd(const char *data, unsigned data_len, string& outd
             LogError("Failed to parse req_params: %s!", req_params.c_str());
             return -1;
         }
-        
+
+        #if 0
         //LogDebug("==>parse seq");
         if (!root["seq"].isNull())
         {
@@ -548,7 +551,8 @@ int32_t CMCDProc::HttpParseCmd(const char *data, unsigned data_len, string& outd
                 m_seq = root["seq"].asString();
             }
         }
-
+        #endif
+        
         //LogDebug("==>parse method");
         if (root["method"].isNull() && root["cmd"].isNull())
         {

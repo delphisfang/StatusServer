@@ -802,15 +802,12 @@ int UserServiceTimer::on_create_session()
 
 int UserServiceTimer::on_send_connect_success()
 {
-    //connectSuccess消息的data字段包含的是service的信息
     Json::Value sessData;
     sessData["userID"]    = m_session.userID;
     sessData["serviceID"] = m_raw_serviceID;
     sessData["sessionID"] = m_sessionID;
     sessData["channel"]   = m_channel;
     sessData["tag"]       = m_userInfo.tag;
-        
-    //解析extends
     on_parse_extends(m_userInfo.extends, sessData);
 
     sessData["serviceName"]   = m_serviceInfo.serviceName;

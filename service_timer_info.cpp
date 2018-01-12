@@ -545,8 +545,6 @@ int ServicePullNextTimer::on_send_connect_success()
     sessData["sessionID"] = m_sessionID;
     //sessData["channel"]   = m_userInfo.channel;
     sessData["tag"]       = m_userInfo.tag;
-    
-    //解析extends
     on_parse_extends(m_userInfo.extends, sessData);
 
     sessData["serviceName"]   = m_serviceInfo.serviceName;

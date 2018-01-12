@@ -392,15 +392,11 @@ int ConnectServiceTimer::on_send_connect_success(const Session &sess, const Serv
 {
     Json::Value sessData;
     
-    LogDebug("==>IN");
-    //connectSuccess消息的data字段包含的是service的信息
     sessData["userID"]    = sess.userID;
     sessData["serviceID"] = sess.serviceID;
     sessData["sessionID"] = sess.sessionID;
     sessData["channel"]   = m_channel;
     sessData["tag"]       = m_userInfo.tag;
-
-    //解析extends
     on_parse_extends(m_userInfo.extends, sessData);
 
     sessData["serviceName"]   = serv.serviceName;
@@ -414,7 +410,6 @@ int ConnectServiceTimer::on_send_connect_success(const Session &sess, const Serv
     sessData["identity"] = "service";
     DO_FAIL(on_send_request("connectSuccess", serv.cpIP, serv.cpPort, sessData, true));
 
-    LogDebug("==>OUT");
     return SS_OK;
 }
 

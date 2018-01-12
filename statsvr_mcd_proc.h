@@ -233,7 +233,7 @@ namespace statsvr
 
         map<string, unsigned> m_cmdMap;
 
-        string m_seq;
+        //string m_seq;
         vector<string>  m_errCmd;
 
     public:

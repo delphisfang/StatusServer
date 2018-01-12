@@ -126,7 +126,7 @@ int AdminConfigTimer::on_admin_send_reply(const Json::Value &data)
     rsp["cmd"]  = m_cmd + "-reply";
     rsp["code"] = 0;
     rsp["msg"]  = "OK";
-    rsp["seq"]  = m_seq;
+    rsp["seq"]  = ""; //返回空seq串给前端
     rsp["data"] = data;
 
     Json::FastWriter writer;
@@ -168,7 +168,12 @@ int AdminConfigTimer::on_admin_pingConf()
     map<string, bool> appIDMap;
     for (unsigned i = 0; i < size; ++i)
     {
-        string appID = req["appIDList"][i].asString();
+        string appID;
+        if (get_value_str_safe(req["appIDList"][i], appID))
+        {
+            LogError("Invalid appIDList[%d]!", i);
+            continue;
+        }
 
         //若appID不存在，则version返回0
         int version = 0;
@@ -182,7 +187,7 @@ int AdminConfigTimer::on_admin_pingConf()
         items["version"] = version;
         appIDlistVer.append(items);
 
-        /* 为appIDList里的每一个appID创建各种数据结构 */
+        /* 为每一个appID创建各种数据结构 */
         CAppConfig::Instance()->AddTagQueue(appID);
         CAppConfig::Instance()->AddTagHighPriQueue(appID);
         CAppConfig::Instance()->AddSessionQueue(appID);
@@ -358,7 +363,13 @@ int AdminConfigTimer::on_admin_getTodayStatus()
     appList.resize(0);
     for (unsigned i = 0; i < size; ++i)
     {
-        string appID = req["appIDList"][i].asString();
+        string appID;
+        if (get_value_str_safe(req["appIDList"][i], appID))
+        {
+            appList.append(Json::objectValue);
+            LogError("Invalid appIDList[%d]!", i);
+            continue;
+        }
         get_app_today_status(appID, appList);
     }
 

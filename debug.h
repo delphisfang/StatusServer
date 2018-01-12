@@ -40,17 +40,17 @@
     }while(0)
 
 #define ON_ERROR_PARSE_DATA(data_name) do{\
-        LogError("[%s] Error parse %s!\n", m_search_no.c_str(), data_name);\
+        LogError("Error parse %s!\n", data_name);\
         on_error_parse_data(data_name);\
     }while(0)
 
 #define ON_ERROR_GET_DATA(data_name) do{\
-        LogError("[%s] Error get %s!", m_search_no.c_str(), data_name);\
+        LogError("Error get %s!", data_name);\
         on_error_get_data(data_name);\
     }while(0)
 
 #define ON_ERROR_SET_DATA(data_name) do{\
-            LogError("[%s] Error set %s!", m_search_no.c_str(), data_name);\
+            LogError("Error set %s!", data_name);\
             on_error_set_data(data_name);\
         }while(0)
 

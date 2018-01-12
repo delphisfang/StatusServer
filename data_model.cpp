@@ -265,8 +265,12 @@ void ServiceInfo::parse_tags(const Json::Value &value)
 
 void ServiceInfo::parse_userList(const Json::Value &value)
 {
-    unsigned userLen = value["userList"].size();
-    for (unsigned i = 0; i < userLen; i++)
+    if (!value.isObject() || !value["userList"].isArray())
+    {
+        return;
+    }
+    
+    for (unsigned i = 0; i < value["userList"].size(); ++i)
     {
         string raw_userID;
         if (get_value_str_safe(value["userList"][i], raw_userID))
@@ -415,10 +419,12 @@ ServiceHeap::ServiceHeap(const string& strServiceHeap)
         return;
     }
     
-    int serviceLength = value["tagServiceList"].size();
-    for (int i = 0; i < serviceLength; i++)
+    for (int i = 0; i < value["tagServiceList"].size(); ++i)
     {
-        _servlist.insert(value["tagServiceList"][i].asString());
+        if (value["tagServiceList"][i].isString())
+        {
+            _servlist.insert(value["tagServiceList"][i].asString());
+        }
     }
 }
 

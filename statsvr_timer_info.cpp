@@ -36,7 +36,7 @@ int CTimerInfo::init(string req_data, int datalen)
     
     if (js_root["data"].isNull() || !js_root["data"].isObject())
     {
-        m_search_no = m_appID + "_" + i2str(m_msg_seq);
+        //m_search_no = m_appID + "_" + i2str(m_msg_seq);
         return 0;
     }
 
@@ -187,9 +187,10 @@ int CTimerInfo::init(string req_data, int datalen)
     m_priority = get_value_str(js_data, "priority");
     m_notify   = get_value_uint(js_data, "notify");
 
-    char id_buf[64];
+    /*char id_buf[64];
     snprintf(id_buf, sizeof(id_buf), "%s:%s:%s:%d", m_appID.c_str(), m_serviceID.c_str(), m_userID.c_str(), m_msg_seq);
     m_search_no = string(id_buf);
+    */
     
     LogDebug("Init request data OK! [id:%s,cmd:%s,userID:%s,servID:%s,msg_seq:%u]", 
                 m_identity.c_str(), m_cmd.c_str(), m_userID.c_str(), m_serviceID.c_str(), m_msg_seq);
@@ -289,7 +290,8 @@ void CTimerInfo::on_expire()
 {
     Json::Value error_rsp;
     
-    LogError("searchid[%s]: timer handle timeout, status[%d].", m_search_no.c_str(), m_cur_step);
+    //LogError("searchid[%s]: timer handle timeout, status[%d].", m_search_no.c_str(), m_cur_step);
+    LogError("Timer handle timeout, status[%d].", m_cur_step);
 
     error_rsp["method"]   = m_cmd + "-reply";
     error_rsp["innerSeq"] = m_seq;
@@ -427,7 +429,8 @@ int CTimerInfo::on_send_reply(const Json::Value &data)
 
     if (m_proc->EnququeHttp2CCD(m_ret_flow, strRsp.c_str(), strRsp.size()))
     {
-        LogError("searchid[%s]: Failed to SendReply <%s>", m_search_no.c_str(), m_cmd.c_str());
+        //LogError("searchid[%s]: Failed to SendReply <%s>", m_search_no.c_str(), m_cmd.c_str());
+        LogError("Failed to SendReply <%s>", m_cmd.c_str());
         m_errno  = ERROR_SYSTEM_WRONG;
         m_errmsg = "Error send reply";
         on_error();
@@ -456,7 +459,8 @@ int CTimerInfo::on_send_error_reply(ERROR_TYPE code, string msg, const Json::Val
     
     if (m_proc->EnququeHttp2CCD(m_ret_flow, strRsp.c_str(), strRsp.size()))
     {
-        LogError("searchid[%s]: Failed to SendErrorReply <%s>", m_search_no.c_str(), msg.c_str());
+        //LogError("searchid[%s]: Failed to SendErrorReply <%s>", m_search_no.c_str(), msg.c_str());
+        LogError("Failed to SendErrorReply <%s>", msg.c_str());
         m_errno  = ERROR_SYSTEM_WRONG;
         m_errmsg = "Error send error reply";
         on_error();
