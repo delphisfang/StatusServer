@@ -469,6 +469,20 @@ int CTimerInfo::on_send_error_reply(ERROR_TYPE code, string msg, const Json::Val
     }
 }
 
+void on_parse_extends(const string &extends, Json::Value &data)
+{
+    Json::Reader reader;
+    Json::Value  json_extends;
+    if (!reader.parse(extends, json_extends))
+    {
+        data["extends"] = Json::objectValue;
+    }
+    else
+    {
+        data["extends"] = json_extends;
+    }
+}
+
 /***************** never use m_xxx in methods below, keep them stateless **************/
 
 string CTimerInfo::gen_sessionID(const string &app_userID)

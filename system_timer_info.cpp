@@ -811,17 +811,8 @@ int UserServiceTimer::on_send_connect_success()
     sessData["tag"]       = m_userInfo.tag;
         
     //解析extends
-    Json::Reader reader;
-    Json::Value json_extends;
-    if (!reader.parse(m_userInfo.extends, json_extends))
-    {
-        sessData["extends"] = Json::objectValue;
-    }
-    else
-    {
-        sessData["extends"] = json_extends;
-    }
-    
+    on_parse_extends(m_userInfo.extends, sessData);
+
     sessData["serviceName"]   = m_serviceInfo.serviceName;
     sessData["serviceAvatar"] = m_serviceInfo.serviceAvatar;
 

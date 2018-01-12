@@ -89,7 +89,7 @@ public:
 
     int UpdateSubConf(const string &appID, const Json::Value &appID_conf, 
                     Json::Value &real_conf, ostringstream &ostr);
-    int UpdateAppConf(const Json::Value &push_config, string &errmsg);
+    int UpdateAppConf(const Json::Value &config_req, string &errmsg);
     int GetAppConf(Json::Value &data);
     int WriteAppConf(const string &conf_file);
     int LoadAppConf(const string &conf_file, Json::Value &data);

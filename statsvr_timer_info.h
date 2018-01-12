@@ -112,7 +112,7 @@ namespace statsvr
         int on_send_request(string cmd, string ip, unsigned short port, const Json::Value &data, bool with_code = false);
         int on_send_reply(const Json::Value &data);
         int on_send_error_reply(ERROR_TYPE code, string msg, const Json::Value &data);
-
+        void on_parse_extends(const string &extends, Json::Value &data);
 
         /***************** never use m_xxx in methods below, keep them stateless **************/
 

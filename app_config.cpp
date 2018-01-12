@@ -156,7 +156,7 @@ int CAppConfig::UpdateSubConf(const string &appID, const Json::Value &appID_conf
 }
 
 
-int CAppConfig::UpdateAppConf(const Json::Value &push_config, string &err_msg)
+int CAppConfig::UpdateAppConf(const Json::Value &config_req, string &err_msg)
 {
     Json::Value appList;
     Json::Value appIDList;
@@ -171,12 +171,11 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config, string &err_msg)
     }
 
 
-    Json::Value configList = push_config["appList"];
-    int size = configList.size();
+    Json::Value configList = config_req["appList"];
     Json::Value appID_conf;
     ostringstream ostr;
 
-    for (int i = 0; i < size; ++i)
+    for (int i = 0; i < configList.size(); ++i)
     {
         appID_conf = configList[i];
             
@@ -312,7 +311,6 @@ int CAppConfig::UpdateAppConf(const Json::Value &push_config, string &err_msg)
         SetVersion(appID, version);
     }
 
-    //set err_msg
     err_msg.clear();
     err_msg = ostr.str();
     //LogTrace("[updateConf] err_msg: %s", err_msg.c_str());

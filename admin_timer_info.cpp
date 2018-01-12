@@ -231,6 +231,7 @@ int AdminConfigTimer::on_admin_updateConf(bool isUpdateConf)
         LogError("Send config errmsg: %s!", m_errmsg.c_str());
         m_errno = ERROR_SYSTEM_WRONG;
         on_admin_error();
+        //do not return
     }
     
     //store config into file
