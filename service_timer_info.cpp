@@ -338,7 +338,7 @@ input: m_userID, m_serviceID, m_changeServiceID, m_tag, m_changeServiceID_list
 int ChangeServiceTimer::on_change_service()
 {
     //参数检查
-    if ("" == m_raw_changeServiceID && "" == m_raw_tag && 0 == m_changeServiceID_list.size())
+    if ("" == m_raw_changeServiceID && m_changeServiceID_list.size() <= 0 && "" == m_raw_tag)
     {
         ON_ERROR_PARSE_PACKET();
         return SS_ERROR;
@@ -356,13 +356,13 @@ int ChangeServiceTimer::on_change_service()
     {
         DO_FAIL(on_change_service_by_serviceID(true));
     }
-    else if ("" != m_raw_tag)
+    else if (m_changeServiceID_list.size() > 0)
     {
-        DO_FAIL(on_change_service_by_tag());
+        DO_FAIL(on_change_service_by_list());
     }
     else
     {
-        DO_FAIL(on_change_service_by_list());
+        DO_FAIL(on_change_service_by_tag());
     }
 
     //回复给src_service
@@ -431,6 +431,22 @@ int ChangeServiceTimer::on_change_service_by_tag()
 
 int ChangeServiceTimer::on_change_service_by_list()
 {
+    //如果熟客在组里，就熟客优先
+    if ("lastServiceID" == m_priority)
+    {
+        DO_FAIL(mGetUser(m_userID, m_userInfo));
+        m_raw_changeServiceID = m_userInfo.lastServiceID;
+        m_changeServiceID     = m_appID + "_" + m_raw_changeServiceID;
+        if (m_changeServiceID_list.end() != m_changeServiceID_list.find(m_changeServiceID))
+        {
+            if (0 == on_change_service_by_serviceID(false))
+            {
+                LogTrace("[ChangeService] userID:%s <-----> lastServiceID:%s", m_userID.c_str(), m_changeServiceID.c_str());
+                return SS_OK;
+            }
+        }
+    }
+
     if (find_least_service_by_list(m_changeServiceID_list, m_serviceID, m_dst_serviceInfo))
     {
         on_no_service_avail();
@@ -502,14 +518,6 @@ int ChangeServiceTimer::on_send_change_success()
     sessData["identity"] = "user";
     DO_FAIL(on_send_request("changeSuccess", m_session.cpIP, m_session.cpPort, sessData, true));
     
-    #if 0
-    //if(m_whereFrom == "websocket")
-    if(m_session.whereFrom == "websocket" || m_session.whereFrom == "iOS" || m_session.whereFrom == "Android")
-    {
-        MsgRetransmit::Instance()->SetMsg(strServiceRsp, m_appID, m_seq, m_session.userChatproxyIP, m_session.userChatproxyPort, m_proc->m_cfg._re_msg_send_timeout);
-    }
-    #endif
-
     sessData["identity"] = "service";
     DO_FAIL(on_send_request("changeSuccess", m_dst_serviceInfo.cpIP, m_dst_serviceInfo.cpPort, sessData, true));    
 }
@@ -566,13 +574,6 @@ int ServicePullNextTimer::on_send_connect_success()
     sessData["identity"]      = "user";
     DO_FAIL(on_send_request("connectSuccess", m_session.cpIP, m_session.cpPort, sessData, true));
 
-#if 0
-    if (m_whereFrom == "websocket" || m_session.whereFrom == "iOS" || m_session.whereFrom == "Android")
-    {
-        MsgRetransmit::Instance()->SetMsg(strServiceRsp, m_appID, ui2str(m_msg_seq), m_session.userChatproxyIP, m_session.userChatproxyPort, m_proc->m_cfg._re_msg_send_timeout);
-    }
-#endif
-    
     //发送给service端
     sessData["identity"]      = "service";
     DO_FAIL(on_send_request("connectSuccess", m_serviceInfo.cpIP, m_serviceInfo.cpPort, sessData, true));
