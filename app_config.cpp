@@ -188,21 +188,23 @@ int CAppConfig::UpdateAppConf(const Json::Value &config_req, string &err_msg)
         }
 
         //check version
-        unsigned version;
-        if (get_value_uint_safe(appID_conf["version"], version))
+        unsigned version = 0;
+        if (get_value_uint_safe(appID_conf["version"], version) || version <= 0)
         {
             ostr <<  "Err get app["<<appID<<"] version;";
             continue;
         }
         int myVersion = 0;
         int appIDExist = GetVersion(appID, myVersion);
+        #if 0
         if (myVersion >= version)
         {
             LogWarn("appID: %s, version:%d <= myVersion:%d!", appID.c_str(), version, myVersion);
             ostr << "Err cmp app["<<appID<<"] version;";
             continue;
         }
-
+        #endif
+        
         //check configs
         if (appID_conf["configs"].isNull() || !appID_conf["configs"].isObject())
         {

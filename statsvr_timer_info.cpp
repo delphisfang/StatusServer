@@ -473,7 +473,7 @@ int CTimerInfo::on_send_error_reply(ERROR_TYPE code, string msg, const Json::Val
     }
 }
 
-void on_parse_extends(const string &extends, Json::Value &data)
+void CTimerInfo::on_parse_extends(const string &extends, Json::Value &data)
 {
     Json::Reader reader;
     Json::Value  json_extends;
