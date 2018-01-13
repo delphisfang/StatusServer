@@ -543,42 +543,42 @@ namespace statsvr
     class SessionQueue
     {
     public:
+        //以expire_time从大到小排序
         list<SessionTimer> _sess_list;
+        //以atime从大到小排序
+        list<SessionTimer> _yibot_list;
         
         SessionQueue()
         {
-            _sess_list.clear();    
-        };
+            _sess_list.clear();
+            _yibot_list.clear();
+        }
 
         //important: free all elements
         ~SessionQueue()
         {
             _sess_list.clear();
-        };
+            _yibot_list.clear();
+        }
         
-        int set(string userID, Session* sess, 
+        int set(string userID, Session *sess, 
                 long long gap_warn = 10*60, long long gap_expire = 20*60, int is_warn = 0)
         {
-            list<SessionTimer>::iterator it;
-
-            for (it = _sess_list.begin(); it != _sess_list.end(); it++)
+            //先删除再插入，以保证有序
+            if (delete_session(userID)
+                || insert(userID, sess, gap_warn, gap_expire, is_warn))
             {
-                if ((*it).userID == userID)
-                {
-                    (*it).session     = *sess;
-                    (*it).isWarn      = is_warn;
-                    (*it).warn_time   = (sess->atime/1000) + gap_warn;
-                    (*it).expire_time = (sess->atime/1000) + gap_expire;
-                    LogTrace("Success to set session: %s.", sess->toString().c_str());
-                    return 0;
-                }
+                LogError("Failed to set session: %s!", sess->toString().c_str());
+                return -1;
             }
-            
-            LogError("Failed to set session: %s!", sess->toString().c_str());
-            return -1;
+            else
+            {
+                LogTrace("Success to set session: %s.", sess->toString().c_str());
+                return 0;
+            }
         }
 
-        int insert(string userID, Session* sess, 
+        int insert(string userID, Session *sess, 
                     long long gap_warn = 10*60, long long gap_expire = 20*60, int is_warn = 0)
         {
             SessionTimer st;
@@ -593,44 +593,47 @@ namespace statsvr
             LogDebug("Success to insert session: %s", sess->toString().c_str());
             LogDebug("Session atime: %ld, warn_time: %ld, expire_time: %ld, is_warn: %d", 
                     sess->atime, st.warn_time, st.expire_time, st.isWarn);
-            
-            for (it = _sess_list.begin(); it != _sess_list.end(); it++)
-            {
-                if (st.expire_time < (*it).expire_time)
-                {
-                    _sess_list.insert(it, st);
-                    return 0;
-                }
-            }
-            
-            _sess_list.push_back(st);
-            return 0;
-        }
 
-        /*int pop()
-        {
-            if (_sess_list.size() > 0)
+            if (gap_warn >= MAX_INT && gap_expire >= MAX_INT)
             {
-                _sess_list.pop_front();
+                for (it = _yibot_list.begin(); it != _yibot_list.end(); ++it)
+                {
+                    if (st.session.atime > (*it).session.atime)
+                    {
+                        _yibot_list.insert(it, st);
+                        return 0;
+                    }
+                }
+
+                _yibot_list.push_back(st);
                 return 0;
             }
-            
-            LogError("Failed to pop a session, its size <= 0!");
-            return -1;
-        }*/
+            else
+            {
+                for (it = _sess_list.begin(); it != _sess_list.end(); ++it)
+                {
+                    if (st.expire_time > (*it).expire_time)
+                    {
+                        _sess_list.insert(it, st);
+                        return 0;
+                    }
+                }
+                
+                _sess_list.push_back(st);
+                return 0;
+            }
+        }
 
         int get_first_timer(SessionTimer& sessTimer)
         {
-            list<SessionTimer>::iterator it;
             long long nowTime = (long long)time(NULL);
-            
-            for (it = _sess_list.begin(); it != _sess_list.end(); it++)
+
+            list<SessionTimer>::reverse_iterator it;
+            it = _sess_list.rbegin();
+            if (it != _sess_list.rend() && nowTime >= it->expire_time)
             {
-                if (nowTime >= it->expire_time)
-                {
-                    sessTimer = (*it);
-                    return 0;
-                }
+                sessTimer = (*it);
+                return 0;
             }
             
             LogError("Failed to get an expired session, its size <= 0!");
@@ -639,16 +642,14 @@ namespace statsvr
 
         int get_first(Session& sess)
         {
-            list<SessionTimer>::iterator it;
             long long nowTime = (long long)time(NULL);
-            
-            for (it = _sess_list.begin(); it != _sess_list.end(); it++)
+
+            list<SessionTimer>::reverse_iterator it;
+            it = _sess_list.rbegin();
+            if (it != _sess_list.rend() && nowTime >= it->expire_time)
             {
-                if (nowTime >= it->expire_time)
-                {
-                    sess = it->session;
-                    return 0;
-                }
+                sess = it->session;
+                return 0;
             }
             
             LogError("Failed to get an expired session, its size <= 0!");
@@ -660,7 +661,7 @@ namespace statsvr
         {
             list<SessionTimer>::iterator it;
             
-            for (it = _sess_list.begin(); it != _sess_list.end(); it++)
+            for (it = _sess_list.begin(); it != _sess_list.end(); ++it)
             {
                 if (it->userID == userID)
                 {
@@ -668,14 +669,24 @@ namespace statsvr
                     return 0;
                 }
             }
+
+            for (it = _yibot_list.begin(); it != _yibot_list.end(); ++it)
+            {
+                if (it->userID == userID)
+                {
+                    sess = it->session;
+                    return 0;
+                }
+            }
+
             return -1;
         }
 
         int get_sess_timer(string userID, SessionTimer& st)
         {
             list<SessionTimer>::iterator it;
-            
-            for (it = _sess_list.begin(); it != _sess_list.end(); it++)
+
+            for (it = _sess_list.begin(); it != _sess_list.end(); ++it)
             {
                 if (it->userID == userID)
                 {
@@ -683,6 +694,16 @@ namespace statsvr
                     return 0;
                 }
             }
+
+            for (it = _yibot_list.begin(); it != _yibot_list.end(); ++it)
+            {
+                if (it->userID == userID)
+                {
+                    st = (*it);
+                    return 0;
+                }
+            }
+            
             return -1;
         }
 
@@ -695,22 +716,33 @@ namespace statsvr
                 if (it->userID == userID)
                 {
                     _sess_list.erase(it);
-                    LogDebug("Success to delete session of user[%s]", userID.c_str());
+                    LogDebug("Success to delete human session of user[%s]", userID.c_str());
                     return 0;
                 }
             }
+
+            for (it = _yibot_list.begin(); it != _yibot_list.end(); ++it)
+            {
+                if (it->userID == userID)
+                {
+                    _yibot_list.erase(it);
+                    LogDebug("Success to delete yibot session of user[%s]", userID.c_str());
+                    return 0;
+                }
+            }
+            
             return -1;
         }
 
         int check_warn(Session& sess)
         {
-            list<SessionTimer>::iterator it;
             long long nowTime = (long long)time(NULL);
 
-            for (it = _sess_list.begin(); it != _sess_list.end(); it++)
+            list<SessionTimer>::reverse_iterator it;
+            for (it = _sess_list.rbegin(); it != _sess_list.rend(); ++it)
             {
                 //isWarn==1表示之前提醒过，不需再提醒
-                if (nowTime >= it->warn_time && it->isWarn == 0)
+                if (nowTime >= it->warn_time && 0 == it->isWarn)
                 {
                     LogDebug("[nowTime: %ld] Find session timewarn, session:%s", nowTime, it->toString().c_str());
                     sess = it->session;
@@ -725,57 +757,53 @@ namespace statsvr
         //返回超时断开的数量
         int check_expire()
         {
-            list<SessionTimer>::iterator it;
             int expireNum = 0;
             long long nowTime = (long long)time(NULL);
-            
-            for (it = _sess_list.begin(); it != _sess_list.end(); it++)
+
+            list<SessionTimer>::reverse_iterator it;
+            for (it = _sess_list.rbegin(); it != _sess_list.rend(); ++it)
             {
                 if (nowTime >= it->expire_time)
                 {
-                    //LogDebug("[nowTime: %ld] Find session timeout, session:%s", nowTime, it->toString().c_str());
-                    expireNum++;
+                    ++expireNum;
+                }
+                else
+                {
+                    return expireNum;
                 }
             }
+            
             return expireNum;
         }
 
         void check_expire_yibot(long long gap_expire, vector<string> &app_userID_list)
         {
+            app_userID_list.clear();
             long long nowTime = (long long)time(NULL);
 
-            app_userID_list.clear();
-
-            list<SessionTimer>::iterator it;
-            for (it = _sess_list.begin(); it != _sess_list.end(); ++it)
+            list<SessionTimer>::reverse_iterator it;
+            for (it = _yibot_list.rbegin(); it != _yibot_list.rend(); ++it)
             {
-                //only check yibot session
-                if ("" == it->session.serviceID 
-                    && nowTime >= ((it->session.atime/1000) + gap_expire))
+                if (nowTime >= ((it->session.atime/1000) + gap_expire))
                 {
                     app_userID_list.push_back(it->userID);
+                }
+                else
+                {
+                    return;
                 }
             }
         }
         
         unsigned size()
         { 
-            return _sess_list.size();
+            return _sess_list.size() + _yibot_list.size();
         }
 
         unsigned get_usernum_in_service()
         {
-            list<SessionTimer>::iterator it;
             unsigned userNum = 0;
-            
-            for (it = _sess_list.begin(); it != _sess_list.end(); it++)
-            {
-                SessionTimer st = *it;
-                if ("" != st.session.serviceID)
-                {
-                    ++userNum;
-                }
-            }
+            userNum = _sess_list.size();
             return userNum;
         }
     };

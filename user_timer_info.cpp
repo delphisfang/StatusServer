@@ -35,7 +35,7 @@ int EchoTimer::on_echo()
     Json::Value data;
 
     LogTrace("Get appID[%s] DataStructs...", m_appID.c_str());
-    
+
     CAppConfig::Instance()->getUserListJson(m_appID, userListJson);
     CAppConfig::Instance()->getServiceListJson(m_appID, servListJson);
     CAppConfig::Instance()->getSessionQueueJson(m_appID, sessQueueJson);
@@ -49,6 +49,10 @@ int EchoTimer::on_echo()
     data["normalQueue"] = normalQueueJson;
     data["highpriQueue"] = highpriQueueJson;
     data["onlineServNum"] = onlineServNumJson;
+
+    Json::Value userNumJson;
+    CAppConfig::Instance()->getUserNumJson(userNumJson);
+    data["userNum"] = userNumJson;
     
     return on_send_reply(data);
 }

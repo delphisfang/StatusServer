@@ -68,10 +68,14 @@ public:
     
     unsigned  _queue_rate;
     unsigned  _yibot_time;
+
     time_t    _user_time_gap;
     time_t    _service_time_gap;
     time_t    _yibot_time_gap;
 
+    time_t    _user_check_intv;
+    time_t    _service_check_intv;
+    
     unsigned  _ccd_time_gap;
     string    web_conf_file;
 

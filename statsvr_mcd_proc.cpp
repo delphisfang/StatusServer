@@ -1132,7 +1132,7 @@ void CMCDProc::DispatchUserTimeout()
     timeval ntv;
     gettimeofday(&ntv, NULL);
 
-    if (ntv.tv_sec - user_last_check_time.tv_sec < 15)
+    if (ntv.tv_sec - user_last_check_time.tv_sec < m_cfg._user_check_intv)
     {
         return;
     }
@@ -1167,8 +1167,7 @@ void CMCDProc::DispatchServiceTimeout()
     timeval ntv;
     gettimeofday(&ntv, NULL);
 
-    //check every 15 seconds
-    if (ntv.tv_sec - last_check_time.tv_sec < 15)
+    if (ntv.tv_sec - last_check_time.tv_sec < m_cfg._service_check_intv)
     {
         return;
     }

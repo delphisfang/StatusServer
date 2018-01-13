@@ -1377,6 +1377,7 @@ long long CAppConfig::getDefaultQueueTimeout(string appID)
     return (long long)queue_timeout;
 }
 
+//允许设置为0
 int CAppConfig::getMaxConvNum(string appID)
 {
     int max_conv_num = -1;
@@ -1599,5 +1600,10 @@ void CAppConfig::getOnlineServiceNumJson(string appID, Json::Value &data)
             data[raw_tag]   = it->second;
         }
     }
+}
+
+void CAppConfig::getUserNumJson(Json::Value &data)
+{
+    data = (int)_userlist.size();
 }
 

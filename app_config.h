@@ -187,6 +187,7 @@ public:
     void getTagHighPriQueueJson(string appID, Json::Value &data);
     void getTagNormalQueueJson(string appID, Json::Value &data);
     void getOnlineServiceNumJson(string appID, Json::Value &data);
+    void getUserNumJson(Json::Value &data);
     
 private:
     static CAppConfig *m_instance;

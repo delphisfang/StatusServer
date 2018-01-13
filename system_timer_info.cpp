@@ -46,7 +46,7 @@ int YiBotOutTimer::on_yibot_timeout()
         m_appID  = getappID(m_userID);
         LogTrace("[yibot_timeout] appID: %s, userID: %s", m_appID.c_str(), m_userID.c_str());
 
-        SessionQueue* pSessQueue = NULL;
+        SessionQueue *pSessQueue = NULL;
         DO_FAIL(CAppConfig::Instance()->GetSessionQueue(m_appID, pSessQueue));
         
         //get session
@@ -110,7 +110,7 @@ int UserOutTimer::on_user_timeout()
     LogTrace("Num of timeout users: %d", m_userList.size());
 
     set<string>::iterator it;
-    for (it = m_userList.begin(); it != m_userList.end(); it++)
+    for (it = m_userList.begin(); it != m_userList.end(); ++it)
     {
         LogTrace("Goto delete timeout user[%s].", (*it).c_str());
         

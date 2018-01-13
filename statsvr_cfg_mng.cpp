@@ -123,10 +123,14 @@ int CStatSvrCfgMng::loadConfig()
     _yibot_time_gap   = GetDefault(page, "root\\yibot_time_gap", 10000000);
     _ccd_time_gap     = GetDefault(page, "root\\ccd_time_gap", 10);
     web_conf_file     = GetDefault(page, "root\\web_conf_file", "web_config");
+
+    _user_check_intv    = GetDefault(page, "root\\user_check_intv", 30); //30 seconds
+    _service_check_intv = GetDefault(page, "root\\service_check_intv", 30); //30 seconds
     
     LogTrace("yibot_time_gap: %d, user_time_gap: %d, service_time_gap: %d, queue_rate: %d", 
                 _yibot_time_gap, _user_time_gap, _service_time_gap, _queue_rate);
-    LogTrace("ccd_time_gap: %d", _ccd_time_gap);
+    LogTrace("ccd_time_gap: %d, user_check_intv: %d, service_check_intv: %d", 
+                _ccd_time_gap, _user_check_intv, _service_check_intv);
     
     LoadCacheConfig(page);
     return 0;
