@@ -60,6 +60,9 @@ namespace statsvr
         ~DebugServiceTimer();
 
         int do_next_step(string& req_data);
+        int on_get_service(Json::Value &data);
+        int on_check_fix_service(Json::Value &data, bool fix);
+        int on_delete_service(Json::Value &data);
         int on_debug_service();
 
         string m_debug_op;

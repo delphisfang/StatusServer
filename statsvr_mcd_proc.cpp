@@ -703,7 +703,11 @@ int32_t CMCDProc::HandleRequest(const char *data, unsigned data_len,
         case DEBUG_USER:
             ti = new DebugUserTimer(this, msg_seq, ccd_time, str_client_ip, flow, m_cfg._time_out);
             break;
-        
+
+        case DEBUG_SERV:
+            ti = new DebugServiceTimer(this, msg_seq, ccd_time, str_client_ip, flow, m_cfg._time_out);
+            break;
+            
         default:
             LogError("Unknown cmd[%d] from IP[%s]!", cmd, str_client_ip.c_str());
             Json::Value resp;

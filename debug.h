@@ -121,6 +121,7 @@
 #define BUSY ("busy")
 #define DEF_SERV_STATUS (OFFLINE)
 #define SUB_LIXIAN ("离线")
+#define SUB_ZAIXIAN ("在线")
 
 /* session fields */
 #define USER_ID ("userID")

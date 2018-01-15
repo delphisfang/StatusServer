@@ -1267,18 +1267,17 @@ int CTimerInfo::DeleteServiceDeep(string app_servID)
 
 int CTimerInfo::CheckFixService(string app_servID, bool fix)
 {
-    //检查userList是否存在
-    //检查tags是否存在
-    //检查tagServiceHeap里是否有自己
-    //检查maxUserNum是否等于配置
-    //检查status是否符合预期
-
+    int ret = 0;
+    
     ServiceInfo serv;
-    DO_FAIL(mGetService(app_servID, serv));
+    if (mGetService(app_servID, serv))
+    {
+        return -1;
+    }
 
     string appID = getappID(app_servID);
-    bool changed = false;
 
+    //check: userList是否存在
     set<string> del_user_list;
     set<string>::iterator it;
     UserInfo user;
@@ -1287,20 +1286,43 @@ int CTimerInfo::CheckFixService(string app_servID, bool fix)
         string app_userID = appID + "_" + (*it);
         if (mGetUser(app_userID, user))
         {
+            ret = -2;
             del_user_list.insert(*it);
         }
     }
-    for (it = del_user_list.begin(); it != del_user_list.end(); ++it)
+
+    //fix: 修复userList
+    if (0 != ret && fix)
     {
-        serv.delete_user(*it);
-        changed = true;
-    }
-    if (true == changed)
-    {
+        for (it = del_user_list.begin(); it != del_user_list.end(); ++it)
+        {
+            serv.delete_user(*it);
+        }
         UpdateService(app_servID, serv);
+        LogTrace("Fix service[%s]: clear wrong user", app_servID.c_str());
+    }
+
+    //check: subStatus和status不匹配
+    if (OFFLINE == serv.status && SUB_ZAIXIAN == serv.subStatus)
+    {
+        ret = -3;
+        //fix: 修复subStatus
+        if (fix)
+        {
+            serv.subStatus = SUB_LIXIAN;
+            UpdateService(app_servID, serv);
+            LogTrace("Fix service[%s]: repair subStatus", app_servID.c_str());
+        }
     }
     
-    return SS_OK;
+    #if 0
+    //检查tags是否存在
+    //检查tagServiceHeap里是否有自己
+    //检查maxUserNum是否等于配置
+    //检查status是否符合预期
+    #endif
+    
+    return ret;
 }
 
 int CTimerInfo::UpdateUserSession(string appID, string app_userID, Session *sess, int is_warn)
