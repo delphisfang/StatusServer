@@ -65,13 +65,12 @@ namespace statsvr
 
         ECHO = 41,
 
-        #ifdef _STATSVR_DEBUG_
+        //#ifdef _STATSVR_DEBUG_
         DEBUG_USER = 101,
         DEBUG_SERV = 102,
         DEBUG_SESS = 103,
         DEBUG_QUEUE = 104,
-        #endif
-        
+        //#endif
     };
 
     class CTimerInfo;
