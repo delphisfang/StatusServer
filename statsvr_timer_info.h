@@ -87,6 +87,7 @@ namespace statsvr
 
         virtual int  do_next_step(string& req_data)=0;
         virtual int  init(string req_data, int datalen);
+        virtual int  debug_init(string req_data);
         virtual int  on_error();
         virtual int  on_stat();
         virtual int  on_admin_error();
@@ -157,13 +158,20 @@ namespace statsvr
         int AddUser(string app_userID, const UserInfo &user);
         int UpdateUser(string app_userID, const UserInfo &user);
         int DeleteUser(string app_userID);
+        int DeleteUserDeep(string app_userID);
+        int CheckUser(string app_userID);
+            
         int AddService(string appID, string app_servID, ServiceInfo &serv);
         int UpdateService(string app_servID, const ServiceInfo &serv);
         int DeleteService(string app_servID);
+        int DeleteServiceDeep(string app_servID);
+        int CheckService(string app_servID);
+        
         int UpdateUserSession(string appID, string app_userID, Session *sess, int is_warn = 0);
         int UpdateSessionNotified(const string &appID, const string &app_userID);
         int DeleteUserSession(string appID, string app_userID);
         int CreateUserSession(string appID, string app_userID, Session *sess, long long gap_warn, long long gap_expire);
+
         int AddTagOnlineServNum(string appID, const ServiceInfo &serv);
         int DelTagOnlineServNum(string appID, const ServiceInfo &serv);
 

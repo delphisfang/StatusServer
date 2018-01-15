@@ -283,6 +283,7 @@ int CAppConfig::UpdateAppConf(const Json::Value &config_req, string &err_msg)
         assert(pTagHighPriQueues != NULL);
         assert(pSessQueue != NULL);
 
+        real_conf["tags"].clear();
         //add new tag datastructs
         string tags = "";
         //allow tags be empty

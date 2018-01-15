@@ -68,7 +68,6 @@ namespace statsvr
         string sessionID;
         string lastServiceID;
         string priority;
-        //string userInfo;
         unsigned queuePriority;
         string channel;
         string extends;
@@ -79,7 +78,6 @@ namespace statsvr
         ServiceInfo();
         ~ServiceInfo();
         ServiceInfo(const string& strServiceInfo, unsigned dft_user_num);
-
 
         void parse_tags(const Json::Value &value);
         void parse_userList(const Json::Value &value);
@@ -453,7 +451,6 @@ namespace statsvr
                 }
                 else            //from queue tail
                 {
-                    
                     if (0 == uq->get_last(temp_userID, temp_expire))
                     {
                         if (false == found || temp_expire > expire)
