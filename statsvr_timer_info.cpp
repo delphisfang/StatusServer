@@ -1194,8 +1194,10 @@ int CTimerInfo::DeleteServiceDeep(string app_servID)
     {
         string appID = getappID(app_servID);
 
+        //更新tagServiceHeap
         CAppConfig::Instance()->DelServiceFromTags(appID, serv);
 
+        //更新onlineServiceNum
         //DelTagOnlineServNum(appID, serv);
     }
 

@@ -38,27 +38,45 @@ int DebugUserTimer::do_next_step(string& req_data)
 int DebugUserTimer::on_debug_user()
 {
     Json::Value data = Json::objectValue;
-    
-    if ("get" == m_debug_op)
-    {
-        if (0 == mGetUser(m_userID, m_userInfo))
-        {
-            Json::Value userJson;
-            m_userInfo.toJson(userJson);
-            data["userInfo"] = userJson;
-        }
-        else
-        {
-            data["userInfo"] = Json::objectValue;
-        }
-    }
-    
-    if ("delete" == m_debug_op)
-    {
-        //不判断user的存在性，强制删除
-        DO_FAIL(DeleteUserDeep(m_userID));
-    }
 
+    set<string>::iterator it;
+    for (it = m_userID_list.begin(); it != m_userID_list.end(); ++it)
+    {
+        m_userID = (*it);
+
+        //get
+        if ("get" == m_debug_op)
+        {
+            if (0 == mGetUser(m_userID, m_userInfo))
+            {
+                Json::Value userJson;
+                m_userInfo.toJson(userJson);
+
+                if (0 == get_user_session(m_appID, m_userID, &m_session))
+                {
+                    construct_user_json(m_userInfo, m_session, userJson);
+                }
+                else
+                {
+                    userJson["session"] = Json::objectValue;
+                }
+
+                data["userInfo"].append(userJson);
+            }
+            else
+            {
+                data["userInfo"].append(Json::objectValue);
+            }
+        }
+
+        //delete
+        if ("delete" == m_debug_op)
+        {
+            //不判断user的存在性，强制删除
+            DO_FAIL(DeleteUserDeep(m_userID));
+        }
+    }
+    
     return on_send_reply(data);
 }
 

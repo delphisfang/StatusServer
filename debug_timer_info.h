@@ -40,6 +40,7 @@ namespace statsvr
 
         string m_debug_op;
         UserInfo m_userInfo;
+        Session m_session;
     };
 
     class DebugServiceTimer: public CTimerInfo
