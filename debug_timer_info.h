@@ -36,6 +36,9 @@ namespace statsvr
         ~DebugUserTimer();
 
         int do_next_step(string& req_data);
+        int on_get_user(Json::Value &data);
+        int on_check_fix_user(Json::Value &data, bool fix);
+        int on_delete_user(Json::Value &data);
         int on_debug_user();
 
         string m_debug_op;

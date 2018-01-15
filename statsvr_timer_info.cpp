@@ -1139,29 +1139,87 @@ int CTimerInfo::DeleteUserDeep(string app_userID)
 }
 
 
-int CTimerInfo::CheckUser(string app_userID)
+int CTimerInfo::CheckFixUser(string app_userID, bool fix)
 {
-    //检查session是否存在
-    //检查status是否符合预期
-
-    //检查session.userID是否自己
-    //检查session.serviceID是否存在
-    //检查session.<cpIP,cpPort>是否等于user.<cpIP,cpPort>
-    //检查session.atime是否等于user.atime
-
-    //检查tag是否存在
-    //检查排队队列里是否有用户
-
-    /*string appID = getappID(app_userID);
+    string appID      = getappID(app_userID);
+    string raw_userID = delappID(app_userID);
     
     UserInfo user;
-    mGetUser(app_userID, user);
-    
+    if (mGetUser(app_userID, user))
+    {
+        return -1;
+    }
+
+    //check: session是否存在
     Session sess;
-    get_user_session(appID, app_userID, &sess);
-    */
+    if (get_user_session(appID, app_userID, &sess))
+    {
+        //fix: 创建session
+        if (fix)
+        {
+            sess.sessionID = gen_sessionID(app_userID);
+            sess.userID    = raw_userID;
+            sess.cpIP      = user.cpIP;
+            sess.cpPort    = user.cpPort;
+            sess.atime     = sess.btime = GetCurTimeStamp();
+            sess.serviceID = "";
+            sess.notified  = 0;
+            CreateUserSession(appID, app_userID, &sess, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT);
+            
+            user.sessionID = sess.sessionID;
+            user.atime     = sess.atime;
+            user.status    = IN_YIBOT;
+            UpdateUser(app_userID, user);
+            LogTrace("Fix user[%s]: create session.", app_userID.c_str());
+        }
+        return -2;
+    }
+
+    if ("" != sess.serviceID)
+    {
+        //check: serviceID是否存在
+        string app_servID = appID + "_" + sess.serviceID;
+        ServiceInfo serv;
+        if (mGetService(app_servID, serv))
+        {
+            //fix: 抹去serviceID
+            if (fix)
+            {
+                sess.serviceID = "";
+                UpdateUserSession(appID, app_userID, &sess, 0);
+                user.status    = IN_YIBOT;
+                UpdateUser(app_userID, user);
+                LogTrace("Fix user[%s]: clear wrong serviceID[%s].", app_userID.c_str(), app_servID.c_str());
+            }
+            return -3;
+        }
+
+        //check: service.userList中是否有自己
+        if (serv.find_user(raw_userID))
+        {
+            //fix: 抹去serviceID
+            if (fix)
+            {
+                sess.serviceID = "";
+                UpdateUserSession(appID, app_userID, &sess, 0);
+                user.status    = IN_YIBOT;
+                UpdateUser(app_userID, user);
+                LogTrace("Fix user[%s]: disconnect with service[%s].", app_userID.c_str(), app_servID.c_str());
+            }
+            return -4;
+        }
+    }
+
+    #if 0
+    //检查status是否符合预期
+    //检查session.userID是否自己
+    //检查session.<cpIP,cpPort>是否等于user.<cpIP,cpPort>
+    //检查session.atime与user.atime
+    //检查tag是否存在
+    //检查排队队列里是否有用户
+    #endif
     
-    return SS_OK;
+    return 0;
 }
 
 
@@ -1207,7 +1265,7 @@ int CTimerInfo::DeleteServiceDeep(string app_servID)
     return SS_OK;
 }
 
-int CTimerInfo::CheckService(string app_servID)
+int CTimerInfo::CheckFixService(string app_servID, bool fix)
 {
     //检查userList是否存在
     //检查tags是否存在

@@ -159,13 +159,13 @@ namespace statsvr
         int UpdateUser(string app_userID, const UserInfo &user);
         int DeleteUser(string app_userID);
         int DeleteUserDeep(string app_userID);
-        int CheckUser(string app_userID);
+        int CheckFixUser(string app_userID, bool fix);
             
         int AddService(string appID, string app_servID, ServiceInfo &serv);
         int UpdateService(string app_servID, const ServiceInfo &serv);
         int DeleteService(string app_servID);
         int DeleteServiceDeep(string app_servID);
-        int CheckService(string app_servID);
+        int CheckFixService(string app_servID, bool fix);
         
         int UpdateUserSession(string appID, string app_userID, Session *sess, int is_warn = 0);
         int UpdateSessionNotified(const string &appID, const string &app_userID);
