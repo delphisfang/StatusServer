@@ -1521,6 +1521,17 @@ void CAppConfig::getSessionQueueJson(string appID, Json::Value &data)
 
             data.append(sessJson);
         }
+        for (it2 = pSessQueue->_yibot_list.begin(); it2 != pSessQueue->_yibot_list.end(); it2++)
+        {
+            sessTimer = (*it2);
+            sessJson["warn_time"]   = sessTimer.warn_time;
+            sessJson["expire_time"] = sessTimer.expire_time;
+            
+            sess = sessTimer.session;
+            sess.toJson(sessJson);
+
+            data.append(sessJson);
+        }
     }
 }
 

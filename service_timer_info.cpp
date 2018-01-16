@@ -498,11 +498,11 @@ int ChangeServiceTimer::on_send_change_success()
     sessData["userID"]        = m_raw_userID;
     sessData["serviceID"]     = m_raw_changeServiceID;
     sessData["sessionID"]     = m_sessionID;
-    //sessData["channel"]       = m_channel;
+    sessData["channel"]       = m_userInfo.channel;
     sessData["serviceName"]   = m_dst_serviceInfo.serviceName;
     sessData["serviceAvatar"] = m_dst_serviceInfo.serviceAvatar;
     sessData["tag"]           = m_userInfo.tag;
-        
+    
     //解析extends
     on_parse_extends(m_userInfo.extends, sessData);
 
@@ -543,7 +543,7 @@ int ServicePullNextTimer::on_send_connect_success()
     sessData["userID"]    = m_raw_userID;
     sessData["serviceID"] = m_raw_serviceID;
     sessData["sessionID"] = m_sessionID;
-    //sessData["channel"]   = m_userInfo.channel;
+    sessData["channel"]   = m_userInfo.channel;
     sessData["tag"]       = m_userInfo.tag;
     on_parse_extends(m_userInfo.extends, sessData);
 
