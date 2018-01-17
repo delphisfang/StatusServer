@@ -14,6 +14,16 @@ int EchoTimer::do_next_step(string& req_data)
         ON_ERROR_PARSE_PACKET();
         return -1;
     }
+
+    Json::Reader reader;
+    Json::Value js_root;
+    if (!reader.parse(req_data, js_root) || !js_root.isObject() || !js_root["data"].isObject())
+    {
+        LogError("Failed to parse req_data: %s!", req_data.c_str());
+        return -1;
+    }
+
+    m_echo_type = get_value_str(js_root["data"], "type");
     
     if (on_echo())
     {
@@ -25,31 +35,40 @@ int EchoTimer::do_next_step(string& req_data)
     }
 }
 
-/*
-input: m_appID
-*/
 int EchoTimer::on_echo()
 {
-    //遍历用户列表、坐席列表
-    Json::Value userListJson, servListJson, sessQueueJson, normalQueueJson, highpriQueueJson, onlineServNumJson;
+    Json::Value userListJson, servListJson, sessQueueJson, normalQueueJson, highpriQueueJson;
+    //Json::Value onlineServNumJson;
     Json::Value data;
 
-    LogTrace("Get appID[%s] DataStructs...", m_appID.c_str());
-    
-    CAppConfig::Instance()->getUserListJson(m_appID, userListJson);
-    CAppConfig::Instance()->getServiceListJson(m_appID, servListJson);
-    CAppConfig::Instance()->getSessionQueueJson(m_appID, sessQueueJson);
-    CAppConfig::Instance()->getTagNormalQueueJson(m_appID, normalQueueJson);
-    CAppConfig::Instance()->getTagHighPriQueueJson(m_appID, highpriQueueJson);
-    CAppConfig::Instance()->getOnlineServiceNumJson(m_appID, onlineServNumJson);
+    if (string::npos != m_echo_type.find("user"))
+    {
+        CAppConfig::Instance()->getUserListJson(m_appID, userListJson);
+        data["userList"] = userListJson;
+    }
 
-    data["userList"] = userListJson;
-    data["servList"] = servListJson;
-    data["sessionList"] = sessQueueJson;
-    data["normalQueue"] = normalQueueJson;
-    data["highpriQueue"] = highpriQueueJson;
-    data["onlineServNum"] = onlineServNumJson;
-    
+    if (string::npos != m_echo_type.find("service"))
+    {
+        CAppConfig::Instance()->getServiceListJson(m_appID, servListJson);
+        data["servList"] = servListJson;
+    }
+
+    if (string::npos != m_echo_type.find("session"))
+    {
+        CAppConfig::Instance()->getSessionQueueJson(m_appID, sessQueueJson);
+        data["sessionList"] = sessQueueJson;
+    }
+
+    if (string::npos != m_echo_type.find("queue"))
+    {
+        CAppConfig::Instance()->getTagNormalQueueJson(m_appID, normalQueueJson);
+        CAppConfig::Instance()->getTagHighPriQueueJson(m_appID, highpriQueueJson);
+        data["normalQueue"] = normalQueueJson;
+        data["highpriQueue"] = highpriQueueJson;
+    }
+
+    //CAppConfig::Instance()->getOnlineServiceNumJson(m_appID, onlineServNumJson);
+    //data["onlineServNum"] = onlineServNumJson;
     return on_send_reply(data);
 }
 

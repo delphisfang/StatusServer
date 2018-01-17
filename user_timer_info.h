@@ -35,6 +35,8 @@ namespace statsvr
 
         int do_next_step(string& req_data);
         int on_echo();
+
+        string m_echo_type;
     };
 
     class GetUserInfoTimer: public CTimerInfo
