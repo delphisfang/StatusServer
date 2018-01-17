@@ -35,6 +35,14 @@ int DebugUserTimer::do_next_step(string& req_data)
     }
 }
 
+int DebugUserTimer::on_get_userlist(Json::Value &data)
+{
+    Json::Value userIDList;
+    userIDList.resize(0);
+    CAppConfig::Instance()->getUserIDListJson(m_appID, userIDList);
+    data["userIDList"] = userIDList;
+}
+
 int DebugUserTimer::on_get_user(Json::Value &data)
 {
     if (0 == mGetUser(m_userID, m_userInfo))
@@ -103,12 +111,19 @@ int DebugUserTimer::on_debug_user()
 {
     Json::Value data = Json::objectValue;
 
+    //get userid list
+    if ("getlist" == m_debug_op)
+    {
+        on_get_userlist(data);
+        return on_send_reply(data);
+    }
+
     set<string>::iterator it;
     for (it = m_userID_list.begin(); it != m_userID_list.end(); ++it)
     {
         m_userID = (*it);
         m_raw_userID = delappID(m_userID);
-        
+
         //get
         if ("get" == m_debug_op)
         {
@@ -176,6 +191,14 @@ int DebugServiceTimer::do_next_step(string& req_data)
     }
 }
 
+int DebugServiceTimer::on_get_servicelist(Json::Value &data)
+{
+    Json::Value servIDList;
+    servIDList.resize(0);
+    CAppConfig::Instance()->getServiceIDListJson(m_appID, servIDList);
+    data["serviceIDList"] = servIDList;
+}
+
 int DebugServiceTimer::on_get_service(Json::Value &data)
 {
     if (0 == mGetService(m_serviceID, m_serviceInfo))
@@ -231,6 +254,13 @@ int DebugServiceTimer::on_debug_service()
 {
     Json::Value data = Json::objectValue;
 
+    //get servid list
+    if ("getlist" == m_debug_op)
+    {
+        on_get_servicelist(data);
+        return on_send_reply(data);
+    }
+    
     set<string>::iterator it;
     for (it = m_serviceID_list.begin(); it != m_serviceID_list.end(); ++it)
     {

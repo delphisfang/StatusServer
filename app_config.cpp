@@ -1453,6 +1453,18 @@ string CAppConfig::getQueueUpperLimitHint(string appID)
     return hint;
 }
 
+void CAppConfig::getUserIDListJson(string appID, Json::Value &userIDList)
+{
+    userIDList.resize(0);
+    map<string, UserInfo>::iterator it;
+    for (it = _userlist.begin(); it != _userlist.end(); ++it)
+    {
+        if (getappID(it->first) == appID)
+        {
+            userIDList.append(it->second.userID);
+        }
+    }
+}
 
 void CAppConfig::getUserListJson(string appID, Json::Value &userList)
 {
@@ -1470,6 +1482,20 @@ void CAppConfig::getUserListJson(string appID, Json::Value &userList)
             user = it->second;
             user.toJson(userJson);
             userList.append(userJson);
+        }
+    }
+}
+
+void CAppConfig::getServiceIDListJson(string appID, Json::Value &servIDList)
+{
+    Json::Value servJson;
+    servIDList.resize(0);
+    map<string, ServiceInfo>::iterator it;
+    for (it = _servicelist.begin(); it != _servicelist.end(); ++it)
+    {
+        if (getappID(it->first) == appID)
+        {
+            servIDList.append(it->second.serviceID);
         }
     }
 }
