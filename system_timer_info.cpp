@@ -230,7 +230,7 @@ int ServiceOutTimer::on_service_timeout()
         ServiceInfo serv;
         DO_FAIL(mGetService(servID, serv));
         //若service已经offline，无需再强迫下线
-        if (OFFLINE == serv.status)
+        if (OFFLINE == serv.status && SUB_LIXIAN == serv.subStatus)
         {
             LogTrace("service[%s] is offline already, no need to force-offline.", servID.c_str());
             continue;

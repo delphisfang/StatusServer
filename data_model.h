@@ -57,6 +57,7 @@ namespace statsvr
         
         void toJson(Json::Value &value) const;
         string toString() const;
+        int set_field(const string &field, const string &value);
         
         string userID;
         string cpIP;
@@ -68,7 +69,6 @@ namespace statsvr
         string sessionID;
         string lastServiceID;
         string priority;
-        //string userInfo;
         unsigned queuePriority;
         string channel;
         string extends;
@@ -79,7 +79,6 @@ namespace statsvr
         ServiceInfo();
         ~ServiceInfo();
         ServiceInfo(const string& strServiceInfo, unsigned dft_user_num);
-
 
         void parse_tags(const Json::Value &value);
         void parse_userList(const Json::Value &value);
@@ -94,6 +93,7 @@ namespace statsvr
         bool is_available() const;
         bool is_busy() const;
         bool check_tag_exist(const string &raw_tag) const;
+        int set_field(const string &field, const string &value);
         
         string serviceID;
         string status;
@@ -453,7 +453,6 @@ namespace statsvr
                 }
                 else            //from queue tail
                 {
-                    
                     if (0 == uq->get_last(temp_userID, temp_expire))
                     {
                         if (false == found || temp_expire > expire)

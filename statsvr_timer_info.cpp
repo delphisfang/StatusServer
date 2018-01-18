@@ -198,6 +198,29 @@ int CTimerInfo::init(string req_data, int datalen)
     return 0;
 }
 
+int CTimerInfo::debug_init(string req_data)
+{
+    Json::Reader reader;
+    Json::Value js_root;
+    
+    if (!reader.parse(req_data, js_root))
+    {
+        LogError("Failed to parse req_data: %s!", req_data.c_str());
+        return -1;
+    }
+
+    m_cmd = get_value_str(js_root, "method");
+    get_value_str_safe(js_root["appID"], m_appID);
+    m_seq = get_value_uint(js_root, "innerSeq");
+    
+    if (js_root["data"].isNull() || !js_root["data"].isObject())
+    {
+        return 0;
+    }
+    Json::Value js_data = js_root["data"];
+
+}
+
 int CTimerInfo::on_error()
 {
     Json::Value error_rsp;
@@ -1060,13 +1083,152 @@ int CTimerInfo::DeleteUser(string app_userID)
     return SS_OK;
 }
 
+int CTimerInfo::DeleteUserDeep(string app_userID)
+{
+    int ret = 0;
+
+    LogTrace("Goto DeleteUserDeep(user[%s])...", app_userID.c_str());
+    
+    //从service.userList删除user
+    string appID = getappID(app_userID);
+    Session sess;
+    ret = get_user_session(appID, app_userID, &sess);
+    if (0 == ret && "" != sess.serviceID)
+    {
+        string app_servID = appID + "_" + sess.serviceID;
+        ServiceInfo serv;
+        if (0 == mGetService(app_servID, serv))
+        {
+            string raw_userID = delappID(app_userID);
+            serv.delete_user(raw_userID);
+            UpdateService(app_servID, serv);
+            LogTrace("Delete user in Service[%s].", app_servID.c_str());
+        }
+    }
+    
+    //删除user session
+    DeleteUserSession(appID, app_userID);
+    LogTrace("Delete user session.");
+
+    //从排队队列中删除user
+    UserInfo user;
+    if (0 == mGetUser(app_userID, user))
+    {
+        string raw_tag = user.tag;
+        
+        UserQueue *uq = NULL;
+        if (0 == get_highpri_queue(appID, raw_tag, &uq) && NULL != uq)
+        {
+            uq->delete_user(app_userID);
+            KV_set_queue(appID, raw_tag, true);
+            LogTrace("Delete user in HighPriQueue[%s].", raw_tag.c_str());
+        }
+        if (0 == get_normal_queue(appID, raw_tag, &uq) && NULL != uq)
+        {
+            uq->delete_user(app_userID);
+            KV_set_queue(appID, raw_tag, false);
+            LogTrace("Delete user in NormalQueue[%s].", raw_tag.c_str());
+        }
+    }
+
+    //最后删除user
+    DeleteUser(app_userID);
+    LogTrace("Delete user itself.");
+    
+    return SS_OK;
+}
+
+
+int CTimerInfo::CheckFixUser(string app_userID, bool fix)
+{
+    string appID      = getappID(app_userID);
+    string raw_userID = delappID(app_userID);
+    
+    UserInfo user;
+    if (mGetUser(app_userID, user))
+    {
+        return -1;
+    }
+
+    //check: session是否存在
+    Session sess;
+    if (get_user_session(appID, app_userID, &sess))
+    {
+        //fix: 创建session
+        if (fix)
+        {
+            sess.sessionID = gen_sessionID(app_userID);
+            sess.userID    = raw_userID;
+            sess.cpIP      = user.cpIP;
+            sess.cpPort    = user.cpPort;
+            sess.atime     = sess.btime = GetCurTimeStamp();
+            sess.serviceID = "";
+            sess.notified  = 0;
+            CreateUserSession(appID, app_userID, &sess, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT);
+            
+            user.sessionID = sess.sessionID;
+            user.atime     = sess.atime;
+            user.status    = IN_YIBOT;
+            UpdateUser(app_userID, user);
+            LogTrace("Fix user[%s]: create session.", app_userID.c_str());
+        }
+        return -2;
+    }
+
+    if ("" != sess.serviceID)
+    {
+        //check: serviceID是否存在
+        string app_servID = appID + "_" + sess.serviceID;
+        ServiceInfo serv;
+        if (mGetService(app_servID, serv))
+        {
+            //fix: 抹去serviceID
+            if (fix)
+            {
+                sess.serviceID = "";
+                UpdateUserSession(appID, app_userID, &sess, 0);
+                user.status    = IN_YIBOT;
+                UpdateUser(app_userID, user);
+                LogTrace("Fix user[%s]: clear wrong serviceID[%s].", app_userID.c_str(), app_servID.c_str());
+            }
+            return -3;
+        }
+
+        //check: service.userList中是否有自己
+        if (serv.find_user(raw_userID))
+        {
+            //fix: 抹去serviceID
+            if (fix)
+            {
+                sess.serviceID = "";
+                UpdateUserSession(appID, app_userID, &sess, 0);
+                user.status    = IN_YIBOT;
+                UpdateUser(app_userID, user);
+                LogTrace("Fix user[%s]: disconnect with service[%s].", app_userID.c_str(), app_servID.c_str());
+            }
+            return -4;
+        }
+    }
+
+    #if 0
+    //检查status是否符合预期
+    //检查session.userID是否自己
+    //检查session.<cpIP,cpPort>是否等于user.<cpIP,cpPort>
+    //检查session.atime与user.atime
+    //检查tag是否存在
+    //检查排队队列里是否有用户
+    #endif
+    
+    return 0;
+}
+
+
 int CTimerInfo::AddService(string appID, string app_servID, ServiceInfo &serv)
 {
     SET_SERV(CAppConfig::Instance()->AddService(app_servID, serv));
     SET_FAIL(CAppConfig::Instance()->AddService2Tags(appID, serv), "service heap");
     DO_FAIL(KV_set_service(app_servID, serv, false));
     return SS_OK;
-
 }
 
 int CTimerInfo::UpdateService(string app_servID, const ServiceInfo &serv)
@@ -1081,6 +1243,86 @@ int CTimerInfo::DeleteService(string app_servID)
     SET_SERV(CAppConfig::Instance()->DelService(app_servID));
     DO_FAIL(KV_del_service(app_servID));
     return SS_OK;
+}
+
+int CTimerInfo::DeleteServiceDeep(string app_servID)
+{
+    ServiceInfo serv;
+    if (0 == mGetService(app_servID, serv))
+    {
+        string appID = getappID(app_servID);
+
+        //更新tagServiceHeap
+        CAppConfig::Instance()->DelServiceFromTags(appID, serv);
+
+        //更新onlineServiceNum
+        //DelTagOnlineServNum(appID, serv);
+    }
+
+    //最后删除service
+    DeleteService(app_servID);
+    
+    return SS_OK;
+}
+
+int CTimerInfo::CheckFixService(string app_servID, bool fix)
+{
+    int ret = 0;
+    
+    ServiceInfo serv;
+    if (mGetService(app_servID, serv))
+    {
+        return -1;
+    }
+
+    string appID = getappID(app_servID);
+
+    //check: userList是否存在
+    set<string> del_user_list;
+    set<string>::iterator it;
+    UserInfo user;
+    for (it = serv.userList.begin(); it != serv.userList.end(); ++it)
+    {
+        string app_userID = appID + "_" + (*it);
+        if (mGetUser(app_userID, user))
+        {
+            ret = -2;
+            del_user_list.insert(*it);
+        }
+    }
+
+    //fix: 修复userList
+    if (0 != ret && fix)
+    {
+        for (it = del_user_list.begin(); it != del_user_list.end(); ++it)
+        {
+            serv.delete_user(*it);
+        }
+        UpdateService(app_servID, serv);
+        LogTrace("Fix service[%s]: clear wrong user", app_servID.c_str());
+    }
+
+    //check: subStatus和status不匹配
+    if (OFFLINE == serv.status && SUB_LIXIAN != serv.subStatus)
+    {
+        ret = -3;
+        //fix: 修复subStatus
+        if (fix)
+        {
+            serv.subStatus = SUB_LIXIAN;
+            UpdateService(app_servID, serv);
+            LogTrace("Fix service[%s]: repair subStatus", app_servID.c_str());
+        }
+    }
+    
+    #if 0
+    //检查tags是否存在
+    //检查tagServiceHeap里是否有自己
+    //检查maxUserNum是否等于配置
+    //检查status是否符合预期
+    #endif
+    
+    return ret;
 }
 
 int CTimerInfo::UpdateUserSession(string appID, string app_userID, Session *sess, int is_warn)

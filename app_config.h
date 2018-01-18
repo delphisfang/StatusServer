@@ -180,8 +180,10 @@ public:
     string getQueueTimeoutHint(string appID);
     string getQueueUpperLimitHint(string appID);
 
+    void getUserIDListJson(string appID, Json::Value &userIDList);
     void getUserListJson(string appID, Json::Value &userList);
-    void getServiceListJson(string appID, Json::Value &userList);
+    void getServiceIDListJson(string appID, Json::Value &servIDList);
+    void getServiceListJson(string appID, Json::Value &servList);
     void getSessionQueueJson(string appID, Json::Value &data);
     void getTagQueueJson(string appID, Json::Value &data, bool isHighPri);
     void getTagHighPriQueueJson(string appID, Json::Value &data);

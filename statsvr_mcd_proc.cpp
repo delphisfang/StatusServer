@@ -24,6 +24,7 @@
 #include "service_timer_info.h"
 #include "system_timer_info.h"
 #include "txf_timer_info.h"
+#include "debug_timer_info.h"
 
 #include "statsvr_kv.h"
 
@@ -346,12 +347,12 @@ int32_t CMCDProc::InitCmdMap()
 
     m_cmdMap["getAddrByID"] = GET_CP_ADDR;
 
-    #ifdef _STASVR_DEBUG_
+    //#ifdef _STATSVR_DEBUG_
     m_cmdMap["debugUser"]    = DEBUG_USER;
     m_cmdMap["debugService"] = DEBUG_SERV;
     m_cmdMap["debugSession"] = DEBUG_SESS;
     m_cmdMap["debugQueue"]   = DEBUG_QUEUE;
-    #endif
+    //#endif
     
     return 0;
 }
@@ -566,7 +567,7 @@ int32_t CMCDProc::HttpParseCmd(const char *data, unsigned data_len, string& outd
                 LogError("Invalid root[method]!");
                 return -1;
             }
-            cmd  = root["method"].asString();
+            cmd = root["method"].asString();
         }
         else
         {
@@ -575,7 +576,7 @@ int32_t CMCDProc::HttpParseCmd(const char *data, unsigned data_len, string& outd
                 LogError("Invalid root[cmd]!");
                 return -1;
             }
-            cmd  = root["cmd"].asString();
+            cmd = root["cmd"].asString();
         }
         LogWarn("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         LogWarn("==>method: %s", cmd.c_str());
@@ -606,7 +607,6 @@ int32_t CMCDProc::HttpParseCmd(const char *data, unsigned data_len, string& outd
     {
         return -1;
     }
-
     //LogDebug("==>identity: %s", identity.c_str());
     if ("admin" == identity)
     {
@@ -698,6 +698,14 @@ int32_t CMCDProc::HandleRequest(const char *data, unsigned data_len,
 
         case GET_CP_ADDR:
             ti = new TransferTimer(this, msg_seq, ccd_time, str_client_ip, flow, m_cfg._time_out);
+            break;
+
+        case DEBUG_USER:
+            ti = new DebugUserTimer(this, msg_seq, ccd_time, str_client_ip, flow, m_cfg._time_out);
+            break;
+
+        case DEBUG_SERV:
+            ti = new DebugServiceTimer(this, msg_seq, ccd_time, str_client_ip, flow, m_cfg._time_out);
             break;
             
         default:
