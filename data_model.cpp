@@ -398,6 +398,51 @@ bool ServiceInfo::check_tag_exist(const string &raw_tag) const
     return false;
 }
 
+int ServiceInfo::set_field(const string &field, const string &value)
+{
+    if ("status" == field)
+    {
+        status = value;
+        return 0;
+    }
+    if ("subStatus" == field)
+    {
+        subStatus = value;
+        return 0;
+    }
+    if ("maxUserNum" == field)
+    {
+        maxUserNum = atoi(value.c_str());
+        return 0;
+    }
+    if ("cpIP" == field)
+    {
+        cpIP = value;
+        return 0;
+    }
+    if ("cpPort" == field)
+    {
+        cpPort = atoi(value.c_str());
+        return 0;
+    }
+    if ("serviceName" == field)
+    {
+        serviceName = value;
+        return 0;
+    }
+    if ("serviceAvatar" == field)
+    {
+        serviceAvatar = value;
+        return 0;
+    }
+    if ("serviceID" == field)
+    {
+        status = value;
+        return 0;
+    }
+
+    return -1;
+}
 
 ServiceHeap::ServiceHeap()
 {

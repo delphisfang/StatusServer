@@ -180,7 +180,9 @@ int DebugServiceTimer::do_next_step(string& req_data)
     }
 
     m_debug_op = get_value_str(js_root["data"], "op");
-
+    m_field    = get_value_str(js_root["data"], "field");
+    m_value    = get_value_str(js_root["data"], "value");
+    
     if (on_debug_service())
     {
         return -1;
@@ -250,6 +252,32 @@ int DebugServiceTimer::on_delete_service(Json::Value &data)
     return 0;
 }
 
+int DebugServiceTimer::on_set_service(Json::Value &data)
+{
+    Json::Value servJson;
+    servJson["serviceID"] = m_raw_serviceID;
+    
+    if (mGetService(m_serviceID, m_serviceInfo))
+    {
+        servJson["msg"] = "no such service";
+    }
+    else if (m_serviceInfo.set_field(m_field, m_value))
+    {
+        servJson["msg"] = "no such field";
+    }
+    else if (UpdateService(m_serviceID, m_serviceInfo))
+    {
+        servJson["msg"] = "set fail";
+    }
+    else
+    {
+        servJson["msg"] = "OK";
+    }
+
+    data["setInfo"].append(servJson);
+    return 0;
+}
+
 int DebugServiceTimer::on_debug_service()
 {
     Json::Value data = Json::objectValue;
@@ -294,8 +322,15 @@ int DebugServiceTimer::on_debug_service()
             on_delete_service(data);
             continue;
         }
+
+        //set
+        if ("set" == m_debug_op)
+        {
+            on_set_service(data);
+            continue;
+        }
     }
-    
+
     return on_send_reply(data);
 }
 

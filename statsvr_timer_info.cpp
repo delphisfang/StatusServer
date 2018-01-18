@@ -1303,7 +1303,7 @@ int CTimerInfo::CheckFixService(string app_servID, bool fix)
     }
 
     //check: subStatus和status不匹配
-    if (OFFLINE == serv.status && SUB_ZAIXIAN == serv.subStatus)
+    if (OFFLINE == serv.status && SUB_LIXIAN != serv.subStatus)
     {
         ret = -3;
         //fix: 修复subStatus

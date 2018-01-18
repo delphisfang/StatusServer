@@ -65,9 +65,12 @@ namespace statsvr
         int on_get_service(Json::Value &data);
         int on_check_fix_service(Json::Value &data, bool fix);
         int on_delete_service(Json::Value &data);
+        int on_set_service(Json::Value &data);
         int on_debug_service();
 
         string m_debug_op;
+        string m_field;
+        string m_value;
         ServiceInfo m_serviceInfo;
     };
 
