@@ -40,9 +40,12 @@ namespace statsvr
         int on_get_user(Json::Value &data);
         int on_check_fix_user(Json::Value &data, bool fix);
         int on_delete_user(Json::Value &data);
+        int on_set_user(Json::Value &data);
         int on_debug_user();
 
         string m_debug_op;
+        string m_field;
+        string m_value;
         UserInfo m_userInfo;
         Session m_session;
     };

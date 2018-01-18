@@ -183,6 +183,62 @@ string UserInfo::toString() const
     return writer.write(value);
 }
 
+int UserInfo::set_field(const string &field, const string &value)
+{
+    if ("status" == field)
+    {
+        status = value;
+        return 0;
+    }
+    if ("tag" == field)
+    {
+        tag = value;
+        return 0;
+    }
+    if ("sessionID" == field)
+    {
+        sessionID = value;
+        return 0;
+    }
+    if ("lastServiceID" == field)
+    {
+        lastServiceID = value;
+        return 0;
+    }
+    if ("queuePriority" == field)
+    {
+        queuePriority = atoi(value.c_str());
+        return 0;
+    }
+    if ("priority" == field)
+    {
+        priority = value;
+        return 0;
+    }
+    if ("cpIP" == field)
+    {
+        cpIP = value;
+        return 0;
+    }
+    if ("cpPort" == field)
+    {
+        cpPort = atoi(value.c_str());
+        return 0;
+    }
+    if ("channel" == field)
+    {
+        channel = value;
+        return 0;
+    }
+    if ("extends" == field)
+    {
+        extends = value;
+        return 0;
+    }
+
+    return -1;
+}
+
 
 ServiceInfo::ServiceInfo()
 {
@@ -433,11 +489,6 @@ int ServiceInfo::set_field(const string &field, const string &value)
     if ("serviceAvatar" == field)
     {
         serviceAvatar = value;
-        return 0;
-    }
-    if ("serviceID" == field)
-    {
-        status = value;
         return 0;
     }
 

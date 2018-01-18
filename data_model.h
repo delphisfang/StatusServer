@@ -57,6 +57,7 @@ namespace statsvr
         
         void toJson(Json::Value &value) const;
         string toString() const;
+        int set_field(const string &field, const string &value);
         
         string userID;
         string cpIP;
@@ -92,7 +93,7 @@ namespace statsvr
         bool is_available() const;
         bool is_busy() const;
         bool check_tag_exist(const string &raw_tag) const;
-        int  set_field(const string &field, const string &value);
+        int set_field(const string &field, const string &value);
         
         string serviceID;
         string status;

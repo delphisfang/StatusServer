@@ -24,6 +24,8 @@ int DebugUserTimer::do_next_step(string& req_data)
     }
 
     m_debug_op = get_value_str(js_root["data"], "op");
+    m_field    = get_value_str(js_root["data"], "field");
+    m_value    = get_value_str(js_root["data"], "value");
 
     if (on_debug_user())
     {
@@ -107,6 +109,32 @@ int DebugUserTimer::on_delete_user(Json::Value &data)
     return 0;
 }
 
+int DebugUserTimer::on_set_user(Json::Value &data)
+{
+    Json::Value userJson;
+    userJson["userID"] = m_raw_userID;
+    
+    if (mGetUser(m_userID, m_userInfo))
+    {
+        userJson["msg"] = "no such user";
+    }
+    else if (m_userInfo.set_field(m_field, m_value))
+    {
+        userJson["msg"] = "no such field";
+    }
+    else if (UpdateUser(m_userID, m_userInfo))
+    {
+        userJson["msg"] = "set user fail";
+    }
+    else
+    {
+        userJson["msg"] = "OK";
+    }
+
+    data["setInfo"].append(userJson);
+    return 0;
+}
+
 int DebugUserTimer::on_debug_user()
 {
     Json::Value data = Json::objectValue;
@@ -149,6 +177,13 @@ int DebugUserTimer::on_debug_user()
         if ("delete" == m_debug_op)
         {
             on_delete_user(data);
+            continue;
+        }
+
+        //set
+        if ("set" == m_debug_op)
+        {
+            on_set_user(data);
             continue;
         }
     }
@@ -267,7 +302,7 @@ int DebugServiceTimer::on_set_service(Json::Value &data)
     }
     else if (UpdateService(m_serviceID, m_serviceInfo))
     {
-        servJson["msg"] = "set fail";
+        servJson["msg"] = "set service fail";
     }
     else
     {
