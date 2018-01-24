@@ -131,6 +131,7 @@ void ServiceLoginTimer::set_service_fields(ServiceInfo &serv)
     //do not change serv.userList
 }
 
+
 int ServiceLoginTimer::on_service_login()
 {
     ServiceInfo serv;
@@ -167,6 +168,8 @@ int ServiceLoginTimer::on_service_login()
             DO_FAIL(AddTagOnlineServNum(m_appID, serv));
             DO_FAIL(CAppConfig::Instance()->AddService2Tags(m_appID, serv));
             DO_FAIL(UpdateService(m_serviceID, serv));
+
+            on_update_addr(m_appID, "service", m_raw_serviceID, serv.cpIP, serv.cpPort);
         }
     }
     else //service first login, create and add new service

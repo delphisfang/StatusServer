@@ -54,7 +54,7 @@ int DebugUserTimer::on_get_user(Json::Value &data)
     
         if (0 == get_user_session(m_appID, m_userID, &m_session))
         {
-            construct_user_json(m_userInfo, m_session, userJson);
+            construct_user_json(m_appID, m_userID, m_userInfo, m_session, userJson, true);
         }
         else
         {

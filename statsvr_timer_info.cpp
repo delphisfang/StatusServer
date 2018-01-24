@@ -510,6 +510,36 @@ void CTimerInfo::on_parse_extends(const string &extends, Json::Value &data)
     }
 }
 
+int CTimerInfo::on_update_addr(const string &appID, const string &identity, const string &raw_id,
+                                const string &cpIP, const unsigned &cpPort)
+{
+    Json::Value addr;
+    addr["appID"]         = appID;
+    addr["identity"]      = identity;
+    if ("user" == identity)
+    {
+        addr["userID"] = raw_id;
+    }
+    else
+    {
+        addr["serviceID"] = raw_id;
+    }
+    addr["chatProxyIp"]   = cpIP;
+    addr["chatProxyPort"] = cpPort;
+
+    Json::Value addrList;
+    addrList.resize(0);
+    addrList.append(addr);
+
+    Json::Value data;
+    data["appID"]    = appID;
+    data["AddrList"] = addrList;
+
+    LogTrace("====> Update %s addr: %s", identity.c_str(), data.toStyledString().c_str());
+    on_send_request("updateAddr", m_proc->m_cfg._transfer_ip, m_proc->m_cfg._transfer_port, data);
+    return 0;
+}
+
 /***************** never use m_xxx in methods below, keep them stateless **************/
 
 string CTimerInfo::gen_sessionID(const string &app_userID)
@@ -522,7 +552,7 @@ int CTimerInfo::get_user_session(const string &appID, const string &app_userID, 
     if (NULL == sess)
         return SS_ERROR;
     
-    SessionQueue* pSessQueue = NULL;
+    SessionQueue *pSessQueue = NULL;
     Session temp;
     if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue)
         || pSessQueue->get(app_userID, temp))
@@ -540,7 +570,7 @@ int CTimerInfo::get_session_timer(const string &appID, const string &app_userID,
     if (NULL == st)
         return SS_ERROR;
     
-    SessionQueue* pSessQueue = NULL;
+    SessionQueue *pSessQueue = NULL;
     SessionTimer temp;
     if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue)
         || pSessQueue->get_sess_timer(app_userID, temp))
@@ -559,7 +589,7 @@ int CTimerInfo::update_user_session(const string &appID, const string &app_userI
     if (NULL == sess)
         return SS_ERROR;
     
-    SessionQueue* pSessQueue = NULL;
+    SessionQueue *pSessQueue = NULL;
     if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue)
         || pSessQueue->set(app_userID, sess, gap_warn, gap_expire, is_warn))
     {
@@ -572,7 +602,7 @@ int CTimerInfo::update_user_session(const string &appID, const string &app_userI
 
 int CTimerInfo::delete_user_session(const string &appID, const string &app_userID)
 {
-    SessionQueue* pSessQueue = NULL;
+    SessionQueue *pSessQueue = NULL;
     if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue)
         || pSessQueue->delete_session(app_userID))
     {
@@ -588,7 +618,7 @@ int CTimerInfo::create_user_session(const string &appID, const string &app_userI
     if (NULL == sess)
         return SS_ERROR;
     
-    SessionQueue* pSessQueue = NULL;
+    SessionQueue *pSessQueue = NULL;
     if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue)
         || pSessQueue->insert(app_userID, sess, gap_warn, gap_expire, is_warn))
     {
@@ -599,7 +629,33 @@ int CTimerInfo::create_user_session(const string &appID, const string &app_userI
     return SS_OK;
 }
 
-void CTimerInfo::get_user_json(const string &appID, const string &app_userID, const UserInfo &user, Json::Value &userJson)
+int CTimerInfo::get_user_queueRank(const string &appID, const string &app_userID)
+{
+    TagUserQueue *pTagQueues = NULL;
+    int queueRank = -1;
+
+    if (SS_OK == CAppConfig::Instance()->GetTagHighPriQueue(appID, pTagQueues)
+          && -1 != (queueRank = pTagQueues->find_user(app_userID))
+       )
+    {
+        LogTrace("user[%s] is on HighPriQueue", app_userID.c_str());
+        return queueRank;
+    }
+    else if (SS_OK == CAppConfig::Instance()->GetTagQueue(appID, pTagQueues)
+                  && -1 != (queueRank = pTagQueues->find_user(app_userID))
+            )
+    {
+        LogTrace("user[%s] is on NormalQueue", app_userID.c_str());
+        return queueRank;
+    }
+    else
+    {
+        return -1;
+    }
+}
+
+void CTimerInfo::get_user_json(const string &appID, const string &app_userID, 
+                                const UserInfo &user, Json::Value &userJson, bool withQueueRank)
 {
     user.toJson(userJson);
 
@@ -614,29 +670,41 @@ void CTimerInfo::get_user_json(const string &appID, const string &app_userID, co
         sess.toJson(sessJson);
         userJson["session"] = sessJson;
     }
+
+    if (withQueueRank)
+    {
+        userJson["queueRank"] = get_user_queueRank(appID, app_userID);
+    }
 }
 
-void CTimerInfo::construct_user_json(const UserInfo &user, const Session &sess, Json::Value &userJson)
+void CTimerInfo::construct_user_json(const string &appID, const string &app_userID,
+                                    const UserInfo &user, const Session &sess, Json::Value &userJson, bool withQueueRank)
 {
     user.toJson(userJson);
 
     Json::Value sessJson;
     sess.toJson(sessJson);
     userJson["session"] = sessJson;
+
+    if (withQueueRank)
+    {
+        userJson["queueRank"] = get_user_queueRank(appID, app_userID);
+    }
 }
 
 int CTimerInfo::reply_user_json_A(const string &appID, const string &app_userID, const UserInfo &user)
 {
     Json::Value userJson;
-    get_user_json(appID, app_userID, user, userJson);
+    get_user_json(appID, app_userID, user, userJson, true);//withQueueRank
     DO_FAIL(on_send_reply(userJson));
     return SS_OK;
 }
 
-int CTimerInfo::reply_user_json_B(const UserInfo &user, const Session &sess)
+int CTimerInfo::reply_user_json_B(const string &appID, const string &app_userID,
+                                const UserInfo &user, const Session &sess)
 {
     Json::Value userJson;
-    construct_user_json(user, sess, userJson);
+    construct_user_json(appID, app_userID, user, sess, userJson, true);//withQueueRank
     DO_FAIL(on_send_reply(userJson));
     return SS_OK;
 }

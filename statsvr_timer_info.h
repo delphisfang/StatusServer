@@ -114,15 +114,18 @@ namespace statsvr
         int on_send_reply(const Json::Value &data);
         int on_send_error_reply(ERROR_TYPE code, string msg, const Json::Value &data);
         void on_parse_extends(const string &extends, Json::Value &data);
+        int on_update_addr(const string &appID, const string &identity, const string &raw_id,
+                           const string &cpIP, const unsigned &cpPort);
 
         /***************** never use m_xxx in methods below, keep them stateless **************/
 
         int get_user_session(const string &appID, const string &app_userID, Session *sess);
         int get_session_timer(const string &appID, const string &app_userID, SessionTimer *st);
-        void get_user_json(const string &appID, const string &app_userID, const UserInfo &user, Json::Value &userJson);
-        void construct_user_json(const UserInfo &user, const Session &sess, Json::Value &userJson);
+        int get_user_queueRank(const string &appID, const string &app_userID);
+        void get_user_json(const string &appID, const string &app_userID, const UserInfo &user, Json::Value &userJson, bool withQueueRank = false);
+        void construct_user_json(const string &appID, const string &app_userID, const UserInfo &user, const Session &sess, Json::Value &userJson, bool withQueueRank = false);
         int reply_user_json_A(const string &appID, const string &app_userID, const UserInfo &user);
-        int reply_user_json_B(const UserInfo &user, const Session &sess);
+        int reply_user_json_B(const string &appID, const string &app_userID, const UserInfo &user, const Session &sess);
         unsigned get_service_queuenum(const string &appID, const ServiceInfo &serv);
         int get_service_json(const string &appID, const ServiceInfo &serv, Json::Value &servJson);
         int update_user_session(const string &appID, const string &app_userID, Session *sess, long long gap_warn, long long gap_expire, int is_warn = 0);

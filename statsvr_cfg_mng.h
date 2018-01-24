@@ -79,6 +79,9 @@ public:
     unsigned  _ccd_time_gap;
     string    web_conf_file;
 
+    string    _transfer_ip;
+    unsigned  _transfer_port;
+    
     // add end
 private:
     int loadConfig();

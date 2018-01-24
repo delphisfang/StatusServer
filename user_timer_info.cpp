@@ -112,8 +112,6 @@ int GetUserInfoTimer::on_get_userinfo()
     userInfoList.resize(0);
     Json::Value userJson;
     
-    TagUserQueue* pTagQueues = NULL;
-    SessionQueue*  pSessQueue = NULL;
     Session sess;
     int queueRank = 0;
 
@@ -133,39 +131,27 @@ int GetUserInfoTimer::on_get_userinfo()
         }
 
         // get user queueRank
-        if (SS_OK == CAppConfig::Instance()->GetTagHighPriQueue(m_appID, pTagQueues)
-              && -1 != (queueRank = pTagQueues->find_user(m_userID))
-           )
+        queueRank = get_user_queueRank(m_appID, m_userID);
+        if (queueRank >= 0)
         {
-            LogTrace("user[%s] is on HighPriQueue", m_userID.c_str());
-            get_user_json(m_appID, m_userID, user, userJson);
-            userJson["status"] = ON_QUEUE;
+            get_user_json(m_appID, m_userID, user, userJson, false);
+            userJson["status"]    = ON_QUEUE;
             userJson["queueRank"] = queueRank;
         }
-        else if (SS_OK == CAppConfig::Instance()->GetTagQueue(m_appID, pTagQueues)
-                      && -1 != (queueRank = pTagQueues->find_user(m_userID))
-                )
-        {
-            LogTrace("user[%s] is on NormalQueue", m_userID.c_str());
-            get_user_json(m_appID, m_userID, user, userJson);
-            userJson["status"] = ON_QUEUE;
-            userJson["queueRank"] = queueRank;
-        }
-        else if (SS_OK == CAppConfig::Instance()->GetSessionQueue(m_appID, pSessQueue)
-                    && SS_OK == pSessQueue->get(m_userID, sess)
-                    && sess.serviceID != "")
+        else if (SS_OK == get_user_session(m_appID, m_userID, &sess)
+                    && "" != sess.serviceID)
         {
             LogTrace("user[%s] is inService", m_userID.c_str());
-            construct_user_json(user, sess, userJson);
+            construct_user_json(m_appID, m_userID, user, sess, userJson, false);
             userJson["status"]    = IN_SERVICE;
-            userJson["queueRank"] = 0;
+            userJson["queueRank"] = -1;
         }
         else
         {
             LogTrace("user[%s] is inYiBot", m_userID.c_str());
-            get_user_json(m_appID, m_userID, user, userJson);
-            userJson["status"]      = IN_YIBOT;
-            userJson["queueRank"] = 0;
+            get_user_json(m_appID, m_userID, user, userJson, false);
+            userJson["status"]    = IN_YIBOT;
+            userJson["queueRank"] = -1;
         }
         
         userInfoList[i] = userJson;
@@ -268,11 +254,13 @@ int UserOnlineTimer::on_user_online()
             DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess));
 
             //send reply
-            DO_FAIL(reply_user_json_B(user, sess));
+            DO_FAIL(reply_user_json_B(m_appID, m_userID, user, sess));
 
             //update session["notified"]
             DO_FAIL(UpdateSessionNotified(m_appID, m_userID));
 
+            //send to transfer
+            on_update_addr(m_appID, "user", m_raw_userID, user.cpIP, user.cpPort);
             return SS_OK;
         }
     }
@@ -297,7 +285,7 @@ int UserOnlineTimer::on_user_online()
         DO_FAIL(CreateUserSession(m_appID, m_userID, &sess, MAX_INT, MAX_INT));
         
         //send reply
-        DO_FAIL(reply_user_json_B(user, sess));
+        DO_FAIL(reply_user_json_B(m_appID, m_userID, user, sess));
 
         //update session["notified"]
         DO_FAIL(UpdateSessionNotified(m_appID, m_userID));
