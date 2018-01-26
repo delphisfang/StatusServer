@@ -37,6 +37,7 @@ namespace statsvr
         int  on_admin_getConf();
         int  on_admin_updateConf(bool isUpdateConf);
         int  on_admin_getServiceStatus();
+        int  on_admin_getUserStatus();
         int  get_app_today_status(string appID, Json::Value &appList);
         int  on_admin_getTodayStatus();
         

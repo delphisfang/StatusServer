@@ -84,6 +84,26 @@ int AdminConfigTimer::do_next_step(string& req_data)
                 m_cur_step = STATE_END;
                 return 1;
             }
+            else if (m_cmd == "getUserStatus")
+            {
+                if (m_proc->m_workMode == statsvr::WORKMODE_READY)
+                {
+                    m_errno  = ERROR_NOT_READY;
+                    m_errmsg = "System not ready";
+                    on_error();
+                    m_cur_step = STATE_END;
+                    return -1;
+                }
+                
+                if (on_admin_getUserStatus())
+                {
+                    m_cur_step = STATE_END;
+                    return -1;
+                }
+                on_stat();
+                m_cur_step = STATE_END;
+                return 1;
+            }
             else if (m_cmd == "getTodayStatus")
             {
                 if (m_proc->m_workMode == statsvr::WORKMODE_READY)
@@ -292,10 +312,46 @@ int AdminConfigTimer::on_admin_getServiceStatus()
 
     Json::Value data;
     data["services"] = servInfoList;
-    data["identity"] = m_identity;
+    data["identity"] = m_identity; //admin
 
     return on_admin_send_reply(data);
 }
+
+int AdminConfigTimer::on_admin_getUserStatus()
+{
+    Json::Value userInfoList;
+    userInfoList.resize(0);
+    Json::Value userInfo;
+    int i = 0;
+    
+    string app_userID;
+    
+    for (set<string>::iterator it = m_userID_list.begin(); it != m_userID_list.end(); ++it)
+    {
+        app_userID = (*it);
+        userInfo["userID"] = delappID(app_userID);
+
+        UserInfo user;
+        if (mGetUser(app_userID, user))
+        {
+            userInfo["userStatus"] = NOT_EXIST;
+        }
+        else
+        {
+            userInfo["userStatus"] = user.status;
+        }
+        
+        userInfoList[i] = userInfo;
+        ++i;
+    }
+
+    Json::Value data;
+    data["users"]    = userInfoList;
+    data["identity"] = m_identity; //admin
+
+    return on_admin_send_reply(data);
+}
+
 
 int AdminConfigTimer::get_app_today_status(string appID, Json::Value &appList)
 {

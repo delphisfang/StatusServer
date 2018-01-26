@@ -114,6 +114,7 @@
 #define IN_YIBOT ("inYiBot")
 #define IN_SERVICE ("inService")
 #define ON_QUEUE ("onQueue")
+#define NOT_EXIST ("notExist")
 
 /* service status */
 #define ONLINE ("online")

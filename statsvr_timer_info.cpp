@@ -91,6 +91,14 @@ int CTimerInfo::init(string req_data, int datalen)
             m_userID_list.insert(m_appID + "_" + userID_list[i].asString());
         }
     }
+    else if (!js_data["users"].isNull() && js_data["users"].isArray())
+    {
+        Json::Value userID_list = js_data["users"];
+        for (int i = 0; i < userID_list.size(); i++)
+        {
+            m_userID_list.insert(m_appID + "_" + userID_list[i].asString());
+        }
+    }
     
     if (!js_data["serviceID"].isNull() && js_data["serviceID"].isString())
     {
