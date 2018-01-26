@@ -629,17 +629,40 @@ namespace statsvr
 
             list<SessionTimer>::reverse_iterator it;
             it = _sess_list.rbegin();
+
+            #if 1
             if (it != _sess_list.rend() && nowTime >= it->expire_time)
             {
                 sessTimer = (*it);
                 return 0;
             }
-            
+            #else
+            while (it != _sess_list.rend())
+            {
+                if (nowTime < it->expire_time)
+                {
+                    break;
+                }
+                
+                if ("" == it->session.lastTalk
+                    || 0 == getNewPolicy()
+                    || "service" == it->session.lastTalk)
+                {
+                    sessTimer = (*it);
+                    return 0;
+                }
+                else
+                {
+                    ++it;
+                    continue;
+                }
+            }
+            #endif
             LogError("Failed to get an expired session, its size <= 0!");
             return -1;
         }
 
-        int get_first(Session& sess)
+        /*int get_first(Session& sess)
         {
             long long nowTime = (long long)time(NULL);
 
@@ -653,8 +676,7 @@ namespace statsvr
             
             LogError("Failed to get an expired session, its size <= 0!");
             return -1;
-        }
-
+        }*/
 
         int get(string userID, Session& sess)
         {
@@ -743,10 +765,17 @@ namespace statsvr
                 //isWarn==1表示之前提醒过，不需再提醒
                 if (nowTime >= it->warn_time && 0 == it->isWarn)
                 {
-                    LogDebug("[nowTime: %ld] Find session timewarn, session:%s", nowTime, it->toString().c_str());
-                    sess = it->session;
-                    it->isWarn = 1;
-                    return 0;
+                    #if 0
+                    if ("" == it->session.lastTalk
+                        || 0 == getNewSessionPolicy() 
+                        || "service" == it->session.lastTalk)
+                    #endif
+                    {
+                        LogDebug("[nowTime: %ld] Find session timewarn, session:%s", nowTime, it->toString().c_str());
+                        sess = it->session;
+                        it->isWarn = 1;
+                        return 0;
+                    }
                 }
             }
             
@@ -762,6 +791,7 @@ namespace statsvr
             list<SessionTimer>::reverse_iterator it;
             for (it = _sess_list.rbegin(); it != _sess_list.rend(); ++it)
             {
+                #if 1
                 if (nowTime >= it->expire_time)
                 {
                     ++expireNum;
@@ -770,6 +800,22 @@ namespace statsvr
                 {
                     return expireNum;
                 }
+                #else
+                if (nowTime < it->expire_time)
+                {
+                    return expireNum;
+                }
+                if ("" == it->session.lastTalk
+                    || 0 == getNewPolicy()
+                    || "service" == it->session.lastTalk)
+                {
+                    ++expireNum;
+                }
+                else
+                {
+                    continue;
+                }
+                #endif
             }
             
             return expireNum;

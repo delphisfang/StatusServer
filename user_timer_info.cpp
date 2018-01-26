@@ -215,6 +215,7 @@ int UserOnlineTimer::on_user_online()
 {
     UserInfo user;
     Json::Value data;
+    SessionTimer st;
     Session sess;
     
     if (SS_OK == mGetUser(m_userID, user))
@@ -248,10 +249,11 @@ int UserOnlineTimer::on_user_online()
 
             //update session
             LogDebug("update user[%s]'s session.", m_userID.c_str());
-            GET_SESS(get_user_session(m_appID, m_userID, &sess));
+            DO_FAIL(get_session_timer(m_appID, m_userID, &st));
+            sess = st.session;
             sess.cpIP   = m_cpIP;
             sess.cpPort = m_cpPort;
-            DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess));
+            DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess, st.isWarn));
 
             //send reply
             DO_FAIL(reply_user_json_B(m_appID, m_userID, user, sess));

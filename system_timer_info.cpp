@@ -418,6 +418,22 @@ int SessionWarnTimer::on_session_timewarn()
         return SS_OK;
     }
 
+    #if 0
+    //新策略：最后消息由坐席发出才触发超时(提醒、结束)
+    //前端发送一个开关new_policy，开启时才采用新策略
+    //旧的session，缺少lastTalk信息(lastTalk=空串"")，只能按照旧策略处理
+    //new_policy切为true时，
+    //1)尚未提醒的session，会按照新策略提醒
+    //2)已经提醒的session，由于isWarn=1，不会再提醒
+    //new_policy切为false时，
+    //1)尚未提醒的session，会按照旧策略提醒
+    //2)已经提醒的session，由于isWarn=1，不会再提醒
+    if ("service" != sess.lastTalk)
+    {
+        return SS_OK;
+    }
+    #endif
+    
     m_raw_userID    = sess.userID;
     m_raw_serviceID = sess.serviceID;
     m_userID        = m_appID + "_" + m_raw_userID;
