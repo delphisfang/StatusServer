@@ -37,14 +37,15 @@ namespace statsvr
         
         string    sessionID;
         string    userID;
-        string    cpIP;            //用户的cpIP
-        unsigned short cpPort;    //用户的cpPort
+        string    cpIP;         //用户的cpIP
+        unsigned short cpPort;  //用户的cpPort
         string    serviceID;    //坐席ID
         long long atime;        //活跃时间，即有消息时间到达就更新
         long long btime;        //建立连接的时间
-        int       notified;        //欢迎语通知
+        int       notified;     //欢迎语通知
+        string    lastTalk;     //最后发送消息者
         //bool      toIM;       //标记数据流向，默认为0
-        //string      whereFrom;    //标记使用http还是websocket
+        //string      whereFrom;//标记使用http还是websocket
         //string    channel;
         //unsigned  userCount;
     };
@@ -538,7 +539,9 @@ namespace statsvr
             return value.toStyledString();
         }
     };
-    
+
+    typedef bool(*SelectSessFunc)(const SessionTimer &st, void *arg);
+
     class SessionQueue
     {
     public:
@@ -559,7 +562,7 @@ namespace statsvr
             _sess_list.clear();
             _yibot_list.clear();
         }
-        
+
         int set(string userID, Session *sess, 
                 long long gap_warn = 10*60, long long gap_expire = 20*60, int is_warn = 0)
         {
@@ -623,60 +626,28 @@ namespace statsvr
             }
         }
 
-        int get_first_timer(SessionTimer& sessTimer)
+        int get_first_timer(SessionTimer& sessTimer, SelectSessFunc pFunc, void *arg)
         {
             long long nowTime = (long long)time(NULL);
 
             list<SessionTimer>::reverse_iterator it;
-            it = _sess_list.rbegin();
-
-            #if 1
-            if (it != _sess_list.rend() && nowTime >= it->expire_time)
-            {
-                sessTimer = (*it);
-                return 0;
-            }
-            #else
-            while (it != _sess_list.rend())
+            for (it = _sess_list.rbegin(); it != _sess_list.rend(); ++it)
             {
                 if (nowTime < it->expire_time)
                 {
                     break;
                 }
                 
-                if ("" == it->session.lastTalk
-                    || 0 == getNewPolicy()
-                    || "service" == it->session.lastTalk)
+                if ((*pFunc)(*it, arg))
                 {
                     sessTimer = (*it);
                     return 0;
                 }
-                else
-                {
-                    ++it;
-                    continue;
-                }
-            }
-            #endif
-            LogError("Failed to get an expired session, its size <= 0!");
-            return -1;
-        }
-
-        /*int get_first(Session& sess)
-        {
-            long long nowTime = (long long)time(NULL);
-
-            list<SessionTimer>::reverse_iterator it;
-            it = _sess_list.rbegin();
-            if (it != _sess_list.rend() && nowTime >= it->expire_time)
-            {
-                sess = it->session;
-                return 0;
             }
             
             LogError("Failed to get an expired session, its size <= 0!");
             return -1;
-        }*/
+        }
 
         int get(string userID, Session& sess)
         {
@@ -755,21 +726,16 @@ namespace statsvr
             return -1;
         }
 
-        int check_warn(Session& sess)
+        int check_warn(Session& sess, SelectSessFunc pFunc, void *arg)
         {
             long long nowTime = (long long)time(NULL);
 
             list<SessionTimer>::reverse_iterator it;
             for (it = _sess_list.rbegin(); it != _sess_list.rend(); ++it)
             {
-                //isWarn==1表示之前提醒过，不需再提醒
                 if (nowTime >= it->warn_time && 0 == it->isWarn)
                 {
-                    #if 0
-                    if ("" == it->session.lastTalk
-                        || 0 == getNewSessionPolicy() 
-                        || "service" == it->session.lastTalk)
-                    #endif
+                    if ((*pFunc)(*it, arg))
                     {
                         LogDebug("[nowTime: %ld] Find session timewarn, session:%s", nowTime, it->toString().c_str());
                         sess = it->session;
@@ -782,8 +748,8 @@ namespace statsvr
             return -1;
         }
 
-        //返回超时断开的数量
-        int check_expire()
+        //返回超时结束的数量
+        int check_expire(SelectSessFunc pFunc, void *arg)
         {
             int expireNum = 0;
             long long nowTime = (long long)time(NULL);
@@ -791,31 +757,15 @@ namespace statsvr
             list<SessionTimer>::reverse_iterator it;
             for (it = _sess_list.rbegin(); it != _sess_list.rend(); ++it)
             {
-                #if 1
-                if (nowTime >= it->expire_time)
-                {
-                    ++expireNum;
-                }
-                else
-                {
-                    return expireNum;
-                }
-                #else
                 if (nowTime < it->expire_time)
                 {
                     return expireNum;
                 }
-                if ("" == it->session.lastTalk
-                    || 0 == getNewPolicy()
-                    || "service" == it->session.lastTalk)
+                
+                if ((*pFunc)(*it, arg))
                 {
                     ++expireNum;
                 }
-                else
-                {
-                    continue;
-                }
-                #endif
             }
             
             return expireNum;
@@ -847,9 +797,7 @@ namespace statsvr
 
         unsigned get_usernum_in_service()
         {
-            unsigned userNum = 0;
-            userNum = _sess_list.size();
-            return userNum;
+            return _sess_list.size();
         }
     };
 }

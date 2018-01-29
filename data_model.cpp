@@ -13,18 +13,11 @@ Session::Session()
     cpIP.clear();
     cpPort = 0;
     notified = 0;
+    lastTalk.clear();
 }
 
 Session::~Session()
 {
-    sessionID.clear();
-    userID.clear();
-    serviceID.clear();
-    atime = 0;
-    btime = 0;
-    cpIP.clear();
-    cpPort = 0;
-    notified = 0;
 }
 
 Session::Session(const string& strSession)
@@ -45,6 +38,7 @@ Session::Session(const string& strSession)
     cpIP      = get_value_str(value, CP_IP);
     cpPort    = get_value_uint(value, CP_PORT);
     notified  = get_value_int(value, NOTIFIED, 0);
+    lastTalk  = get_value_str(value, LAST_TALK);
 }
 
 void Session::toJson(Json::Value &value) const
@@ -57,6 +51,7 @@ void Session::toJson(Json::Value &value) const
     value[CP_IP]       = cpIP;
     value[CP_PORT]     = cpPort;
     value[NOTIFIED]    = notified;
+    value[LAST_TALK]   = lastTalk;
 }
 
 string Session::toString() const
@@ -99,19 +94,6 @@ UserInfo::UserInfo()
 
 UserInfo::~UserInfo()
 {
-    userID.clear();
-    cpIP.clear();
-    cpPort = 0;
-    tag.clear();
-    status = IN_YIBOT;
-    atime = 0;
-    qtime = 0;
-    sessionID.clear();
-    lastServiceID.clear();
-    priority.clear();
-    queuePriority = 0;
-    channel.clear();
-    extends.clear();
 }
 
 UserInfo::UserInfo(const string& strUserInfo)
@@ -235,7 +217,7 @@ int UserInfo::set_field(const string &field, const string &value)
         extends = value;
         return 0;
     }
-
+    
     return -1;
 }
 
@@ -258,17 +240,6 @@ ServiceInfo::ServiceInfo()
 
 ServiceInfo::~ServiceInfo()
 {
-    serviceID.clear();
-    status = DEF_SERV_STATUS;
-    atime = 0;
-    cpIP.clear();
-    cpPort = 0;
-    tags.clear();
-    userList.clear();
-    serviceName.clear();
-    serviceAvatar.clear();
-    subStatus = SUB_LIXIAN;
-    //whereFrom.clear();
 }
 
 ServiceInfo::ServiceInfo(const string& strServiceInfo, unsigned dft_user_num)

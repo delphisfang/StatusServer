@@ -271,11 +271,7 @@ int SessionOutTimer::on_send_timeout_msg()
 {
     Json::Value data;
 
-    //if(m_session.whereFrom == "wx" || m_session.whereFrom == "wxpro")
-    //{
-        data["des"] = CAppConfig::Instance()->getTimeOutHint(m_appID);
-    //}
-
+    data["des"]       = CAppConfig::Instance()->getTimeOutHint(m_appID);
     data["userID"]    = m_raw_userID;
     data["serviceID"] = m_raw_serviceID;
     data["sessionID"] = m_sessionID;
@@ -298,11 +294,12 @@ int SessionOutTimer::on_session_timeout()
     Session sess;
     string new_sessionID;
     
-    //choose first session  
+    //choose first timeout session
     if (SS_OK != CAppConfig::Instance()->GetSessionQueue(m_appID, pSessQueue) 
-        || SS_OK != pSessQueue->get_first_timer(sessTimer))
+        || SS_OK != pSessQueue->get_first_timer(sessTimer, select_session_by_timeout_model, (void*)m_appID.c_str())
+        )
     {
-        //no session timeout yet
+        //no session timeout
         return SS_OK;
     }
 
@@ -378,13 +375,9 @@ int SessionWarnTimer::do_next_step(string& req_data)
 int SessionWarnTimer::on_send_timewarn_msg()
 {
     Json::Value data;
-
-    //if(m_session.whereFrom == "wx" || m_session.whereFrom == "wxpro")
-    //{
-        data["des"] = CAppConfig::Instance()->getTimeWarnHint(m_appID);
-    //}
     
     //发送超时提醒给坐席
+    data["des"]       = CAppConfig::Instance()->getTimeWarnHint(m_appID);
     data["userID"]    = m_raw_userID;
     data["serviceID"] = m_raw_serviceID;
     data["sessionID"] = m_sessionID;
@@ -405,7 +398,7 @@ int SessionWarnTimer::on_session_timewarn()
     Session sess;
     
     if (SS_OK != CAppConfig::Instance()->GetSessionQueue(m_appID, pSessQueue) 
-        || pSessQueue->check_warn(sess))
+        || pSessQueue->check_warn(sess, select_session_by_timeout_model, (void*)m_appID.c_str()))
     {
         //no session timewarn
         return SS_OK;
@@ -418,22 +411,6 @@ int SessionWarnTimer::on_session_timewarn()
         return SS_OK;
     }
 
-    #if 0
-    //新策略：最后消息由坐席发出才触发超时(提醒、结束)
-    //前端发送一个开关new_policy，开启时才采用新策略
-    //旧的session，缺少lastTalk信息(lastTalk=空串"")，只能按照旧策略处理
-    //new_policy切为true时，
-    //1)尚未提醒的session，会按照新策略提醒
-    //2)已经提醒的session，由于isWarn=1，不会再提醒
-    //new_policy切为false时，
-    //1)尚未提醒的session，会按照旧策略提醒
-    //2)已经提醒的session，由于isWarn=1，不会再提醒
-    if ("service" != sess.lastTalk)
-    {
-        return SS_OK;
-    }
-    #endif
-    
     m_raw_userID    = sess.userID;
     m_raw_serviceID = sess.serviceID;
     m_userID        = m_appID + "_" + m_raw_userID;
@@ -454,15 +431,15 @@ int SessionWarnTimer::on_session_timewarn()
     //获取user，以便发送timewarn报文
     GET_USER(mGetUser(m_userID, m_userInfo));
 
-    #if 0
-    if (m_whereFrom == "websocket")
-    {
-        MsgRetransmit::Instance()->SetMsg(strUserRsp, m_appID, ui2str(m_msg_seq), m_session.userChatproxyIP, m_session.userChatproxyPort, m_proc->m_cfg._re_msg_send_timeout);
-    }
-    #endif
-
     //发送超时提醒
-    return on_send_timewarn_msg();
+    if (1 == CAppConfig::Instance()->getSessionTimeoutModel(m_appID)) //需求1001546
+    {
+        return on_send_timewarn_msg();
+    }
+    else
+    {
+        return SS_OK;
+    }
 }
 
 SessionWarnTimer::~SessionWarnTimer()
@@ -539,11 +516,7 @@ int QueueOutTimer::on_queue_timeout(string &req_data)
     data["identity"]  = "user";
     data["userID"]    = delappID(m_userID);
     data["sessionID"] = user.sessionID;
-    
-    //if(m_whereFrom == "wx" || m_whereFrom == "wxpro")
-    //{
-        data["des"] = CAppConfig::Instance()->getQueueTimeoutHint(m_appID);
-    //}
+    data["des"]       = CAppConfig::Instance()->getQueueTimeoutHint(m_appID);
 
     LogDebug("==>OUT");
 
@@ -576,8 +549,6 @@ int UserServiceTimer::do_next_step(string& req_data)
 //分配tag内的一个坐席
 int UserServiceTimer::on_user_tag()
 {
-    LogDebug("==>IN");
-    
     ServiceHeap servHeap;
     if (CAppConfig::Instance()->GetTagServiceHeap(m_tag, servHeap))
     {
@@ -608,8 +579,6 @@ int UserServiceTimer::on_user_tag()
 //给用户分配熟客
 int UserServiceTimer::on_user_lastService()
 {
-    LogDebug("==>IN");
-
     DO_FAIL(mGetService(m_lastServiceID, m_serviceInfo));
 
     if (false == m_serviceInfo.is_available())
@@ -633,8 +602,6 @@ int UserServiceTimer::on_user_lastService()
 //随机分配一个坐席
 int UserServiceTimer::on_user_common()
 {
-    LogDebug("==>IN");
-
     string strTags;
     CAppConfig::Instance()->GetValue(m_appID, "tags", strTags);
     LogDebug("[%s]: strTags:%s", m_appID.c_str(), strTags.c_str());
@@ -876,6 +843,7 @@ int RefreshSessionTimer::on_refresh_session()
 
     //update session.atime
     sess.atime = GetCurTimeStamp();
+    sess.lastTalk = m_identity;
     DO_FAIL(UpdateUserSession(m_appID, m_userID, &sess));
 
     //update user.atime

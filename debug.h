@@ -133,6 +133,7 @@
 #define CP_IP ("chatProxyIp")
 #define CP_PORT ("chatProxyPort")
 #define NOTIFIED ("notified")
+#define LAST_TALK ("lastTalk")
 #define STATUS ("status")
 #define QUEUE_RANK ("queueRank")
 

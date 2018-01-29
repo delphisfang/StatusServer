@@ -152,6 +152,18 @@ int CAppConfig::UpdateSubConf(const string &appID, const Json::Value &appID_conf
         real_conf["timeout_end_hint"] = timeout_end_hint;
     }
 
+    if (!appID_conf["session_timeout_model"].isNull())
+    {
+        if (!appID_conf["session_timeout_model"].isInt())
+        {
+            ostr << "Err get app["<<appID<<"] configs[session_timeout_model];";
+            return -1;
+        }
+        int session_timeout_model = appID_conf["session_timeout_model"].asInt();
+        SetValue(appID, "session_timeout_model", session_timeout_model);
+        real_conf["session_timeout_model"] = session_timeout_model;
+    }
+
     return 0;
 }
 
@@ -1090,14 +1102,14 @@ int CAppConfig::AddSessionQueue(string appID)
     return 0;
 }
 
-int CAppConfig::GetSessionQueue(string appID, SessionQueue* &pSessionQueue)
+int CAppConfig::GetSessionQueue(string appID, SessionQueue* &pSessQueue)
 {
     map<string, SessionQueue*>::iterator it;
     
     it = appSessionQueue.find(appID);
     if (it != appSessionQueue.end())
     {
-        pSessionQueue = it->second;
+        pSessQueue = it->second;
         return 0;
     }
     return -1;
@@ -1452,6 +1464,23 @@ string CAppConfig::getQueueUpperLimitHint(string appID)
     string hint;
     GetValue(appID, "queue_upper_limit_hint", hint);
     return hint;
+}
+
+/*
+* 1 - 默认，当客户/坐席超时未回复时，触发超时机制
+* 2 - 仅当客户超时未回复时，触发超时机制
+*/
+int CAppConfig::getSessionTimeoutModel(string appID)
+{
+    int model = 1;
+
+    if (GetValue(appID, "session_timeout_model", model)
+        || model < 1 || model > 2)
+    {
+        model = 1;
+    }
+
+    return model;
 }
 
 void CAppConfig::getUserIDListJson(string appID, Json::Value &userIDList)

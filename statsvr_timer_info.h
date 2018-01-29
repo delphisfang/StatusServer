@@ -141,6 +141,7 @@ namespace statsvr
                                     const string &old_app_servID, ServiceInfo &target_serv);
         int find_least_service_by_list(const set<string> &app_servID_list, 
                                     const string &old_app_servID, ServiceInfo &target_serv);
+
         /********************************* KV methods *************************************/
 
         int KV_set_userIDList();
@@ -240,5 +241,8 @@ namespace statsvr
         set<string> m_serviceID_list;
         set<string> m_changeServiceID_list;
     };
+
+    /************************* policy functions **********************/
+    bool select_session_by_timeout_model(const SessionTimer &st, void *arg);
 }
 #endif

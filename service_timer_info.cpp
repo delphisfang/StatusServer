@@ -464,9 +464,9 @@ int ChangeServiceTimer::on_change_service_by_list()
 
 int ChangeServiceTimer::on_change_session()
 {
-    SessionQueue *pSessionQueue = NULL;
-    if (CAppConfig::Instance()->GetSessionQueue(m_appID, pSessionQueue) 
-        || pSessionQueue->get(m_userID, m_session))
+    SessionQueue *pSessQueue = NULL;
+    if (CAppConfig::Instance()->GetSessionQueue(m_appID, pSessQueue) 
+        || pSessQueue->get(m_userID, m_session))
     {
         ON_ERROR_GET_DATA("session");
         return SS_ERROR;
@@ -476,7 +476,7 @@ int ChangeServiceTimer::on_change_session()
     m_session.serviceID = m_raw_changeServiceID;
     m_session.atime     = GetCurTimeStamp();
     m_sessionID         = m_session.sessionID;
-    SET_SESS(pSessionQueue->set(m_userID, &m_session, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT));
+    SET_SESS(pSessQueue->set(m_userID, &m_session, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT));
     DO_FAIL(KV_set_session(m_userID, m_session, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT));
     
     //update user

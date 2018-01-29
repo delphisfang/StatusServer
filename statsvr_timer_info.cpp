@@ -923,6 +923,7 @@ int CTimerInfo::find_least_service_by_list(const set<string> &app_servID_list, c
     }
 }
 
+
 /********************************* KV methods *************************************/
 
 int CTimerInfo::KV_set_userIDList()
@@ -1475,5 +1476,37 @@ int CTimerInfo::DelTagOnlineServNum(string appID, const ServiceInfo &serv)
         DO_FAIL(CAppConfig::Instance()->DelTagOnlineServiceNum(appID, *it));
     }
     return 0;
+}
+
+
+/************************* policy functions **********************/
+
+bool statsvr::select_session_by_timeout_model(const SessionTimer &st, void *arg)
+{
+    if (NULL == arg)
+        return false;
+
+    string appID = (char*)arg;
+    int model    = CAppConfig::Instance()->getSessionTimeoutModel(appID);
+    LogTrace("appID: %s, timeout_model: %d, userID: %s, sessionID: %s", 
+            (char*)arg, model, st.userID.c_str(), st.session.sessionID.c_str());
+
+    if ("" == st.session.serviceID)
+    {
+        return false;
+    }
+    
+    if ("" == st.session.lastTalk
+        || 1 == model
+        || "service" == st.session.lastTalk)
+    {
+        LogTrace("return true");
+        return true;
+    }
+    else
+    {
+        LogTrace("return false");
+        return false;
+    }
 }
 

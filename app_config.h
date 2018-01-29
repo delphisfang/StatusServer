@@ -35,21 +35,8 @@ public:
         appTagQueues.clear();
         appTagHighPriQueues.clear();
         appSessionQueue.clear();
-        
-        
-        #if 0
-        mapappIDQueue.clear();
-        mapappIDQueueString.clear();
-        tagServiceList.clear();
-        mapServiceStatus.clear();
-        mapServiceNumber.clear();
-        mapOfflineHeap.clear();
-        mapappIDSessionQueue.clear();
-        mapKickServiceStatus.clear();
-        mapHighPriAppIDQueue.clear();
-        needConnectServiceWord.clear();
-        #endif
     }
+
     ~CAppConfig()
     {
         mapConfigString.clear();
@@ -63,26 +50,8 @@ public:
         appTagQueues.clear();
         appTagHighPriQueues.clear();
         appSessionQueue.clear();
-
-        #if 0
-        mapappIDQueue.clear();
-        mapappIDQueueString.clear();
-        tagServiceList.clear();
-        mapServiceStatus.clear();
-        mapServiceNumber.clear();
-        mapOfflineHeap.clear();
-        mapappIDSessionQueue.clear();
-        mapKickServiceStatus.clear();
-        mapHighPriAppIDQueue.clear();
-        needConnectServiceWord.clear();
-        #endif
     }
-    int Init()
-    {
-        return 0;
-    }
-
-
+    
 public:
     int CheckDel(const map<unsigned, bool>& map_now);
     int CheckDel(const map<string, bool>& map_now);
@@ -150,7 +119,7 @@ public:
     int GetTagHighPriQueue(string appID, TagUserQueue* &tuq);
     
     int AddSessionQueue(string appID);
-    int GetSessionQueue(string appID, SessionQueue* &pSessionQueue);
+    int GetSessionQueue(string appID, SessionQueue* &pSessQueue);
     int DelSessionQueue(string appID);
 
     unsigned GetServiceNum(string appID);
@@ -179,6 +148,7 @@ public:
     string getNoServiceOnlineHint(string appID);
     string getQueueTimeoutHint(string appID);
     string getQueueUpperLimitHint(string appID);
+    int getSessionTimeoutModel(string appID);
 
     void getUserIDListJson(string appID, Json::Value &userIDList);
     void getUserListJson(string appID, Json::Value &userList);

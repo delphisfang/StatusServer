@@ -1421,15 +1421,15 @@ void CMCDProc::DispatchCheckSession(string appID)
     }
     else
     {
-        int count = pSessQueue->check_expire();
+        int count = pSessQueue->check_expire(select_session_by_timeout_model, (void*)appID.c_str());
 
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < count; ++i)
         {
             timeval ntv;
             gettimeofday(&ntv, NULL);
             CTimerInfo* ti = new SessionOutTimer(this, GetMsgSeq(), ntv, "", 0, m_cfg._time_out);
             string req_data = appID;
-            if (ti->do_next_step(req_data) == 0)
+            if (0 == ti->do_next_step(req_data))
             {
                 m_timer_queue.set(ti->GetMsgSeq(), ti, ti->GetTimeGap());
             }
@@ -1445,7 +1445,7 @@ void CMCDProc::DispatchCheckSession(string appID)
             gettimeofday(&ntv, NULL);
             CTimerInfo* ti = new SessionWarnTimer(this, GetMsgSeq(), ntv, "", 0, m_cfg._time_out);
             string req_data = appID;
-            if (ti->do_next_step(req_data) == 0)
+            if (0 == ti->do_next_step(req_data))
             {
                 delete ti;
                 continue;
