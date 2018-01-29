@@ -79,9 +79,6 @@ int YiBotOutTimer::on_yibot_timeout()
     return SS_OK;
 }
 
-YiBotOutTimer::~YiBotOutTimer()
-{
-}
 #endif
 
 
@@ -177,10 +174,6 @@ int UserOutTimer::on_user_timeout()
     return 0;
 }
 
-UserOutTimer::~UserOutTimer()
-{
-}
-
 
 int ServiceOutTimer::do_next_step(string& req_data)
 {
@@ -247,10 +240,6 @@ int ServiceOutTimer::on_service_timeout()
     }
 
     return 0;
-}
-
-ServiceOutTimer::~ServiceOutTimer()
-{
 }
 
 
@@ -354,10 +343,6 @@ int SessionOutTimer::on_session_timeout()
     return on_send_timeout_msg();
 }
 
-SessionOutTimer::~SessionOutTimer()
-{
-}
-
 
 int SessionWarnTimer::do_next_step(string& req_data)
 {
@@ -442,10 +427,6 @@ int SessionWarnTimer::on_session_timewarn()
     }
 }
 
-SessionWarnTimer::~SessionWarnTimer()
-{
-}
-
 
 int QueueOutTimer::do_next_step(string& req_data)
 {
@@ -521,10 +502,6 @@ int QueueOutTimer::on_queue_timeout(string &req_data)
     LogDebug("==>OUT");
 
     return on_send_request("timeoutDequeue", user.cpIP, user.cpPort, data, false);
-}
-
-QueueOutTimer::~QueueOutTimer()
-{
 }
 
 
@@ -807,12 +784,6 @@ int UserServiceTimer::on_send_connect_success()
     return SS_OK;
 }
 
-UserServiceTimer::~UserServiceTimer()
-{
-    
-}
-
-
 
 int RefreshSessionTimer::do_next_step(string& req_data)
 {
@@ -866,9 +837,5 @@ int RefreshSessionTimer::on_refresh_session()
     Json::Value data = Json::objectValue;
     DO_FAIL(on_send_reply(data));
     return SS_OK;
-}
-
-RefreshSessionTimer::~RefreshSessionTimer()
-{
 }
 

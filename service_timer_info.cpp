@@ -67,10 +67,6 @@ int GetServiceInfoTimer::on_get_serviceinfo()
     return on_send_reply(data);
 }
 
-GetServiceInfoTimer::~GetServiceInfoTimer()
-{
-}
-
 
 int ServiceLoginTimer::do_next_step(string& req_data)
 {
@@ -189,10 +185,6 @@ int ServiceLoginTimer::on_service_login()
     return SS_OK;
 }
 
-ServiceLoginTimer::~ServiceLoginTimer()
-{
-}
-
 
 int ServiceChangeStatusTimer::do_next_step(string& req_data)
 {
@@ -265,11 +257,6 @@ int ServiceChangeStatusTimer::on_service_changestatus()
         return on_resp_cp();
     }
 }
-
-ServiceChangeStatusTimer::~ServiceChangeStatusTimer()
-{
-}
-
 
 
 int ChangeServiceTimer::do_next_step(string& req_data)
@@ -516,10 +503,6 @@ int ChangeServiceTimer::on_send_change_success()
     DO_FAIL(on_send_request("changeSuccess", m_dst_serviceInfo.cpIP, m_dst_serviceInfo.cpPort, sessData, true));    
 }
 
-ChangeServiceTimer::~ChangeServiceTimer()
-{
-}
-
 
 int ServicePullNextTimer::do_next_step(string& req_data)
 {
@@ -642,10 +625,5 @@ int ServicePullNextTimer::on_pull_next()
     LogWarn("Service[%s] overload user[%s] success.", m_serviceID.c_str(), m_userID.c_str());
     
     return on_send_connect_success();
-}
-
-
-ServicePullNextTimer::~ServicePullNextTimer()
-{
 }
 

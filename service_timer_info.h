@@ -25,7 +25,6 @@ namespace statsvr
                       , uint64_t max_time_gap) 
                       : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
         {}
-        ~GetServiceInfoTimer();
 
         int do_next_step(string& req_data);
         int on_not_online();
@@ -43,7 +42,6 @@ namespace statsvr
                       , uint64_t max_time_gap) 
                       : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
         {}
-        ~ServiceLoginTimer();
 
         int do_next_step(string& req_data);
         int on_serviceLogin_reply();
@@ -63,7 +61,6 @@ namespace statsvr
                       , uint64_t max_time_gap) 
                       : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
         {}
-        ~ServiceChangeStatusTimer();
 
         int do_next_step(string& req_data);
         int on_resp_cp();
@@ -84,7 +81,6 @@ namespace statsvr
                       , uint64_t max_time_gap) 
                       : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
         {}
-        ~ChangeServiceTimer();
 
         int do_next_step(string& req_data);
         int on_resp_cp();
@@ -118,7 +114,6 @@ namespace statsvr
                   , uint64_t max_time_gap) 
                   : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
         {}
-        ~ServicePullNextTimer();
 
         int do_next_step(string& req_data);
         int on_send_connect_success();

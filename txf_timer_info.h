@@ -30,7 +30,7 @@ namespace statsvr
                       , uint64_t max_time_gap) 
                       : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
         {}
-        ~TransferTimer();
+
         int do_next_step(string& req_data);
         int on_not_online();
         int on_rsp_cp_addr();

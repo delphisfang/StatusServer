@@ -72,10 +72,6 @@ int EchoTimer::on_echo()
    return on_send_reply(data);
 }
 
-EchoTimer::~EchoTimer()
-{
-}
-
 
 int GetUserInfoTimer::do_next_step(string& req_data)
 {
@@ -171,10 +167,6 @@ int GetUserInfoTimer::on_get_userinfo()
 
     data["userInfo"] = userInfoList;
     return on_send_reply(data);
-}
-
-GetUserInfoTimer::~GetUserInfoTimer()
-{
 }
 
 
@@ -294,10 +286,6 @@ int UserOnlineTimer::on_user_online()
         
         return SS_OK;
     }
-}
-
-UserOnlineTimer::~UserOnlineTimer()
-{
 }
 
 
@@ -622,11 +610,6 @@ int ConnectServiceTimer::on_connect_service()
     return SS_OK;
 }
 
-ConnectServiceTimer::~ConnectServiceTimer()
-{
-}
-
-
 
 int CancelQueueTimer::do_next_step(string& req_data)
 {
@@ -703,10 +686,6 @@ int CancelQueueTimer::on_cancel_queue()
     on_resp_cp();
     LogDebug("==>OUT");
     return SS_OK;
-}
-
-CancelQueueTimer::~CancelQueueTimer()
-{
 }
 
 
@@ -809,10 +788,6 @@ int CloseSessionTimer::on_close_session()
     return SS_OK;
 }
 
-CloseSessionTimer::~CloseSessionTimer()
-{
-}
-
 
 int RefreshUserTimer::do_next_step(string& req_data)
 {
@@ -844,9 +819,5 @@ int RefreshUserTimer::on_refresh_user()
     Json::Value data = Json::objectValue;
     DO_FAIL(on_send_reply(data));
     return SS_OK;
-}
-
-RefreshUserTimer::~RefreshUserTimer()
-{
 }
 

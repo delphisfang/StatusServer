@@ -31,7 +31,6 @@ namespace statsvr
                       , uint64_t max_time_gap) 
                       : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
         {}
-        ~EchoTimer();
 
         int do_next_step(string& req_data);
         int on_echo();
@@ -50,7 +49,6 @@ namespace statsvr
                       , uint64_t max_time_gap) 
                       : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
         {}
-        ~GetUserInfoTimer();
 
         int do_next_step(string& req_data);
         int on_not_online();
@@ -68,7 +66,6 @@ namespace statsvr
                       , uint64_t max_time_gap) 
                       : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
         {}
-        ~UserOnlineTimer();
 
         int do_next_step(string& req_data);
         //int on_resp_cp();
@@ -91,7 +88,6 @@ namespace statsvr
                       : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
         {
         }
-        ~ConnectServiceTimer();
 
         int do_next_step(string& req_data);
         int set_data(Json::Value &data);
@@ -120,7 +116,6 @@ namespace statsvr
                       , uint64_t max_time_gap) 
                       : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
         {}
-        ~CancelQueueTimer();
 
         int do_next_step(string& req_data);
         int on_resp_cp();
@@ -139,7 +134,6 @@ namespace statsvr
                       , uint64_t max_time_gap) 
                       : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
         {}
-        ~CloseSessionTimer();
 
         int do_next_step(string& req_data);
         int on_closeSession_reply(const string &oldSessionID);
@@ -161,7 +155,7 @@ namespace statsvr
                       , uint64_t max_time_gap) 
                       : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
         {}
-        ~RefreshUserTimer();
+        
         int  do_next_step(string& req_data);
         int  on_refresh_user();
     };

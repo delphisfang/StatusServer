@@ -26,7 +26,7 @@ namespace statsvr
                       , uint64_t max_time_gap) 
                       : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
         {}
-        ~YiBotOutTimer();
+
         int  do_next_step(string& req_data);
         int  on_yibot_timeout();
     };
@@ -43,7 +43,6 @@ namespace statsvr
                       , uint64_t max_time_gap) 
                       : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
         {}
-        ~UserOutTimer();
         
         int  do_next_step(string& req_data);
         int  on_user_timeout();
@@ -63,7 +62,6 @@ namespace statsvr
                       , uint64_t max_time_gap) 
                       : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
         {}
-        ~ServiceOutTimer();
         
         int  do_next_step(string& req_data);
         int  on_service_timeout();
@@ -83,7 +81,7 @@ namespace statsvr
                       , uint64_t max_time_gap) 
                       : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
         {}
-        ~SessionOutTimer();
+
         int  do_next_step(string& req_data);
         int  on_send_timeout_msg();
         int  on_session_timeout();
@@ -103,7 +101,7 @@ namespace statsvr
                       , uint64_t max_time_gap) 
                       : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
         {}
-        ~SessionWarnTimer();
+
         int  do_next_step(string& req_data);
         int  on_send_timewarn_msg();
         int  on_session_timewarn();
@@ -123,7 +121,7 @@ namespace statsvr
                       , uint64_t max_time_gap) 
                       : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
         {}
-        ~QueueOutTimer();
+
         int  do_next_step(string& req_data);
         int  on_queue_timeout(string& req_data);
     };
@@ -139,7 +137,7 @@ namespace statsvr
                       , uint64_t max_time_gap) 
                       : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
         {}
-        ~UserServiceTimer();
+
         int  do_next_step(string& req_data);
         int  on_user_tag();
         int  on_user_lastService();
@@ -166,7 +164,7 @@ namespace statsvr
                       , uint64_t max_time_gap) 
                       : CTimerInfo(proc, msg_seq, ccd_time, ccd_client_ip, ret_flow, max_time_gap)
         {}
-        ~RefreshSessionTimer();
+
         int  do_next_step(string& req_data);
         int  on_refresh_session();
     };

@@ -107,6 +107,3 @@ int TransferTimer::on_get_cp_addr()
     return on_rsp_cp_addr();
 }
 
-TransferTimer::~TransferTimer()
-{
-}
