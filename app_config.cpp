@@ -1483,6 +1483,18 @@ int CAppConfig::getSessionTimeoutModel(string appID)
     return model;
 }
 
+int CAppConfig::getSessionTimeGap(string appID)
+{
+    if (1 == CAppConfig::Instance()->getSessionTimeoutModel(appID))
+    {
+        return 0;
+    }
+    else
+    {
+        return 7200;
+    }
+}
+
 void CAppConfig::getUserIDListJson(string appID, Json::Value &userIDList)
 {
     userIDList.resize(0);

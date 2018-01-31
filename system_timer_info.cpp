@@ -282,10 +282,10 @@ int SessionOutTimer::on_session_timeout()
     SessionTimer sessTimer;
     Session sess;
     string new_sessionID;
-    
+
     //choose first timeout session
     if (SS_OK != CAppConfig::Instance()->GetSessionQueue(m_appID, pSessQueue) 
-        || SS_OK != pSessQueue->get_first_timer(sessTimer, select_session_by_timeout_model, (void*)m_appID.c_str())
+        || SS_OK != pSessQueue->get_first_timer(calc_sess_gap, (void*)m_appID.c_str(), sessTimer)
         )
     {
         //no session timeout
@@ -380,14 +380,15 @@ int SessionWarnTimer::on_send_timewarn_msg()
 int SessionWarnTimer::on_session_timewarn()
 {
     SessionQueue* pSessQueue = NULL;
-    Session sess;
+    SessionTimer st;
     
     if (SS_OK != CAppConfig::Instance()->GetSessionQueue(m_appID, pSessQueue) 
-        || pSessQueue->check_warn(sess, select_session_by_timeout_model, (void*)m_appID.c_str()))
+        || pSessQueue->check_warn(calc_sess_gap, (void*)m_appID.c_str(), st))
     {
         //no session timewarn
         return SS_OK;
     }
+    Session sess = st.session;
     LogDebug("Choose timewarn session: %s", sess.toString().c_str());
 
     if ("" == sess.serviceID)
@@ -417,7 +418,7 @@ int SessionWarnTimer::on_session_timewarn()
     GET_USER(mGetUser(m_userID, m_userInfo));
 
     //发送超时提醒
-    if (1 == CAppConfig::Instance()->getSessionTimeoutModel(m_appID)) //需求1001546
+    if (0 == calc_sess_gap(st, (void*)m_appID.c_str())) //需求1001546
     {
         return on_send_timewarn_msg();
     }

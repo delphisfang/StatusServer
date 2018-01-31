@@ -280,6 +280,15 @@ int ChangeServiceTimer::do_next_step(string& req_data)
 int ChangeServiceTimer::on_resp_cp()
 {
     Json::Value data = Json::objectValue;
+
+    Session sess;
+    if (0 == get_user_session(m_appID, m_userID, &sess))
+    {
+        data["userID"]    = m_raw_userID;
+        data["serviceID"] = m_raw_changeServiceID;
+        data["sessionID"] = sess.sessionID;
+    }
+
     return on_send_reply(data);
 }
 

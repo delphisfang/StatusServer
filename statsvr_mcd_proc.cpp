@@ -380,7 +380,6 @@ int32_t CMCDProc::InitKV()
     }
 }
 
-
 void CMCDProc::DispatchCCD()
 {
     int32_t ret = 0;
@@ -1070,64 +1069,6 @@ int32_t CMCDProc::EnququeErrHttp2DCC(const char *data, unsigned data_len)
     return 0;
 }
 
-#if 0
-int32_t CMCDProc::PostErrLog(string &data, int type, unsigned appID, unsigned level)
-{
-    struct timeval cur_time;
-    int64_t cur_time_msc;
-    Json::Value post_err;
-    string err_str;
-
-    gettimeofday(&cur_time, NULL);
-    cur_time_msc = cur_time.tv_sec*1000 + cur_time.tv_usec/1000;
-    post_err["project"] = "statsvr";
-    post_err["module"]  = "statsvr";
-    post_err["code"]    = type;
-    post_err["desc"]    = data;
-    post_err["env"]     = m_cfg._env;
-    post_err["ip"]      = m_cfg._local_ip;
-    post_err["appid"]   = i2str(appID);
-    post_err["time"]    = l2str(cur_time_msc);
-    post_err["level"]   = level;
-    err_str = post_err.toStyledString();
-
-    LogDebug("[PostErrLog] start post error\n");
-
-    return EnququeErrHttp2DCC((char *)err_str.c_str(), err_str.size());
-}
-
-int32_t CMCDProc::Enqueue2DCC(char* data, unsigned data_len, const string& ip, unsigned short port)
-{
-    TDCCHeader *header = (TDCCHeader*)m_send_buf;
-    char *data_buff    = m_send_buf + DCC_HEADER_LEN;
-    unsigned data_max  = BUFF_SIZE - DCC_HEADER_LEN;
-
-    if (data_len > data_max)
-    {
-        LogError("data_len > data_max (%u > %u)!", data_len, data_max);
-        return -1;
-    }
-
-    unsigned iip = INET_aton(ip.c_str());
-    unsigned long long flow = make_flow64(iip, port);
-
-    memcpy(data_buff, data, data_len);
-    
-    header->_type = dcc_req_send;
-    header->_ip   = iip;
-    header->_port = port;
-
-    int totallen = DCC_HEADER_LEN + msg_len;
-    if (m_mq_mcd_2_dcc->enqueue(header, totallen, flow))
-    {
-        LogError("Failed to enqueue to DCC!");
-        return -2;
-    }
-
-    return 0;
-}
-#endif
-
 void CMCDProc::DispatchUserTimeout()
 {
     static struct timeval user_last_check_time = {0, 0};
@@ -1367,7 +1308,7 @@ void CMCDProc::DispatchCheckYiBot(string appID)
 {
     #ifndef DISABLE_YIBOT_SESSION_CHECK
     
-    SessionQueue* pSessQueue = NULL;
+    SessionQueue *pSessQueue = NULL;
     if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue) 
         || pSessQueue->size() <= 0)
     {
@@ -1412,7 +1353,7 @@ void CMCDProc::DispatchCheckYiBot(string appID)
 
 void CMCDProc::DispatchCheckSession(string appID)
 {
-    SessionQueue* pSessQueue = NULL;
+    SessionQueue *pSessQueue = NULL;
     
     if (CAppConfig::Instance()->GetSessionQueue(appID, pSessQueue) 
         || pSessQueue->size() <= 0)
@@ -1421,9 +1362,10 @@ void CMCDProc::DispatchCheckSession(string appID)
     }
     else
     {
-        int count = pSessQueue->check_expire(select_session_by_timeout_model, (void*)appID.c_str());
-
-        for (int i = 0; i < count; ++i)
+        int count        = pSessQueue->check_expire(calc_sess_gap, (void*)appID.c_str());
+        int handle_count = (count < MAX_EXPIRE_COUNT) ? (count) : (MAX_EXPIRE_COUNT);
+        
+        for (int i = 0; i < handle_count; ++i)
         {
             timeval ntv;
             gettimeofday(&ntv, NULL);

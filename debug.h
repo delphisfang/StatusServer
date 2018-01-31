@@ -156,5 +156,7 @@
 #define mSetAppIDListStr(str) CAppConfig::Instance()->SetAppIDListStr(str)
 #define mGetAppList(appList) CAppConfig::Instance()->GetAppList(appList)
 
+#define MAX_EXPIRE_COUNT (30)
+
 #endif /* _MY_DEBUG_H_ */
 

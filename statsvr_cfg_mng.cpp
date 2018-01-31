@@ -130,8 +130,8 @@ int CStatSvrCfgMng::loadConfig()
     _transfer_ip   = GetDefault(page, "root\\transfer\\ip", "127.0.0.1");
     _transfer_port = GetDefault(page, "root\\transfer\\port", 34500);
     
-    LogTrace("yibot_time_gap: %d, user_time_gap: %d, service_time_gap: %d, queue_rate: %d", 
-                _yibot_time_gap, _user_time_gap, _service_time_gap, _queue_rate);
+    LogTrace("user_time_gap: %d, service_time_gap: %d, yibot_time_gap: %d", 
+                _user_time_gap, _service_time_gap, _yibot_time_gap);
     LogTrace("ccd_time_gap: %d, user_check_intv: %d, service_check_intv: %d", 
                 _ccd_time_gap, _user_check_intv, _service_check_intv);
     LogTrace("transfer_ip: %s, transfer_port: %d", 

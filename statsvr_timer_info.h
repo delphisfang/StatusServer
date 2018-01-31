@@ -243,6 +243,6 @@ namespace statsvr
     };
 
     /************************* policy functions **********************/
-    bool select_session_by_timeout_model(const SessionTimer &st, void *arg);
+    long long calc_sess_gap(const SessionTimer &st, void *arg);
 }
 #endif

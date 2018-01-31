@@ -373,7 +373,7 @@ namespace statsvr
             return uq->set(userID, expire_time);
         }
 
-        int find_user(string userID)
+        int find_user(string userID, string &app_tag)
         {
             map<string, UserQueue*>::iterator it;
             UserQueue *uq = NULL;
@@ -386,6 +386,7 @@ namespace statsvr
                 
                 if (pos >= 0)
                 {
+                    app_tag = it->first;
                     return pos;
                 }
             }
@@ -540,7 +541,7 @@ namespace statsvr
         }
     };
 
-    typedef bool(*SelectSessFunc)(const SessionTimer &st, void *arg);
+    typedef long long (*SESS_GAP_FUNC)(const SessionTimer &st, void *arg);
 
     class SessionQueue
     {
@@ -626,9 +627,10 @@ namespace statsvr
             }
         }
 
-        int get_first_timer(SessionTimer& sessTimer, SelectSessFunc pFunc, void *arg)
+        int get_first_timer(SESS_GAP_FUNC pFunc, void *arg, SessionTimer& sessTimer)
         {
             long long nowTime = (long long)time(NULL);
+            long long timeGap = 0;
 
             list<SessionTimer>::reverse_iterator it;
             for (it = _sess_list.rbegin(); it != _sess_list.rend(); ++it)
@@ -637,8 +639,9 @@ namespace statsvr
                 {
                     break;
                 }
-                
-                if ((*pFunc)(*it, arg))
+
+                timeGap = (*pFunc)(*it, arg);
+                if (nowTime >= (it->expire_time + timeGap))
                 {
                     sessTimer = (*it);
                     return 0;
@@ -726,22 +729,21 @@ namespace statsvr
             return -1;
         }
 
-        int check_warn(Session& sess, SelectSessFunc pFunc, void *arg)
+        int check_warn(SESS_GAP_FUNC pFunc, void *arg, SessionTimer& st)
         {
             long long nowTime = (long long)time(NULL);
-
+            long long timeGap = 0;
             list<SessionTimer>::reverse_iterator it;
             for (it = _sess_list.rbegin(); it != _sess_list.rend(); ++it)
             {
-                if (nowTime >= it->warn_time && 0 == it->isWarn)
+                timeGap = (*pFunc)(*it, arg);
+
+                if (nowTime >= (it->warn_time + timeGap) && 0 == it->isWarn)
                 {
-                    if ((*pFunc)(*it, arg))
-                    {
-                        LogDebug("[nowTime: %ld] Find session timewarn, session:%s", nowTime, it->toString().c_str());
-                        sess = it->session;
-                        it->isWarn = 1;
-                        return 0;
-                    }
+                    LogDebug("[nowTime: %ld] Find session timewarn, session:%s", nowTime, it->toString().c_str());
+                    st = (*it);
+                    it->isWarn = 1;
+                    return 0;
                 }
             }
             
@@ -749,10 +751,11 @@ namespace statsvr
         }
 
         //返回超时结束的数量
-        int check_expire(SelectSessFunc pFunc, void *arg)
+        int check_expire(SESS_GAP_FUNC pFunc, void *arg)
         {
             int expireNum = 0;
             long long nowTime = (long long)time(NULL);
+            long long timeGap = 0;
 
             list<SessionTimer>::reverse_iterator it;
             for (it = _sess_list.rbegin(); it != _sess_list.rend(); ++it)
@@ -761,8 +764,9 @@ namespace statsvr
                 {
                     return expireNum;
                 }
-                
-                if ((*pFunc)(*it, arg))
+
+                timeGap = (*pFunc)(*it, arg);
+                if (nowTime >= (it->expire_time + timeGap))
                 {
                     ++expireNum;
                 }

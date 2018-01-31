@@ -149,6 +149,7 @@ public:
     string getQueueTimeoutHint(string appID);
     string getQueueUpperLimitHint(string appID);
     int getSessionTimeoutModel(string appID);
+    int getSessionTimeGap(string appID);
 
     void getUserIDListJson(string appID, Json::Value &userIDList);
     void getUserListJson(string appID, Json::Value &userList);

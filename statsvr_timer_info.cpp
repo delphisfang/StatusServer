@@ -642,15 +642,16 @@ int CTimerInfo::get_user_queueRank(const string &appID, const string &app_userID
     TagUserQueue *pTagQueues = NULL;
     int queueRank = -1;
 
+    string temp;
     if (SS_OK == CAppConfig::Instance()->GetTagHighPriQueue(appID, pTagQueues)
-          && -1 != (queueRank = pTagQueues->find_user(app_userID))
+          && -1 != (queueRank = pTagQueues->find_user(app_userID, temp))
        )
     {
         LogTrace("user[%s] is on HighPriQueue", app_userID.c_str());
         return queueRank;
     }
     else if (SS_OK == CAppConfig::Instance()->GetTagQueue(appID, pTagQueues)
-                  && -1 != (queueRank = pTagQueues->find_user(app_userID))
+                  && -1 != (queueRank = pTagQueues->find_user(app_userID, temp))
             )
     {
         LogTrace("user[%s] is on NormalQueue", app_userID.c_str());
@@ -1481,32 +1482,25 @@ int CTimerInfo::DelTagOnlineServNum(string appID, const ServiceInfo &serv)
 
 /************************* policy functions **********************/
 
-bool statsvr::select_session_by_timeout_model(const SessionTimer &st, void *arg)
+long long statsvr::calc_sess_gap(const SessionTimer &st, void *arg)
 {
     if (NULL == arg)
         return false;
 
     string appID = (char*)arg;
     int model    = CAppConfig::Instance()->getSessionTimeoutModel(appID);
-    LogTrace("appID: %s, timeout_model: %d, userID: %s, sessionID: %s", 
-            (char*)arg, model, st.userID.c_str(), st.session.sessionID.c_str());
+    /*LogTrace("appID: %s, timeout_model: %d, userID: %s, sessionID: %s", 
+            (char*)arg, model, st.userID.c_str(), st.session.sessionID.c_str());*/
 
-    if ("" == st.session.serviceID)
-    {
-        return false;
-    }
-    
-    if ("" == st.session.lastTalk
-        || 1 == model
+    if (1 == model
+        || "" == st.session.lastTalk
         || "service" == st.session.lastTalk)
     {
-        LogTrace("return true");
-        return true;
+        return 0;
     }
     else
     {
-        LogTrace("return false");
-        return false;
+        return CAppConfig::Instance()->getSessionTimeGap(appID);
     }
 }
 

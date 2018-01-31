@@ -587,8 +587,9 @@ int ConnectServiceTimer::on_connect_service()
 
     LogDebug("==>IN");
 
-    if ((0 == CAppConfig::Instance()->GetTagQueue(m_appID, pTagQueues) && -1 != pTagQueues->find_user(m_userID)) 
-        || (0 == CAppConfig::Instance()->GetTagHighPriQueue(m_appID, pTagHighPriQueues) && -1 != pTagHighPriQueues->find_user(m_userID)))
+    string temp;
+    if ((0 == CAppConfig::Instance()->GetTagQueue(m_appID, pTagQueues) && -1 != pTagQueues->find_user(m_userID, temp)) 
+        || (0 == CAppConfig::Instance()->GetTagHighPriQueue(m_appID, pTagHighPriQueues) && -1 != pTagHighPriQueues->find_user(m_userID, temp)))
     {
         LogDebug("Already onQueue");
         on_already_onqueue();
@@ -658,11 +659,11 @@ int CancelQueueTimer::on_cancel_queue()
         return SS_ERROR;
     }
 
-    if (SS_OK == CAppConfig::Instance()->GetTagHighPriQueue(m_appID, pTagQueues) && -1 != pTagQueues->find_user(m_userID))
+    if (SS_OK == CAppConfig::Instance()->GetTagHighPriQueue(m_appID, pTagQueues) && -1 != pTagQueues->find_user(m_userID, m_tag))
     {
         m_queuePriority = 1;
     }
-    else if (SS_OK == CAppConfig::Instance()->GetTagQueue(m_appID, pTagQueues) && -1 != pTagQueues->find_user(m_userID))
+    else if (SS_OK == CAppConfig::Instance()->GetTagQueue(m_appID, pTagQueues) && -1 != pTagQueues->find_user(m_userID, m_tag))
     {
         m_queuePriority = 0;
     }
@@ -673,7 +674,7 @@ int CancelQueueTimer::on_cancel_queue()
     }
 
     //delete user from queue
-    m_raw_tag = user.tag;
+    m_raw_tag = delappID(m_tag);
     LogDebug("Delete user %s from tag queue: %s", m_raw_userID.c_str(), m_raw_tag.c_str());
     SET_USER(pTagQueues->del_user(m_raw_tag, m_userID));
     DO_FAIL(KV_set_queue(m_appID, m_raw_tag, m_queuePriority));
