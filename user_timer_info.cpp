@@ -274,7 +274,8 @@ int UserOnlineTimer::on_user_online()
         sess.cpIP      = m_cpIP;
         sess.cpPort    = m_cpPort;
         sess.atime     = sess.btime = GetCurTimeStamp();
-        sess.serviceID = "";/// no service yet
+        sess.serviceID = "";
+        sess.lastTalk  = "";
         sess.notified  = 0;
         DO_FAIL(CreateUserSession(m_appID, m_userID, &sess, MAX_INT, MAX_INT));
         
@@ -744,8 +745,6 @@ int CloseSessionTimer::on_close_session()
     UserInfo user;
     string oldSessionID;
 
-    LogDebug("==>IN");    
-
     if (mGetUser(m_userID, user) || user.status != IN_SERVICE)
     {
         on_not_inservice();
@@ -760,16 +759,17 @@ int CloseSessionTimer::on_close_session()
     m_lastServiceID     = m_serviceID;
     
     //delete old session, create new session
-    LogTrace("====>Delete old session: %s", m_session.toString().c_str());
+    LogTrace("Delete old session: %s", m_session.toString().c_str());
     if (m_session.has_refreshed())
     {
         m_session.notified = 0;
     }
     m_session.serviceID = "";
+    m_session.lastTalk  = "";
     oldSessionID    = m_session.sessionID;
     user.sessionID  = m_session.sessionID = gen_sessionID(m_userID);
     m_session.atime = m_session.btime = GetCurTimeStamp();
-    LogTrace("====>Create new session: %s", m_session.toString().c_str());
+    LogTrace("Create new session: %s", m_session.toString().c_str());
     DO_FAIL(DeleteUserSession(m_appID, m_userID));
     DO_FAIL(CreateUserSession(m_appID, m_userID, &m_session, MAX_INT, MAX_INT));
 
@@ -785,7 +785,6 @@ int CloseSessionTimer::on_close_session()
     DO_FAIL(UpdateUser(m_userID, user));
     
     DO_FAIL(on_closeSession_reply(oldSessionID));
-    LogDebug("==>OUT");
     return SS_OK;
 }
 

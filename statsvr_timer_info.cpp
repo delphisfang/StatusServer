@@ -1242,6 +1242,7 @@ int CTimerInfo::CheckFixUser(string app_userID, bool fix)
             sess.atime     = sess.btime = GetCurTimeStamp();
             sess.serviceID = "";
             sess.notified  = 0;
+            sess.lastTalk  = "";
             CreateUserSession(appID, app_userID, &sess, DEF_SESS_TIMEWARN, DEF_SESS_TIMEOUT);
             
             user.sessionID = sess.sessionID;

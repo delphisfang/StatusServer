@@ -67,6 +67,7 @@ int YiBotOutTimer::on_yibot_timeout()
         }
         sess.atime = sess.btime = GetCurTimeStamp();
         sess.sessionID = gen_sessionID(m_userID);
+        sess.lastTalk = "";
         DO_FAIL(CreateUserSession(m_appID, m_userID, &sess, MAX_INT, MAX_INT));
         //update user
         UserInfo user;
@@ -327,6 +328,7 @@ int SessionOutTimer::on_session_timeout()
     new_sessionID  = gen_sessionID(m_userID);
     sess.sessionID = new_sessionID;
     sess.serviceID = "";
+    sess.lastTalk  = "";
     sess.atime     = sess.btime = GetCurTimeStamp();
     DO_FAIL(DeleteUserSession(m_appID, m_userID));
     DO_FAIL(CreateUserSession(m_appID, m_userID, &sess, MAX_INT, MAX_INT));
